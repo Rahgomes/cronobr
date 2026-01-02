@@ -36,10 +36,18 @@ Preferred communication style: Simple, everyday language.
 - **Current State**: Uses MemStorage class; database integration prepared but not active
 
 ### Design Patterns
-- **Theming**: Dual light/dark theme with automatic system detection
+- **Theming**: System/Light/Dark theme modes with real-time Appearance API detection via ThemeContext
+- **Internationalization**: Complete i18n system with PT-BR, EN, ES, FR translations via I18nContext
 - **Components**: Reusable themed components (ThemedText, ThemedView, Button, Card, NumericStepper)
-- **Error Handling**: ErrorBoundary component with development-mode error details
+- **Error Handling**: ErrorBoundary component with localized messages and development-mode error details
 - **Cross-platform**: KeyboardAwareScrollViewCompat for web/native keyboard handling
+
+### V2 Features (January 2026)
+- **Multi-language Support**: Full translations for Portuguese (Brazil), English, Spanish, and French with proper accents
+- **Theme Options**: System (auto-detect), Light, and Dark modes with real-time switching
+- **12 Avatars**: 6 male and 6 female minimalist avatars using Feather icons
+- **Manual Time Input**: Tap timer values to type directly; supports formats like "1:30", "45s", "0.75m"
+- **Enhanced Animations**: Spring animations on phase transitions and button feedback
 
 ## External Dependencies
 
