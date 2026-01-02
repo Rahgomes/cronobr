@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { reloadAppAsync } from "expo";
 import {
   StyleSheet,
@@ -7,12 +7,12 @@ import {
   ScrollView,
   Text,
   Modal,
+  useColorScheme,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { ThemedView } from "@/components/ThemedView";
-import { ThemedText } from "@/components/ThemedText";
-import { useTheme } from "@/hooks/useTheme";
-import { Spacing, BorderRadius, Fonts } from "@/constants/theme";
+import { Colors, Spacing, BorderRadius, Fonts } from "@/constants/theme";
+import { getDeviceLanguage, translations, Language } from "@/lib/i18n";
+import { getSettings } from "@/lib/storage";
 
 export type ErrorFallbackProps = {
   error: Error;
@@ -20,8 +20,21 @@ export type ErrorFallbackProps = {
 };
 
 export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
-  const { theme } = useTheme();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const theme = Colors[isDark ? "dark" : "light"];
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [language, setLanguage] = useState<Language>(getDeviceLanguage());
+
+  useEffect(() => {
+    getSettings().then((settings) => {
+      if (settings.language) {
+        setLanguage(settings.language);
+      }
+    }).catch(() => {});
+  }, []);
+
+  const t = translations[language].error;
 
   const handleRestart = async () => {
     try {
@@ -41,7 +54,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
       {__DEV__ ? (
         <Pressable
           onPress={() => setIsModalVisible(true)}
@@ -58,31 +71,28 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
       ) : null}
 
       <View style={styles.content}>
-        <ThemedText type="h1" style={styles.title}>
-          Something went wrong
-        </ThemedText>
+        <Text style={[styles.title, { color: theme.text }]}>
+          {t.title}
+        </Text>
 
-        <ThemedText type="body" style={styles.message}>
-          Please reload the app to continue.
-        </ThemedText>
+        <Text style={[styles.message, { color: theme.textSecondary }]}>
+          {t.message}
+        </Text>
 
         <Pressable
           onPress={handleRestart}
           style={({ pressed }) => [
             styles.button,
             {
-              backgroundColor: theme.link,
+              backgroundColor: Colors.primary,
               opacity: pressed ? 0.9 : 1,
               transform: [{ scale: pressed ? 0.98 : 1 }],
             },
           ]}
         >
-          <ThemedText
-            type="body"
-            style={[styles.buttonText, { color: theme.buttonText }]}
-          >
-            Try Again
-          </ThemedText>
+          <Text style={styles.buttonText}>
+            {t.restart}
+          </Text>
         </Pressable>
       </View>
 
@@ -94,11 +104,11 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
           onRequestClose={() => setIsModalVisible(false)}
         >
           <View style={styles.modalOverlay}>
-            <ThemedView style={styles.modalContainer}>
-              <View style={styles.modalHeader}>
-                <ThemedText type="h2" style={styles.modalTitle}>
+            <View style={[styles.modalContainer, { backgroundColor: theme.backgroundDefault }]}>
+              <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
+                <Text style={[styles.modalTitle, { color: theme.text }]}>
                   Error Details
-                </ThemedText>
+                </Text>
                 <Pressable
                   onPress={() => setIsModalVisible(false)}
                   style={({ pressed }) => [
@@ -118,7 +128,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
                 <View
                   style={[
                     styles.errorContainer,
-                    { backgroundColor: theme.backgroundDefault },
+                    { backgroundColor: theme.backgroundSecondary },
                   ]}
                 >
                   <Text
@@ -135,11 +145,11 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
                   </Text>
                 </View>
               </ScrollView>
-            </ThemedView>
+            </View>
           </View>
         </Modal>
       ) : null}
-    </ThemedView>
+    </View>
   );
 }
 
@@ -150,54 +160,49 @@ const styles = StyleSheet.create({
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
-    padding: Spacing["2xl"],
+    padding: Spacing.xxl,
   },
   content: {
     alignItems: "center",
     justifyContent: "center",
-    gap: Spacing.lg,
+    gap: Spacing.l,
     width: "100%",
     maxWidth: 600,
   },
   title: {
     textAlign: "center",
-    lineHeight: 40,
+    fontSize: 28,
+    fontWeight: "700",
+    lineHeight: 36,
   },
   message: {
     textAlign: "center",
-    opacity: 0.7,
+    fontSize: 16,
     lineHeight: 24,
   },
   topButton: {
     position: "absolute",
-    top: Spacing["2xl"] + Spacing.lg,
-    right: Spacing.lg,
+    top: Spacing.xxl + Spacing.l,
+    right: Spacing.l,
     width: 44,
     height: 44,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.m,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     zIndex: 10,
   },
   button: {
-    paddingVertical: Spacing.lg,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing["2xl"],
+    paddingVertical: Spacing.m,
+    borderRadius: BorderRadius.m,
+    paddingHorizontal: Spacing.xxl,
     minWidth: 200,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   buttonText: {
     fontWeight: "600",
     textAlign: "center",
     fontSize: 16,
+    color: "#FFFFFF",
   },
   modalOverlay: {
     flex: 1,
@@ -207,20 +212,20 @@ const styles = StyleSheet.create({
   modalContainer: {
     width: "100%",
     height: "90%",
-    borderTopLeftRadius: BorderRadius.lg,
-    borderTopRightRadius: BorderRadius.lg,
+    borderTopLeftRadius: BorderRadius.l,
+    borderTopRightRadius: BorderRadius.l,
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.md,
+    paddingHorizontal: Spacing.l,
+    paddingTop: Spacing.l,
+    paddingBottom: Spacing.m,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(128, 128, 128, 0.2)",
   },
   modalTitle: {
+    fontSize: 20,
     fontWeight: "600",
   },
   closeButton: {
@@ -230,13 +235,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   modalScrollContent: {
-    padding: Spacing.lg,
+    padding: Spacing.l,
   },
   errorContainer: {
     width: "100%",
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.m,
     overflow: "hidden",
-    padding: Spacing.lg,
+    padding: Spacing.l,
   },
   errorText: {
     fontSize: 12,

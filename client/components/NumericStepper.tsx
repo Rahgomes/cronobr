@@ -1,10 +1,11 @@
-import React from "react";
-import { View, StyleSheet, Pressable } from "react-native";
+import React, { useState, useCallback } from "react";
+import { View, StyleSheet, Pressable, TextInput, Platform } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  withSequence,
   WithSpringConfig,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
@@ -12,6 +13,7 @@ import * as Haptics from "expo-haptics";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
+import { parseTimeInput } from "@/lib/i18n";
 
 interface NumericStepperProps {
   value: number;
@@ -22,6 +24,7 @@ interface NumericStepperProps {
   label: string;
   icon: keyof typeof Feather.glyphMap;
   formatValue?: (value: number) => string;
+  isTimeInput?: boolean;
 }
 
 const springConfig: WithSpringConfig = {
@@ -52,7 +55,9 @@ function StepperButton({
   const handlePressIn = () => {
     if (!disabled) {
       scale.value = withSpring(0.9, springConfig);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      if (Platform.OS !== "web") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
     }
   };
 
@@ -97,8 +102,17 @@ export function NumericStepper({
   label,
   icon,
   formatValue,
+  isTimeInput = true,
 }: NumericStepperProps) {
   const { theme } = useTheme();
+  const [isEditing, setIsEditing] = useState(false);
+  const [inputText, setInputText] = useState("");
+  const [inputError, setInputError] = useState(false);
+  const inputScale = useSharedValue(1);
+
+  const inputAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: inputScale.value }],
+  }));
 
   const handleIncrement = () => {
     if (value + step <= max) {
@@ -112,6 +126,59 @@ export function NumericStepper({
     }
   };
 
+  const handleValuePress = useCallback(() => {
+    if (isTimeInput) {
+      setIsEditing(true);
+      setInputText("");
+      setInputError(false);
+      if (Platform.OS !== "web") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+    }
+  }, [isTimeInput]);
+
+  const handleInputChange = useCallback((text: string) => {
+    setInputText(text);
+    setInputError(false);
+  }, []);
+
+  const handleInputSubmit = useCallback(() => {
+    if (!inputText.trim()) {
+      setIsEditing(false);
+      return;
+    }
+
+    const parsed = parseTimeInput(inputText);
+    
+    if (parsed !== null && parsed >= min && parsed <= max) {
+      onValueChange(parsed);
+      setIsEditing(false);
+      setInputError(false);
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } else {
+      setInputError(true);
+      inputScale.value = withSequence(
+        withSpring(1.05, { damping: 10, stiffness: 400 }),
+        withSpring(0.95, { damping: 10, stiffness: 400 }),
+        withSpring(1, { damping: 10, stiffness: 400 })
+      );
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+    }
+  }, [inputText, min, max, onValueChange, inputScale]);
+
+  const handleInputBlur = useCallback(() => {
+    if (inputText.trim()) {
+      handleInputSubmit();
+    } else {
+      setIsEditing(false);
+      setInputError(false);
+    }
+  }, [inputText, handleInputSubmit]);
+
   const displayValue = formatValue ? formatValue(value) : `${value}`;
 
   return (
@@ -124,7 +191,38 @@ export function NumericStepper({
           <ThemedText type="bodySmall" style={{ color: theme.textSecondary }}>
             {label}
           </ThemedText>
-          <ThemedText type="h2">{displayValue}</ThemedText>
+          {isEditing ? (
+            <Animated.View style={inputAnimatedStyle}>
+              <TextInput
+                style={[
+                  styles.manualInput,
+                  {
+                    color: theme.text,
+                    backgroundColor: inputError ? Colors.error + "20" : theme.backgroundSecondary,
+                    borderColor: inputError ? Colors.error : Colors.primary,
+                  },
+                ]}
+                value={inputText}
+                onChangeText={handleInputChange}
+                onSubmitEditing={handleInputSubmit}
+                onBlur={handleInputBlur}
+                placeholder="30 or 1:30"
+                placeholderTextColor={theme.textSecondary}
+                keyboardType="default"
+                autoFocus
+                returnKeyType="done"
+              />
+            </Animated.View>
+          ) : (
+            <Pressable onPress={handleValuePress}>
+              <ThemedText 
+                type="h2" 
+                style={isTimeInput ? { textDecorationLine: "underline", textDecorationStyle: "dotted" } : undefined}
+              >
+                {displayValue}
+              </ThemedText>
+            </Pressable>
+          )}
         </View>
       </View>
       <View style={styles.stepperContainer}>
@@ -157,6 +255,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.m,
+    flex: 1,
   },
   iconContainer: {
     width: 48,
@@ -167,6 +266,7 @@ const styles = StyleSheet.create({
   },
   labelContainer: {
     gap: 2,
+    flex: 1,
   },
   stepperContainer: {
     flexDirection: "row",
@@ -178,5 +278,14 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.round,
     alignItems: "center",
     justifyContent: "center",
+  },
+  manualInput: {
+    fontSize: 20,
+    fontWeight: "600",
+    paddingHorizontal: Spacing.s,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.s,
+    borderWidth: 2,
+    minWidth: 80,
   },
 });

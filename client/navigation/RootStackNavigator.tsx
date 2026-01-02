@@ -1,6 +1,7 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
+import { useI18n } from "@/contexts/I18nContext";
 
 import TimerConfigScreen from "@/screens/TimerConfigScreen";
 import ActiveTimerScreen from "@/screens/ActiveTimerScreen";
@@ -25,6 +26,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function RootStackNavigator() {
   const screenOptions = useScreenOptions();
   const opaqueScreenOptions = useScreenOptions({ transparent: false });
+  const { t } = useI18n();
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>
@@ -49,7 +51,7 @@ export default function RootStackNavigator() {
         component={SettingsScreen}
         options={{
           ...opaqueScreenOptions,
-          headerTitle: "Configurações",
+          headerTitle: t("settings.title"),
         }}
       />
       <Stack.Screen
@@ -57,7 +59,7 @@ export default function RootStackNavigator() {
         component={ProfileScreen}
         options={{
           ...opaqueScreenOptions,
-          headerTitle: "Perfil",
+          headerTitle: t("profile.title"),
         }}
       />
     </Stack.Navigator>

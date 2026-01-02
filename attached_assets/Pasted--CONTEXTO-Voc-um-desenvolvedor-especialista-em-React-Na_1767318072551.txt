@@ -1,0 +1,149 @@
+# CONTEXTO
+Você é um desenvolvedor especialista em React Native. Sua tarefa é evoluir o aplicativo **CronôBR – Seu parceiro de treino** para a **Versão 2**, implementando recursos adicionais de personalização, temas, internacionalização completa e melhorias de UX.
+
+Mantenha a arquitetura já estabelecida e implemente todas as funcionalidades abaixo com qualidade, animações fluídas e design coerente.
+
+---
+
+# OBJETIVO DA V2
+Adicionar:
+1. Suporte completo aos 4 idiomas (PT-BR como padrão; EN, ES, FR).
+2. Tema configurável: Sistema, Light e Dark.
+3. Persistência local para dados de perfil e preferências.
+4. Avatares mais completos (mínimo 6 masculinos e 6 femininos, estilo minimalista).
+5. Inputs de tempo com entrada manual (aceitando segundos e minutos, inclusive números quebrados).
+6. Manter e melhorar a UI/UX apresentada nas telas.
+
+---
+
+# ESPECIFICAÇÕES DETALHADAS V2
+
+## 1. Internacionalização (i18n)
+- Finalizar implementação de EN, ES, FR.
+- Todas as strings da interface devem estar no sistema de tradução.
+- O idioma deve ser carregado:
+  • pela escolha do usuário  
+  • persistido localmente  
+  • default: seguir sistema na primeira abertura
+
+---
+
+## 2. Temas (Sistema / Light / Dark)
+- Criar 3 temas completos.
+- O tema “Sistema” deve seguir `Appearance.getColorScheme()` em tempo real.
+- Temas precisam aplicar:
+  • cores  
+  • botões  
+  • backgrounds  
+  • inputs  
+  • textos  
+- Persistir escolha do usuário localmente.
+
+---
+
+## 3. Persistência Local
+Use **AsyncStorage** (ou equivalente) para salvar:
+
+- Nome do usuário
+- Avatar escolhido
+- Idioma selecionado
+- Tema selecionado
+- Preferências de som
+- Preferências de vibração
+
+Requisitos:
+- Dados devem carregar instantaneamente ao abrir o app.
+- Se o app for apagado, tudo deve ser apagado naturalmente.
+
+---
+
+## 4. Perfil Reformulado
+- Adicionar **6 avatares masculinos e 6 femininos**, estilo minimalista.
+- Layout de seleção com:
+  • borda de seleção  
+  • efeito de escala ao tocar  
+  • avatar em grid  
+- Input de nome com:
+  • placeholder traduzido  
+  • validação simples (+ feedback visual)
+
+---
+
+## 5. Inputs de Tempo (Melhorados)
+Cada campo (preparação / exercício / descanso / rounds):
+
+- Controles de +5 / –5 (como já existe)
+- **Campo editável manualmente**
+- Aceitar:
+  • segundos (ex: “45”)  
+  • minutos e segundos (ex: "1:30")  
+  • valores quebrados (ex: “7.5s” ou “1.2m”)  
+
+Regras:
+- Converter para segundos no estado interno.
+- Validar valores negativos.
+- Atualizar estimativa total em tempo real.
+
+---
+
+## 6. UI/UX (Melhorias)
+- Manter o design atual, mas aprimorar:
+  • transições suaves entre telas  
+  • botões com animação de toque (scale + haptic)  
+  • inputs com highlight  
+- Ajustar a tela do timer para exibir mais contraste dependendo do tema.
+- Add microanimação no momento de transição de fase.
+
+---
+
+# ESTRUTURA / ARQUITETURA
+Mantenha a estrutura atual do projeto.
+
+Regras:
+- `providers/ThemeProvider` continua existindo.
+- Persistência local em utils (ex: `utils/storage`).
+- i18n em `utils/i18n`.
+- Componentes bem separados por responsabilidade.
+
+---
+
+# LÓGICA (COT – PASSO A PASSO)
+
+1. Criar os novos temas (light/dark/sistema).
+2. Integrar o listener de alterações do tema do sistema.
+3. Finalizar os arquivos de idioma EN, ES, FR.
+4. Implementar persistência local para perfil e preferências.
+5. Criar novo seletor de avatar com 12 opções.
+6. Permitir edições manuais nos campos de tempo e converter tudo para segundos.
+7. Ajustar estimativa total com base em qualquer alteração.
+8. Melhorar animações e interações nos botões e telas.
+9. Testar no físico (sons / vibrações / aceleração do timer).
+10. Garantir que nenhuma string fique hardcoded fora do i18n.
+
+---
+
+# CHECKLIST V2
+
+## Funcional
+- [ ] Idiomas funcionando e persistindo.
+- [ ] Temas funcionando e persistindo.
+- [ ] Nome e avatar persistem corretamente.
+- [ ] Inputs aceitam valores manuais.
+- [ ] Conversão de tempo correta.
+- [ ] Timer continua funcionando sem regressões.
+
+## Visual
+- [ ] Avatares novos e responsivos.
+- [ ] Inputs com feedback.
+- [ ] Tela do timer melhorada.
+- [ ] Animações consistentes.
+
+## Código
+- [ ] Componentes limpos e reutilizáveis.
+- [ ] Persistência isolada.
+- [ ] Sem warnings no console.
+
+---
+
+# META FINAL DA V2
+Entregar uma versão polida, confiável, moderna e mais pessoal do CronôBR — ainda simples, mas muito mais completa e agradável de usar.

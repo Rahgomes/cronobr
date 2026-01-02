@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { View, StyleSheet, ScrollView, Alert, Pressable, Platform } from "react-native";
+import { View, StyleSheet, ScrollView, Pressable, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -14,21 +14,76 @@ import * as Haptics from "expo-haptics";
 import { ThemedText } from "@/components/ThemedText";
 import { SettingRow } from "@/components/SettingRow";
 import { useTheme } from "@/hooks/useTheme";
+import { useI18n } from "@/contexts/I18nContext";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { getSettings, saveSettings, getProfile, Settings, Profile } from "@/lib/storage";
+import { Language } from "@/lib/i18n";
+import { ThemeMode } from "@/contexts/ThemeContext";
+import { avatars } from "@/constants/avatars";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Settings">;
 
-const avatarIcons: (keyof typeof Feather.glyphMap)[] = ["activity", "user", "clock"];
-
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+interface OptionButtonProps {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}
+
+function OptionButton({ label, selected, onPress }: OptionButtonProps) {
+  const { theme } = useTheme();
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.95, { damping: 15, stiffness: 200 });
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1, { damping: 15, stiffness: 200 });
+  };
+
+  const handlePress = () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    onPress();
+  };
+
+  return (
+    <AnimatedPressable
+      onPress={handlePress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      style={[
+        styles.optionButton,
+        {
+          backgroundColor: selected ? Colors.primary : theme.backgroundSecondary,
+          borderColor: selected ? Colors.primary : theme.border,
+        },
+        animatedStyle,
+      ]}
+    >
+      <ThemedText
+        type="bodySmall"
+        style={{ color: selected ? "#FFFFFF" : theme.text }}
+      >
+        {label}
+      </ThemedText>
+    </AnimatedPressable>
+  );
+}
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
-  const { theme } = useTheme();
-  const profileScale = useSharedValue(1);
+  const { theme, themeMode, setThemeMode } = useTheme();
+  const { t, language, setLanguage, languages } = useI18n();
 
   const [settings, setSettings] = useState<Settings>({
     soundEnabled: true,
@@ -37,7 +92,7 @@ export default function SettingsScreen() {
     theme: "system",
   });
   const [profile, setProfile] = useState<Profile>({
-    name: "Atleta",
+    name: t("profile.athlete"),
     avatarIndex: 0,
   });
 
@@ -56,69 +111,29 @@ export default function SettingsScreen() {
     }, [loadData])
   );
 
-  const handleToggleSetting = async (key: keyof Settings, value: boolean) => {
-    const newSettings = { ...settings, [key]: value };
-    setSettings(newSettings);
-    await saveSettings({ [key]: value });
+  const handleToggle = async (key: "soundEnabled" | "vibrationEnabled") => {
+    const newValue = !settings[key];
+    setSettings((prev) => ({ ...prev, [key]: newValue }));
+    await saveSettings({ [key]: newValue });
   };
 
-  const handleLanguagePress = () => {
-    Alert.alert(
-      "Idioma",
-      "Selecione o idioma",
-      [
-        { text: "Portugues (BR)", onPress: () => handleLanguageChange("pt-BR") },
-        { text: "English", onPress: () => handleLanguageChange("en") },
-        { text: "Espanol", onPress: () => handleLanguageChange("es") },
-        { text: "Francais", onPress: () => handleLanguageChange("fr") },
-        { text: "Cancelar", style: "cancel" },
-      ]
-    );
+  const handleLanguageChange = async (lang: Language) => {
+    setSettings((prev) => ({ ...prev, language: lang }));
+    await setLanguage(lang);
   };
 
-  const handleLanguageChange = async (language: Settings["language"]) => {
-    const newSettings = { ...settings, language };
-    setSettings(newSettings);
-    await saveSettings({ language });
+  const handleThemeChange = async (mode: ThemeMode) => {
+    setSettings((prev) => ({ ...prev, theme: mode }));
+    await setThemeMode(mode);
   };
 
-  const handleThemePress = () => {
-    Alert.alert(
-      "Tema",
-      "Selecione o tema",
-      [
-        { text: "Sistema", onPress: () => handleThemeChange("system") },
-        { text: "Claro", onPress: () => handleThemeChange("light") },
-        { text: "Escuro", onPress: () => handleThemeChange("dark") },
-        { text: "Cancelar", style: "cancel" },
-      ]
-    );
-  };
+  const themeOptions: { mode: ThemeMode; labelKey: string }[] = [
+    { mode: "system", labelKey: "settings.themeSystem" },
+    { mode: "light", labelKey: "settings.themeLight" },
+    { mode: "dark", labelKey: "settings.themeDark" },
+  ];
 
-  const handleThemeChange = async (themeOption: Settings["theme"]) => {
-    const newSettings = { ...settings, theme: themeOption };
-    setSettings(newSettings);
-    await saveSettings({ theme: themeOption });
-  };
-
-  const getLanguageLabel = (lang: string) => {
-    switch (lang) {
-      case "pt-BR": return "Portugues";
-      case "en": return "English";
-      case "es": return "Espanol";
-      case "fr": return "Francais";
-      default: return lang;
-    }
-  };
-
-  const getThemeLabel = (t: string) => {
-    switch (t) {
-      case "system": return "Sistema";
-      case "light": return "Claro";
-      case "dark": return "Escuro";
-      default: return t;
-    }
-  };
+  const profileScale = useSharedValue(1);
 
   const profileAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: profileScale.value }],
@@ -139,6 +154,8 @@ export default function SettingsScreen() {
     navigation.navigate("Profile");
   };
 
+  const currentAvatar = avatars[profile.avatarIndex] || avatars[0];
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.backgroundRoot }]}
@@ -147,6 +164,7 @@ export default function SettingsScreen() {
         paddingBottom: insets.bottom + Spacing.xl,
         paddingHorizontal: Spacing.m,
       }}
+      showsVerticalScrollIndicator={false}
     >
       <AnimatedPressable
         onPress={handleProfilePress}
@@ -159,68 +177,85 @@ export default function SettingsScreen() {
         ]}
       >
         <View style={[styles.avatarContainer, { backgroundColor: Colors.primaryLight + "20" }]}>
-          <Feather name={avatarIcons[profile.avatarIndex]} size={32} color={Colors.primary} />
+          <Feather name={currentAvatar.icon} size={32} color={Colors.primary} />
         </View>
         <View style={styles.profileInfo}>
           <ThemedText type="h3">{profile.name}</ThemedText>
           <ThemedText type="bodySmall" style={{ color: theme.textSecondary }}>
-            Toque para editar perfil
+            {t("settings.editProfile")}
           </ThemedText>
         </View>
         <Feather name="chevron-right" size={20} color={theme.textSecondary} />
       </AnimatedPressable>
 
       <ThemedText type="caption" style={[styles.sectionTitle, { color: theme.textSecondary }]}>
-        PREFERENCIAS
+        {t("settings.preferences")}
       </ThemedText>
-      
-      <View style={styles.section}>
+
+      <View style={[styles.section, { backgroundColor: theme.backgroundDefault, borderColor: theme.border }]}>
         <SettingRow
-          label="Som"
           icon="volume-2"
-          toggle
-          toggleValue={settings.soundEnabled}
-          onToggleChange={(v) => handleToggleSetting("soundEnabled", v)}
+          title={t("settings.sound")}
+          subtitle={t("settings.soundDescription")}
+          type="toggle"
+          value={settings.soundEnabled ? "true" : "false"}
+          onToggle={() => handleToggle("soundEnabled")}
         />
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <SettingRow
-          label="Vibracao"
           icon="smartphone"
-          toggle
-          toggleValue={settings.vibrationEnabled}
-          onToggleChange={(v) => handleToggleSetting("vibrationEnabled", v)}
+          title={t("settings.vibration")}
+          subtitle={t("settings.vibrationDescription")}
+          type="toggle"
+          value={settings.vibrationEnabled ? "true" : "false"}
+          onToggle={() => handleToggle("vibrationEnabled")}
         />
       </View>
 
       <ThemedText type="caption" style={[styles.sectionTitle, { color: theme.textSecondary }]}>
-        APARENCIA
+        {t("settings.appearance")}
       </ThemedText>
 
-      <View style={styles.section}>
-        <SettingRow
-          label="Idioma"
-          icon="globe"
-          value={getLanguageLabel(settings.language)}
-          onPress={handleLanguagePress}
-        />
-        <SettingRow
-          label="Tema"
-          icon="moon"
-          value={getThemeLabel(settings.theme)}
-          onPress={handleThemePress}
-        />
-      </View>
+      <View style={[styles.section, { backgroundColor: theme.backgroundDefault, borderColor: theme.border }]}>
+        <View style={styles.settingItem}>
+          <View style={styles.settingHeader}>
+            <View style={[styles.iconContainer, { backgroundColor: Colors.primaryLight + "20" }]}>
+              <Feather name="globe" size={20} color={Colors.primary} />
+            </View>
+            <ThemedText type="body">{t("settings.language")}</ThemedText>
+          </View>
+          <View style={styles.optionsRow}>
+            {languages.map((lang) => (
+              <OptionButton
+                key={lang.code}
+                label={lang.code === "pt-BR" ? "PT" : lang.code.toUpperCase()}
+                selected={language === lang.code}
+                onPress={() => handleLanguageChange(lang.code)}
+              />
+            ))}
+          </View>
+        </View>
 
-      <ThemedText type="caption" style={[styles.sectionTitle, { color: theme.textSecondary }]}>
-        SOBRE
-      </ThemedText>
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
-      <View style={styles.section}>
-        <SettingRow
-          label="Versao"
-          icon="info"
-          value="1.0.0"
-          showChevron={false}
-        />
+        <View style={styles.settingItem}>
+          <View style={styles.settingHeader}>
+            <View style={[styles.iconContainer, { backgroundColor: Colors.primaryLight + "20" }]}>
+              <Feather name="moon" size={20} color={Colors.primary} />
+            </View>
+            <ThemedText type="body">{t("settings.theme")}</ThemedText>
+          </View>
+          <View style={styles.optionsRow}>
+            {themeOptions.map((option) => (
+              <OptionButton
+                key={option.mode}
+                label={t(option.labelKey)}
+                selected={themeMode === option.mode}
+                onPress={() => handleThemeChange(option.mode)}
+              />
+            ))}
+          </View>
+        </View>
       </View>
     </ScrollView>
   );
@@ -257,6 +292,39 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   section: {
+    borderRadius: BorderRadius.m,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  divider: {
+    height: 1,
+    marginLeft: Spacing.xxl + Spacing.m,
+  },
+  settingItem: {
+    padding: Spacing.m,
+    gap: Spacing.m,
+  },
+  settingHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.m,
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: BorderRadius.s,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  optionsRow: {
+    flexDirection: "row",
     gap: Spacing.s,
+    flexWrap: "wrap",
+  },
+  optionButton: {
+    paddingHorizontal: Spacing.m,
+    paddingVertical: Spacing.s,
+    borderRadius: BorderRadius.s,
+    borderWidth: 1,
   },
 });

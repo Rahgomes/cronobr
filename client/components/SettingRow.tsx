@@ -13,27 +13,25 @@ import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 
 interface SettingRowProps {
-  label: string;
   icon?: keyof typeof Feather.glyphMap;
+  title: string;
+  subtitle?: string;
   value?: string;
   onPress?: () => void;
-  toggle?: boolean;
-  toggleValue?: boolean;
-  onToggleChange?: (value: boolean) => void;
-  showChevron?: boolean;
+  type?: "navigation" | "toggle" | "info";
+  onToggle?: () => void;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function SettingRow({
-  label,
   icon,
+  title,
+  subtitle,
   value,
   onPress,
-  toggle,
-  toggleValue,
-  onToggleChange,
-  showChevron = true,
+  type = "navigation",
+  onToggle,
 }: SettingRowProps) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
@@ -43,32 +41,25 @@ export function SettingRow({
   }));
 
   const handlePressIn = () => {
-    if (onPress) {
+    if (onPress || onToggle) {
       scale.value = withSpring(0.98, { damping: 15, stiffness: 200 });
     }
   };
 
   const handlePressOut = () => {
-    if (onPress) {
+    if (onPress || onToggle) {
       scale.value = withSpring(1, { damping: 15, stiffness: 200 });
     }
   };
 
   const handlePress = () => {
-    if (onPress) {
-      if (Platform.OS !== "web") {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
-      onPress();
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-  };
-
-  const handleToggle = (val: boolean) => {
-    if (onToggleChange) {
-      if (Platform.OS !== "web") {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
-      onToggleChange(val);
+    if (onToggle) {
+      onToggle();
+    } else if (onPress) {
+      onPress();
     }
   };
 
@@ -80,15 +71,22 @@ export function SettingRow({
             <Feather name={icon} size={20} color={Colors.primary} />
           </View>
         ) : null}
-        <ThemedText type="body">{label}</ThemedText>
+        <View style={styles.textContainer}>
+          <ThemedText type="body">{title}</ThemedText>
+          {subtitle ? (
+            <ThemedText type="caption" style={{ color: theme.textSecondary }}>
+              {subtitle}
+            </ThemedText>
+          ) : null}
+        </View>
       </View>
       <View style={styles.rightSection}>
-        {toggle ? (
+        {type === "toggle" ? (
           <Switch
-            value={toggleValue}
-            onValueChange={handleToggle}
+            value={value === "true"}
+            onValueChange={() => onToggle?.()}
             trackColor={{ false: theme.backgroundTertiary, true: Colors.primaryLight }}
-            thumbColor={toggleValue ? Colors.primary : theme.textSecondary}
+            thumbColor={value === "true" ? Colors.primary : theme.textSecondary}
           />
         ) : (
           <>
@@ -97,7 +95,7 @@ export function SettingRow({
                 {value}
               </ThemedText>
             ) : null}
-            {showChevron && onPress ? (
+            {type === "navigation" ? (
               <Feather name="chevron-right" size={20} color={theme.textSecondary} />
             ) : null}
           </>
@@ -106,9 +104,20 @@ export function SettingRow({
     </>
   );
 
-  if (toggle) {
+  if (type === "toggle") {
     return (
-      <View style={[styles.container, { backgroundColor: theme.backgroundDefault, borderColor: theme.border }]}>
+      <Pressable
+        onPress={handlePress}
+        style={styles.rowContent}
+      >
+        {content}
+      </Pressable>
+    );
+  }
+
+  if (type === "info") {
+    return (
+      <View style={styles.rowContent}>
         {content}
       </View>
     );
@@ -119,11 +128,7 @@ export function SettingRow({
       onPress={handlePress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      style={[
-        styles.container,
-        { backgroundColor: theme.backgroundDefault, borderColor: theme.border },
-        animatedStyle,
-      ]}
+      style={[styles.rowContent, animatedStyle]}
     >
       {content}
     </AnimatedPressable>
@@ -131,19 +136,22 @@ export function SettingRow({
 }
 
 const styles = StyleSheet.create({
-  container: {
+  rowContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     padding: Spacing.m,
-    borderRadius: BorderRadius.m,
-    borderWidth: 1,
     minHeight: 56,
   },
   leftSection: {
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.m,
+    flex: 1,
+  },
+  textContainer: {
+    flex: 1,
+    gap: 2,
   },
   iconContainer: {
     width: 36,

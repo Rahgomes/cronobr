@@ -9,13 +9,13 @@ import Animated, {
   withSpring,
   withSequence,
   withTiming,
-  runOnJS,
   Easing,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
+import { useI18n } from "@/contexts/I18nContext";
 import { Colors, Spacing, BorderRadius, Fonts } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { getSettings, Settings } from "@/lib/storage";
@@ -24,30 +24,7 @@ type ActiveTimerRouteProp = RouteProp<RootStackParamList, "ActiveTimer">;
 
 type Phase = "preparation" | "exercise" | "rest" | "completed";
 
-const phaseConfig = {
-  preparation: {
-    color: Colors.phasePreparation,
-    label: "Preparacao",
-    icon: "clock" as const,
-  },
-  exercise: {
-    color: Colors.phaseExercise,
-    label: "Exercicio",
-    icon: "zap" as const,
-  },
-  rest: {
-    color: Colors.phaseRest,
-    label: "Descanso",
-    icon: "wind" as const,
-  },
-  completed: {
-    color: Colors.success,
-    label: "Concluido!",
-    icon: "check-circle" as const,
-  },
-};
-
-const formatTime = (seconds: number): string => {
+const formatTimerDisplay = (seconds: number): string => {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
@@ -57,7 +34,31 @@ export default function ActiveTimerScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const route = useRoute<ActiveTimerRouteProp>();
+  const { t } = useI18n();
   const { prepTime, exerciseTime, restTime, rounds } = route.params;
+
+  const phaseConfig = {
+    preparation: {
+      color: Colors.phasePreparation,
+      label: t("activeTimer.preparation"),
+      icon: "clock" as const,
+    },
+    exercise: {
+      color: Colors.phaseExercise,
+      label: t("activeTimer.exercise"),
+      icon: "zap" as const,
+    },
+    rest: {
+      color: Colors.phaseRest,
+      label: t("activeTimer.rest"),
+      icon: "wind" as const,
+    },
+    completed: {
+      color: Colors.success,
+      label: t("activeTimer.completed"),
+      icon: "check-circle" as const,
+    },
+  };
 
   const [phase, setPhase] = useState<Phase>("preparation");
   const [currentRound, setCurrentRound] = useState(1);
@@ -82,6 +83,7 @@ export default function ActiveTimerScreen() {
   const backgroundColor = useSharedValue(phaseConfig.preparation.color);
   const progressWidth = useSharedValue(0);
   const shakeX = useSharedValue(0);
+  const phaseIconScale = useSharedValue(1);
 
   const animatedContainerStyle = useAnimatedStyle(() => ({
     backgroundColor: backgroundColor.value,
@@ -96,6 +98,10 @@ export default function ActiveTimerScreen() {
 
   const animatedProgressStyle = useAnimatedStyle(() => ({
     width: `${progressWidth.value}%`,
+  }));
+
+  const animatedPhaseIconStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: phaseIconScale.value }],
   }));
 
   const triggerHaptic = useCallback((type: "light" | "medium" | "heavy" | "notification") => {
@@ -134,19 +140,27 @@ export default function ActiveTimerScreen() {
     );
   }, [shakeX]);
 
+  const animatePhaseTransition = useCallback(() => {
+    phaseIconScale.value = withSequence(
+      withSpring(1.3, { damping: 8, stiffness: 200 }),
+      withSpring(1, { damping: 10, stiffness: 200 })
+    );
+  }, [phaseIconScale]);
+
   const transitionToPhase = useCallback((newPhase: Phase, time: number) => {
     setPhase(newPhase);
     setTimeRemaining(time);
     setTotalPhaseTime(time);
     
     backgroundColor.value = withTiming(phaseConfig[newPhase].color, {
-      duration: 300,
+      duration: 400,
       easing: Easing.inOut(Easing.ease),
     });
     
     progressWidth.value = 0;
+    animatePhaseTransition();
     triggerHaptic("medium");
-  }, [backgroundColor, progressWidth, triggerHaptic]);
+  }, [backgroundColor, progressWidth, triggerHaptic, animatePhaseTransition, phaseConfig]);
 
   useEffect(() => {
     if (!isRunning || isPaused) {
@@ -230,22 +244,30 @@ export default function ActiveTimerScreen() {
       <View style={styles.content}>
         <View style={styles.roundIndicator}>
           <ThemedText type="h2" style={styles.whiteText}>
-            Round {currentRound}/{rounds}
+            {t("activeTimer.round")} {currentRound}/{rounds}
           </ThemedText>
         </View>
 
-        <View style={styles.phaseIndicator}>
+        <Animated.View style={[styles.phaseIndicator, animatedPhaseIconStyle]}>
           <Feather name={config.icon} size={32} color="#FFFFFF" />
           <ThemedText type="h3" style={styles.whiteText}>
             {config.label}
           </ThemedText>
-        </View>
+        </Animated.View>
 
         <Animated.View style={animatedTimerStyle}>
           <ThemedText type="display" style={[styles.timerText, { fontFamily: Fonts?.mono }]}>
-            {phase === "completed" ? "00:00" : formatTime(timeRemaining)}
+            {phase === "completed" ? "00:00" : formatTimerDisplay(timeRemaining)}
           </ThemedText>
         </Animated.View>
+
+        {phase === "completed" ? (
+          <View style={styles.congratsContainer}>
+            <ThemedText type="body" style={[styles.whiteText, styles.congratsText]}>
+              {t("activeTimer.congratulations")}
+            </ThemedText>
+          </View>
+        ) : null}
 
         <View style={styles.progressContainer}>
           <View style={styles.progressBackground}>
@@ -267,7 +289,7 @@ export default function ActiveTimerScreen() {
                   color="#FFFFFF"
                 />
                 <ThemedText type="button" style={styles.whiteText}>
-                  {isPaused ? "CONTINUAR" : "PAUSAR"}
+                  {isPaused ? t("common.resume") : t("common.pause")}
                 </ThemedText>
               </View>
             </Button>
@@ -279,7 +301,7 @@ export default function ActiveTimerScreen() {
               <View style={styles.buttonContent}>
                 <Feather name="square" size={24} color="#FFFFFF" />
                 <ThemedText type="button" style={styles.whiteText}>
-                  PARAR
+                  {t("common.stop")}
                 </ThemedText>
               </View>
             </Button>
@@ -294,7 +316,7 @@ export default function ActiveTimerScreen() {
               <View style={styles.buttonContent}>
                 <Feather name="check" size={24} color="#FFFFFF" />
                 <ThemedText type="button" style={styles.whiteText}>
-                  FINALIZAR
+                  {t("activeTimer.close")}
                 </ThemedText>
               </View>
             </Button>
@@ -340,6 +362,13 @@ const styles = StyleSheet.create({
   },
   whiteText: {
     color: "#FFFFFF",
+  },
+  congratsContainer: {
+    marginBottom: Spacing.l,
+  },
+  congratsText: {
+    textAlign: "center",
+    opacity: 0.9,
   },
   progressContainer: {
     width: "80%",

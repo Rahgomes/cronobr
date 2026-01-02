@@ -11,26 +11,19 @@ import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
 import { NumericStepper } from "@/components/NumericStepper";
 import { useTheme } from "@/hooks/useTheme";
+import { useI18n } from "@/contexts/I18nContext";
 import { Colors, Spacing } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { getTimerConfig, saveTimerConfig, TimerConfig } from "@/lib/storage";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "TimerConfig">;
 
-const formatTime = (seconds: number): string => {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  if (mins > 0) {
-    return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
-  }
-  return `${secs}s`;
-};
-
 export default function TimerConfigScreen() {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const navigation = useNavigation<NavigationProp>();
   const { theme } = useTheme();
+  const { t, formatTime } = useI18n();
 
   const [config, setConfig] = useState<TimerConfig>({
     prepTime: 10,
@@ -93,13 +86,13 @@ export default function TimerConfigScreen() {
       >
         <View style={styles.heroSection}>
           <ThemedText type="bodySmall" style={{ color: theme.textSecondary, textAlign: "center" }}>
-            Seu parceiro de treino
+            {t("timerConfig.subtitle")}
           </ThemedText>
         </View>
 
         <View style={styles.totalTimeCard}>
           <ThemedText type="caption" style={{ color: theme.textSecondary }}>
-            Tempo total estimado
+            {t("timerConfig.estimatedTime")}
           </ThemedText>
           <ThemedText type="h2" style={{ color: Colors.primary }}>
             {formatTime(totalTime)}
@@ -111,33 +104,36 @@ export default function TimerConfigScreen() {
             value={config.prepTime}
             onValueChange={(v) => handleConfigChange("prepTime", v)}
             min={5}
-            max={60}
+            max={120}
             step={5}
-            label="Preparacao"
+            label={t("timerConfig.preparation")}
             icon="clock"
             formatValue={formatTime}
+            isTimeInput={true}
           />
 
           <NumericStepper
             value={config.exerciseTime}
             onValueChange={(v) => handleConfigChange("exerciseTime", v)}
-            min={10}
-            max={300}
+            min={5}
+            max={600}
             step={5}
-            label="Exercicio"
+            label={t("timerConfig.exercise")}
             icon="zap"
             formatValue={formatTime}
+            isTimeInput={true}
           />
 
           <NumericStepper
             value={config.restTime}
             onValueChange={(v) => handleConfigChange("restTime", v)}
             min={5}
-            max={180}
+            max={300}
             step={5}
-            label="Descanso"
+            label={t("timerConfig.rest")}
             icon="wind"
             formatValue={formatTime}
+            isTimeInput={true}
           />
 
           <NumericStepper
@@ -146,9 +142,10 @@ export default function TimerConfigScreen() {
             min={1}
             max={50}
             step={1}
-            label="Rounds"
+            label={t("timerConfig.rounds")}
             icon="repeat"
             formatValue={(v) => `${v}x`}
+            isTimeInput={false}
           />
         </View>
       </ScrollView>
@@ -163,7 +160,7 @@ export default function TimerConfigScreen() {
         ]}
       >
         <Button onPress={handleStart} style={styles.startButton}>
-          INICIAR
+          {t("common.start")}
         </Button>
       </View>
     </View>

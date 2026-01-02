@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { View, StyleSheet, Pressable, TextInput, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
@@ -14,24 +14,23 @@ import * as Haptics from "expo-haptics";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useI18n } from "@/contexts/I18nContext";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { getProfile, saveProfile, Profile } from "@/lib/storage";
-
-const avatarIcons: (keyof typeof Feather.glyphMap)[] = ["activity", "user", "clock"];
-const avatarLabels = ["Halter", "Atleta", "Cronometro"];
+import { avatars, getAvatarLabel } from "@/constants/avatars";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 function AvatarOption({
-  icon,
-  label,
+  avatar,
   selected,
   onPress,
+  language,
 }: {
-  icon: keyof typeof Feather.glyphMap;
-  label: string;
+  avatar: typeof avatars[0];
   selected: boolean;
   onPress: () => void;
+  language: string;
 }) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
@@ -41,7 +40,7 @@ function AvatarOption({
   }));
 
   const handlePressIn = () => {
-    scale.value = withSpring(0.95, { damping: 15, stiffness: 200 });
+    scale.value = withSpring(0.92, { damping: 15, stiffness: 200 });
   };
 
   const handlePressOut = () => {
@@ -71,9 +70,11 @@ function AvatarOption({
       ]}
     >
       <View style={[styles.avatarIconContainer, { backgroundColor: Colors.primaryLight + "20" }]}>
-        <Feather name={icon} size={32} color={Colors.primary} />
+        <Feather name={avatar.icon} size={28} color={Colors.primary} />
       </View>
-      <ThemedText type="bodySmall">{label}</ThemedText>
+      <ThemedText type="caption" numberOfLines={1}>
+        {getAvatarLabel(avatar.labelKey, language)}
+      </ThemedText>
     </AnimatedPressable>
   );
 }
@@ -82,12 +83,15 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { theme } = useTheme();
+  const { t, language } = useI18n();
 
   const [profile, setProfile] = useState<Profile>({
-    name: "Atleta",
+    name: t("profile.athlete"),
     avatarIndex: 0,
   });
   const [hasChanges, setHasChanges] = useState(false);
+  const [inputFocused, setInputFocused] = useState(false);
+  const [nameError, setNameError] = useState(false);
 
   const loadProfile = useCallback(async () => {
     const loadedProfile = await getProfile();
@@ -98,10 +102,19 @@ export default function ProfileScreen() {
     useCallback(() => {
       loadProfile();
       setHasChanges(false);
+      setNameError(false);
     }, [loadProfile])
   );
 
   const handleSave = useCallback(async () => {
+    if (!profile.name.trim()) {
+      setNameError(true);
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+      return;
+    }
+    
     await saveProfile(profile);
     if (Platform.OS !== "web") {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -111,28 +124,35 @@ export default function ProfileScreen() {
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
+      headerTitle: t("profile.title"),
       headerRight: () => (
         <HeaderButton
           onPress={handleSave}
           pressColor={Colors.primary + "20"}
         >
           <ThemedText type="button" style={{ color: Colors.primary }}>
-            Salvar
+            {t("common.save")}
           </ThemedText>
         </HeaderButton>
       ),
     });
-  }, [navigation, handleSave]);
+  }, [navigation, handleSave, t]);
 
   const handleNameChange = (text: string) => {
     setProfile((prev) => ({ ...prev, name: text }));
     setHasChanges(true);
+    if (text.trim()) {
+      setNameError(false);
+    }
   };
 
   const handleAvatarSelect = (index: number) => {
     setProfile((prev) => ({ ...prev, avatarIndex: index }));
     setHasChanges(true);
   };
+
+  const maleAvatars = avatars.filter((a) => a.gender === "male");
+  const femaleAvatars = avatars.filter((a) => a.gender === "female");
 
   return (
     <KeyboardAwareScrollViewCompat
@@ -145,42 +165,70 @@ export default function ProfileScreen() {
       scrollIndicatorInsets={{ bottom: insets.bottom }}
     >
       <ThemedText type="caption" style={[styles.sectionTitle, { color: theme.textSecondary }]}>
-        AVATAR
+        {t("profile.avatar")}
       </ThemedText>
 
       <View style={styles.avatarGrid}>
-        {avatarIcons.map((icon, index) => (
+        {maleAvatars.map((avatar) => (
           <AvatarOption
-            key={icon}
-            icon={icon}
-            label={avatarLabels[index]}
-            selected={profile.avatarIndex === index}
-            onPress={() => handleAvatarSelect(index)}
+            key={avatar.id}
+            avatar={avatar}
+            selected={profile.avatarIndex === avatar.id}
+            onPress={() => handleAvatarSelect(avatar.id)}
+            language={language}
+          />
+        ))}
+      </View>
+
+      <View style={styles.avatarGrid}>
+        {femaleAvatars.map((avatar) => (
+          <AvatarOption
+            key={avatar.id}
+            avatar={avatar}
+            selected={profile.avatarIndex === avatar.id}
+            onPress={() => handleAvatarSelect(avatar.id)}
+            language={language}
           />
         ))}
       </View>
 
       <ThemedText type="caption" style={[styles.sectionTitle, { color: theme.textSecondary }]}>
-        NOME
+        {t("profile.name")}
       </ThemedText>
 
       <View
         style={[
           styles.inputContainer,
-          { backgroundColor: theme.backgroundDefault, borderColor: theme.border },
+          {
+            backgroundColor: theme.backgroundDefault,
+            borderColor: nameError ? Colors.error : inputFocused ? Colors.primary : theme.border,
+            borderWidth: inputFocused || nameError ? 2 : 1,
+          },
         ]}
       >
-        <Feather name="user" size={20} color={theme.textSecondary} />
+        <Feather 
+          name="user" 
+          size={20} 
+          color={nameError ? Colors.error : inputFocused ? Colors.primary : theme.textSecondary} 
+        />
         <TextInput
           style={[styles.input, { color: theme.text }]}
           value={profile.name}
           onChangeText={handleNameChange}
-          placeholder="Digite seu nome"
+          placeholder={t("profile.namePlaceholder")}
           placeholderTextColor={theme.textSecondary}
           autoCapitalize="words"
           autoCorrect={false}
+          onFocus={() => setInputFocused(true)}
+          onBlur={() => setInputFocused(false)}
         />
       </View>
+
+      {nameError ? (
+        <ThemedText type="caption" style={[styles.errorText, { color: Colors.error }]}>
+          {t("profile.namePlaceholder")}
+        </ThemedText>
+      ) : null}
     </KeyboardAwareScrollViewCompat>
   );
 }
@@ -190,22 +238,26 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.s,
     marginLeft: Spacing.s,
     letterSpacing: 1,
+    marginTop: Spacing.m,
   },
   avatarGrid: {
     flexDirection: "row",
-    gap: Spacing.m,
-    marginBottom: Spacing.l,
+    flexWrap: "wrap",
+    gap: Spacing.s,
+    marginBottom: Spacing.m,
   },
   avatarOption: {
-    flex: 1,
+    width: "30%",
+    aspectRatio: 1,
     alignItems: "center",
-    padding: Spacing.m,
+    justifyContent: "center",
+    padding: Spacing.s,
     borderRadius: BorderRadius.m,
-    gap: Spacing.s,
+    gap: Spacing.xs,
   },
   avatarIconContainer: {
-    width: 64,
-    height: 64,
+    width: 48,
+    height: 48,
     borderRadius: BorderRadius.round,
     alignItems: "center",
     justifyContent: "center",
@@ -215,12 +267,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: Spacing.m,
     borderRadius: BorderRadius.m,
-    borderWidth: 1,
     gap: Spacing.m,
   },
   input: {
     flex: 1,
     fontSize: 16,
     padding: 0,
+  },
+  errorText: {
+    marginTop: Spacing.s,
+    marginLeft: Spacing.s,
   },
 });
