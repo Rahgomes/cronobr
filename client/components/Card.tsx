@@ -80,18 +80,19 @@ export function Card({
         styles.card,
         {
           backgroundColor: cardBackgroundColor,
+          borderColor: theme.border,
         },
         animatedStyle,
         style,
       ]}
     >
       {title ? (
-        <ThemedText type="h4" style={styles.cardTitle}>
+        <ThemedText type="h3" style={styles.cardTitle}>
           {title}
         </ThemedText>
       ) : null}
       {description ? (
-        <ThemedText type="small" style={styles.cardDescription}>
+        <ThemedText type="bodySmall" style={styles.cardDescription}>
           {description}
         </ThemedText>
       ) : null}
@@ -102,11 +103,12 @@ export function Card({
 
 const styles = StyleSheet.create({
   card: {
-    padding: Spacing.xl,
-    borderRadius: BorderRadius["2xl"],
+    padding: Spacing.m,
+    borderRadius: BorderRadius.m,
+    borderWidth: 1,
   },
   cardTitle: {
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.s,
   },
   cardDescription: {
     opacity: 0.7,
