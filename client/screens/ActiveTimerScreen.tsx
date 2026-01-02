@@ -185,7 +185,13 @@ export default function ActiveTimerScreen() {
 
         if (newTime <= 0) {
           if (phase === "preparation") {
-            transitionToPhase("exercise", exerciseTime);
+            if (rounds === 0) {
+              transitionToPhase("completed", 0);
+              setIsRunning(false);
+              triggerHaptic("notification");
+            } else {
+              transitionToPhase("exercise", exerciseTime);
+            }
           } else if (phase === "exercise") {
             shakeTimer();
             if (currentRound < rounds) {
@@ -244,7 +250,7 @@ export default function ActiveTimerScreen() {
       <View style={styles.content}>
         <View style={styles.roundIndicator}>
           <ThemedText type="h2" style={styles.whiteText}>
-            {t("activeTimer.round")} {currentRound}/{rounds}
+            {rounds > 0 ? `${t("activeTimer.round")} ${currentRound}/${rounds}` : t("activeTimer.preparation")}
           </ThemedText>
         </View>
 

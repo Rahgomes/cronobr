@@ -9,7 +9,9 @@ import { HeaderButton } from "@react-navigation/elements";
 
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
-import { NumericStepper } from "@/components/NumericStepper";
+import { ConfigCard } from "@/components/ConfigCard";
+import { TimePickerModal } from "@/components/TimePickerModal";
+import { RoundsPickerModal } from "@/components/RoundsPickerModal";
 import { useTheme } from "@/hooks/useTheme";
 import { useI18n } from "@/contexts/I18nContext";
 import { Colors, Spacing } from "@/constants/theme";
@@ -17,6 +19,8 @@ import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { getTimerConfig, saveTimerConfig, TimerConfig } from "@/lib/storage";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "TimerConfig">;
+
+type ModalType = "prep" | "exercise" | "rest" | "rounds" | null;
 
 export default function TimerConfigScreen() {
   const insets = useSafeAreaInsets();
@@ -31,6 +35,9 @@ export default function TimerConfigScreen() {
     restTime: 15,
     rounds: 5,
   });
+
+  const [activeModal, setActiveModal] = useState<ModalType>(null);
+  const [highlightedCard, setHighlightedCard] = useState<string | null>(null);
 
   const loadConfig = useCallback(async () => {
     const loadedConfig = await getTimerConfig();
@@ -60,6 +67,8 @@ export default function TimerConfigScreen() {
     const newConfig = { ...config, [key]: value };
     setConfig(newConfig);
     await saveTimerConfig({ [key]: value });
+    setHighlightedCard(key);
+    setTimeout(() => setHighlightedCard(null), 300);
   };
 
   const handleStart = () => {
@@ -71,7 +80,20 @@ export default function TimerConfigScreen() {
     });
   };
 
-  const totalTime = config.prepTime + (config.exerciseTime + config.restTime) * config.rounds - config.restTime;
+  const totalTime = config.rounds > 0 
+    ? config.prepTime + (config.exerciseTime + config.restTime) * config.rounds - config.restTime
+    : 0;
+
+  const formatDisplayTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins > 0 && secs > 0) {
+      return `${mins}m ${secs}s`;
+    } else if (mins > 0) {
+      return `${mins}m`;
+    }
+    return `${secs}s`;
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
@@ -95,57 +117,41 @@ export default function TimerConfigScreen() {
             {t("timerConfig.estimatedTime")}
           </ThemedText>
           <ThemedText type="h2" style={{ color: Colors.primary }}>
-            {formatTime(totalTime)}
+            {config.rounds === 0 ? formatDisplayTime(config.prepTime) : formatTime(totalTime)}
           </ThemedText>
         </View>
 
-        <View style={styles.steppersContainer}>
-          <NumericStepper
-            value={config.prepTime}
-            onValueChange={(v) => handleConfigChange("prepTime", v)}
-            min={5}
-            max={120}
-            step={5}
+        <View style={styles.cardsContainer}>
+          <ConfigCard
             label={t("timerConfig.preparation")}
+            value={formatDisplayTime(config.prepTime)}
             icon="clock"
-            formatValue={formatTime}
-            isTimeInput={true}
+            onPress={() => setActiveModal("prep")}
+            highlightBorder={highlightedCard === "prepTime"}
           />
 
-          <NumericStepper
-            value={config.exerciseTime}
-            onValueChange={(v) => handleConfigChange("exerciseTime", v)}
-            min={5}
-            max={600}
-            step={5}
+          <ConfigCard
             label={t("timerConfig.exercise")}
+            value={formatDisplayTime(config.exerciseTime)}
             icon="zap"
-            formatValue={formatTime}
-            isTimeInput={true}
+            onPress={() => setActiveModal("exercise")}
+            highlightBorder={highlightedCard === "exerciseTime"}
           />
 
-          <NumericStepper
-            value={config.restTime}
-            onValueChange={(v) => handleConfigChange("restTime", v)}
-            min={5}
-            max={300}
-            step={5}
+          <ConfigCard
             label={t("timerConfig.rest")}
+            value={formatDisplayTime(config.restTime)}
             icon="wind"
-            formatValue={formatTime}
-            isTimeInput={true}
+            onPress={() => setActiveModal("rest")}
+            highlightBorder={highlightedCard === "restTime"}
           />
 
-          <NumericStepper
-            value={config.rounds}
-            onValueChange={(v) => handleConfigChange("rounds", v)}
-            min={1}
-            max={50}
-            step={1}
+          <ConfigCard
             label={t("timerConfig.rounds")}
+            value={`${config.rounds}x`}
             icon="repeat"
-            formatValue={(v) => `${v}x`}
-            isTimeInput={false}
+            onPress={() => setActiveModal("rounds")}
+            highlightBorder={highlightedCard === "rounds"}
           />
         </View>
       </ScrollView>
@@ -163,6 +169,43 @@ export default function TimerConfigScreen() {
           {t("common.start")}
         </Button>
       </View>
+
+      <TimePickerModal
+        visible={activeModal === "prep"}
+        onClose={() => setActiveModal(null)}
+        onConfirm={(seconds) => handleConfigChange("prepTime", Math.max(5, seconds))}
+        initialValue={config.prepTime}
+        title={t("timerConfig.preparation")}
+        maxMinutes={10}
+      />
+
+      <TimePickerModal
+        visible={activeModal === "exercise"}
+        onClose={() => setActiveModal(null)}
+        onConfirm={(seconds) => handleConfigChange("exerciseTime", Math.max(5, seconds))}
+        initialValue={config.exerciseTime}
+        title={t("timerConfig.exercise")}
+        maxMinutes={60}
+      />
+
+      <TimePickerModal
+        visible={activeModal === "rest"}
+        onClose={() => setActiveModal(null)}
+        onConfirm={(seconds) => handleConfigChange("restTime", Math.max(5, seconds))}
+        initialValue={config.restTime}
+        title={t("timerConfig.rest")}
+        maxMinutes={30}
+      />
+
+      <RoundsPickerModal
+        visible={activeModal === "rounds"}
+        onClose={() => setActiveModal(null)}
+        onConfirm={(rounds) => handleConfigChange("rounds", rounds)}
+        initialValue={config.rounds}
+        title={t("timerConfig.rounds")}
+        min={0}
+        max={99}
+      />
     </View>
   );
 }
@@ -183,7 +226,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.l,
     padding: Spacing.m,
   },
-  steppersContainer: {
+  cardsContainer: {
     gap: Spacing.m,
   },
   startButtonContainer: {

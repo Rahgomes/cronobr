@@ -1,0 +1,104 @@
+# FUNÇÃO
+Você é um desenvolvedor especialista em React Native.  
+Deve implementar a versão 3 do aplicativo CronôBR – um timer de treinos totalmente personalizável.
+
+---
+
+# OBJETIVO DA V3
+Criar uma nova interface de edição de tempos e rounds baseada em **modais com seletores** de minutos/segundos e dezenas/unidades.
+
+O usuário deve ser capaz de configurar:
+- Tempo de preparação
+- Tempo de exercício
+- Tempo de descanso
+- Quantidade de rounds
+
+**Todos usando modais com seletores numéricos precisos.**
+
+---
+
+# NOVAS REGRAS DA V3
+
+## 1. Remover botões de +5 e -5 segundos
+Remover completamente os botões de incremento e decremento.
+
+## 2. O card inteiro vira um botão
+Cada card (Preparação / Exercício / Descanso / Rounds) deve ser clicável.  
+Ao tocar nele, abre um modal com o seletor adequado.
+
+## 3. Modal de seleção de tempo (minutos/segundos)
+Criar um modal estiloso contendo dois seletores:
+
+- Minutos: **0 a 99**
+- Segundos: **0 a 59**
+
+Esse seletor pode ser:
+- roda estilo iOS (wheel picker), **preferencial**  
+ou
+- lista snapada  
+ou
+- dois carrosséis verticais independentes
+
+Ao confirmar:
+- fechar modal
+- atualizar valor no card
+- recalcular o tempo total
+
+## 4. Modal de seleção de rounds (0–99)
+Criar seletor semelhante, mas agora:
+- dezenas: 0 a 9
+- unidades: 0 a 9
+
+Ou
+- um único seletor rolável de 0 a 99 (aceitável)
+
+---
+
+# FUNCIONALIDADES EXISTENTES (não remover)
+Preserve e mantenha funcionando:
+- Timer (preparação → exercício → descanso)
+- Sons
+- Vibração
+- Temas (sistema / claro / escuro)
+- Idiomas: PT, EN, ES, FR
+- Perfil com nome + avatar salvo em armazenamento local
+- Tela de configurações
+- Animações entre fases
+- Persistência via AsyncStorage (ou equivalente Expo)
+
+---
+
+# REQUISITOS DE DESIGN
+- Modal deve ter:
+  - fundo semitransparente
+  - container arredondado
+  - botão “Cancelar” e “OK”
+  - suporte a light/dark/system
+- Tempo exibido no card deve ajustar automaticamente:
+  - “30s”
+  - “1m 40s”
+  - “2m”
+- Rounds exibidos como:
+  - “5x”
+  - “12x”
+
+---
+
+# ANIMAÇÕES OBRIGATÓRIAS
+Adicionar microinterações suaves:
+- fade‑in/down no modal
+- scale leve no card ao abrir modal
+- highlight na borda por 150ms ao alterar valor
+- haptic light ao confirmar
+
+---
+
+# LÓGICA INTERNA DO TIMER
+Não alterar fluxo:
+1. preparação  
+2. exercício  
+3. descanso  
+4. próximo round  
+5. finalizar
+
+Timer deve recalcular automaticamente quando valores forem alterados antes do START.

@@ -66,8 +66,8 @@ export const translations = {
       fr: "Fran\u00e7ais",
     },
     time: {
-      seconds: "s",
-      minutes: "m",
+      seconds: "seg",
+      minutes: "min",
     },
     error: {
       title: "Algo deu errado",
@@ -137,8 +137,8 @@ export const translations = {
       fr: "French",
     },
     time: {
-      seconds: "s",
-      minutes: "m",
+      seconds: "sec",
+      minutes: "min",
     },
     error: {
       title: "Something went wrong",
@@ -208,8 +208,8 @@ export const translations = {
       fr: "Franc\u00e9s",
     },
     time: {
-      seconds: "s",
-      minutes: "m",
+      seconds: "seg",
+      minutes: "min",
     },
     error: {
       title: "Algo sali\u00f3 mal",
@@ -279,8 +279,8 @@ export const translations = {
       fr: "Fran\u00e7ais",
     },
     time: {
-      seconds: "s",
-      minutes: "m",
+      seconds: "sec",
+      minutes: "min",
     },
     error: {
       title: "Une erreur s'est produite",
