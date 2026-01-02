@@ -1,0 +1,74 @@
+# CONTEXTO E OBJETIVO
+Você é um desenvolvedor especialista em React Native e precisa criar um aplicativo de timer para treinos chamado **"CronôBR - Seu parceiro de treino"**.
+
+Este é um MVP funcional com foco em usabilidade, design atraente e experiência fluida. O app será usado para cronometrar exercícios com rounds, descansos e preparação.
+
+---
+
+# ESPECIFICAÇÕES TÉCNICAS
+
+## Stack Tecnológica
+- **Framework:** React Native (versão mais recente estável)
+- **Gerenciamento de estado:** React Hooks (useState, useEffect, useRef)
+- **Navegação:** React Navigation (se necessário para futuras telas)
+- **Internacionalização:** react-i18next (estrutura base para PT-BR, EN, ES, FR)
+- **Áudio/Vibração:** expo-av e expo-haptics (ou react-native-sound + Vibration API)
+- **Estilização:** StyleSheet nativo com tema consistente
+
+---
+
+# FUNCIONALIDADES OBRIGATÓRIAS
+
+## 1. Configuração de Treino (Tela Principal)
+**Inputs numéricos com steppers (+/-) para:**
+- ⏱️ **Tempo de Preparação** (Get Ready): 5-60 segundos (padrão: 10s)
+- 💪 **Tempo de Exercício** (Round): 10-300 segundos (padrão: 30s)
+- 😮‍💨 **Tempo de Descanso**: 5-180 segundos (padrão: 15s)
+- 🔄 **Quantidade de Rounds**: 1-50 (padrão: 5)
+
+**Validações:**
+- Todos os valores devem ser > 0
+- Feedback visual se valor inválido
+
+## 2. Controles de Timer
+**Botões principais:**
+- ▶️ **START** - Inicia o cronômetro (muda para PAUSE quando ativo)
+- ⏸️ **PAUSE/RESUME** - Pausa e retoma o timer
+- ⏹️ **STOP** - Para completamente e reseta para configuração inicial
+
+**Estados visuais:**
+- Botões devem ter cores distintas (verde/amarelo/vermelho)
+- Efeitos de pressão (scale animation + haptic feedback)
+- Desabilitar botões quando não aplicável (ex: PAUSE quando parado)
+
+## 3. Indicadores Visuais Durante o Treino
+**Display central deve mostrar:**
+- ⏲️ **Timer grande e legível** (formato MM:SS)
+- 📍 **Fase atual** com cor de fundo dinâmica:
+  - 🟡 Amarelo: Preparação
+  - 🟢 Verde: Exercício
+  - 🔵 Azul: Descanso
+- 🔢 **Round atual / Total** (ex: "Round 3/5")
+- 📊 **Barra de progresso** do round atual
+
+**Animações suaves:**
+- Transição de cores entre fases (fade)
+- Pulso no timer quando faltam 3 segundos
+- Shake animation ao completar round
+
+## 4. Alertas Sonoros e Táteis
+**Sons distintos para cada evento:**
+- 🔔 **Bip curto (1x):** Início da preparação
+- 🔔 **Bip duplo (2x):** Início do exercício
+- 🔔 **Bip triplo (3x):** Início do descanso
+- 🎉 **Som de conclusão:** Treino finalizado
+
+**Vibração:**
+- Vibração curta (200ms) em cada transição de fase
+- Vibração longa (500ms) ao concluir todos os rounds
+
+## 5. Internacionalização (i18n)
+**Estrutura base com react-i18next:**
+- Idiomas: PT-BR (padrão), EN, ES, FR
+- Strings traduzíveis: labels dos inputs, botões, fases
+- **MVP:** Implementar apenas PT-BR, deixar estrutura pronta para outros idiomas
