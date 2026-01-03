@@ -1,0 +1,111 @@
+# CONTEXTO
+Você é um desenvolvedor especialista em React Native.
+Sua tarefa é implementar a Versão 4 do aplicativo CronôBR.
+
+A V4 adiciona:
+1. Ajustes nos tempos (permitir 1–4s sem correção automática)
+2. Tela de Pré‑visualização do treino com timeline animada
+3. Menu hamburger com nova área de Configurações de Som
+4. Configurações completas de áudio (incluindo teste de som)
+5. Volume configurável para cada tipo de som
+
+Todos esses recursos **devem seguir o design atual**, mantendo a estética sólida e minimalista do CronôBR.
+
+---
+
+# OBJETIVOS DA V4
+
+## 1. Permitir tempos de 1–4 segundos
+Atualmente tempos abaixo de 5s sobem automaticamente para 5s.
+Esse comportamento deve ser removido.
+
+Novos requisitos:
+- Preparação / Exercício / Descanso aceitam valores entre 1s e 99m59s
+- Caso o usuário coloque 0s → mostrar aviso (“O tempo deve ser maior que zero”)
+- Persistir corretamente o valor escolhido
+
+---
+
+## 2. Pré‑visualização do treino (Timeline Animada)
+Criar uma nova tela chamada “Pré‑visualização”.
+Acessos:
+- Botão “Pré‑visualizar treino” na tela inicial OU parte inferior dos cards de configuração
+
+A timeline deve:
+- Exibir blocos animados representando:
+  • preparação  
+  • exercício  
+  • descanso  
+  • rounds subsequentes  
+- Cada fase deve ter cor igual ao timer real:
+  • amarelo = preparação  
+  • verde = exercício  
+  • azul = descanso  
+- Mostrar duração de cada bloco
+- Mostrar tempo total
+- Usar animações leves:
+  • fade  
+  • slide  
+  • scale suave
+
+Essa tela não inicia o treino; é apenas uma simulação visual.
+
+---
+
+## 3. Menu “hamburger”
+Adicionar um botão de menu (ícone “☰”) no canto superior esquerdo da tela inicial.
+
+Ao tocar:
+- Abrir um drawer lateral ou modal deslizante
+- O primeiro item deve ser: **Configurações de Som**
+
+---
+
+## 4. Tela “Configurações de Som”
+Essa nova tela deve conter:
+
+### 4.1 Categorias de som configuráveis
+Para cada categoria deve existir:
+- Um botão estilo card (igual ao da home)
+- Ao tocar → abrir modal selecionando entre:
+  • Som 1  
+  • Som 2  
+  • Som 3  
+  • Sem Som  
+
+Categorias:
+1. Som de contagem regressiva (últimos 5 segundos)
+2. Som do início do round
+3. Som do fim do round
+4. Som da metade do round
+5. Som antes do fim do round
+   - Aqui o usuário deve escolher:
+     • o som  
+     • quantos segundos antes do fim ele quer que toque (modal igual ao de segundos)
+
+### 4.2 Testar som
+Em cada modal de seleção de som:
+- Ter um botão “Testar som”
+- O som selecionado deve tocar imediatamente
+
+A interface deve ser intuitiva e minimalista.
+
+---
+
+## 5. Controle de Volume
+Adicionar slider para ajustar volume geral dos sons do app.
+
+Requisitos:
+- Slider 0 a 100%
+- Valor salvo em AsyncStorage
+- Volume aplicado em todos os sons tocados pelo app
+
+Opcional: exibir valor numérico ao lado (0–100)
+
+---
+
+# DESIGN & UX
+- Respeitar temas (claro / escuro / sistema)
+- Usar mesma paleta e identidade visual
+- Cards devem ter animação leve ao toque
+- Modais devem seguir estilo atual (bordas arredondadas, fundo blur/dim)

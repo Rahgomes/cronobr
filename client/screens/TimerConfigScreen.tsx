@@ -1,11 +1,17 @@
 import React, { useState, useCallback } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import { View, StyleSheet, ScrollView, Modal, Pressable, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import { HeaderButton } from "@react-navigation/elements";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
 
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
@@ -14,13 +20,85 @@ import { TimePickerModal } from "@/components/TimePickerModal";
 import { RoundsPickerModal } from "@/components/RoundsPickerModal";
 import { useTheme } from "@/hooks/useTheme";
 import { useI18n } from "@/contexts/I18nContext";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { getTimerConfig, saveTimerConfig, TimerConfig } from "@/lib/storage";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "TimerConfig">;
 
 type ModalType = "prep" | "exercise" | "rest" | "rounds" | null;
+
+function MenuDrawer({
+  visible,
+  onClose,
+  onNavigate,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onNavigate: (screen: "SoundSettings" | "Preview") => void;
+}) {
+  const { theme } = useTheme();
+  const { t } = useI18n();
+  const insets = useSafeAreaInsets();
+  const translateX = useSharedValue(-300);
+  const opacity = useSharedValue(0);
+
+  React.useEffect(() => {
+    if (visible) {
+      opacity.value = withTiming(1, { duration: 200 });
+      translateX.value = withTiming(0, { duration: 250 });
+    } else {
+      opacity.value = withTiming(0, { duration: 150 });
+      translateX.value = withTiming(-300, { duration: 200 });
+    }
+  }, [visible]);
+
+  const backdropStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  const drawerStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  const menuItems = [
+    { key: "SoundSettings" as const, icon: "volume-2" as const, label: t("menu.soundSettings") },
+    { key: "Preview" as const, icon: "eye" as const, label: t("menu.preview") },
+  ];
+
+  return (
+    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+      <Animated.View style={[styles.menuBackdrop, backdropStyle]}>
+        <Pressable style={styles.menuBackdropPress} onPress={onClose} />
+        <Animated.View
+          style={[styles.menuDrawer, { backgroundColor: theme.backgroundDefault, paddingTop: insets.top + Spacing.l }, drawerStyle]}
+        >
+          <ThemedText type="h2" style={styles.menuTitle}>Menu</ThemedText>
+          <View style={styles.menuItems}>
+            {menuItems.map((item) => (
+              <Pressable
+                key={item.key}
+                onPress={() => {
+                  if (Platform.OS !== "web") {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }
+                  onNavigate(item.key);
+                }}
+                style={({ pressed }) => [
+                  styles.menuItem,
+                  { backgroundColor: pressed ? theme.backgroundSecondary : "transparent" },
+                ]}
+              >
+                <Feather name={item.icon} size={22} color={Colors.primary} />
+                <ThemedText type="body">{item.label}</ThemedText>
+              </Pressable>
+            ))}
+          </View>
+        </Animated.View>
+      </Animated.View>
+    </Modal>
+  );
+}
 
 export default function TimerConfigScreen() {
   const insets = useSafeAreaInsets();
@@ -38,6 +116,7 @@ export default function TimerConfigScreen() {
 
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [highlightedCard, setHighlightedCard] = useState<string | null>(null);
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const loadConfig = useCallback(async () => {
     const loadedConfig = await getTimerConfig();
@@ -52,6 +131,14 @@ export default function TimerConfigScreen() {
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
+      headerLeft: () => (
+        <HeaderButton
+          onPress={() => setMenuVisible(true)}
+          pressColor={Colors.primary + "20"}
+        >
+          <Feather name="menu" size={24} color={theme.text} />
+        </HeaderButton>
+      ),
       headerRight: () => (
         <HeaderButton
           onPress={() => navigation.navigate("Settings")}
@@ -62,6 +149,20 @@ export default function TimerConfigScreen() {
       ),
     });
   }, [navigation, theme]);
+
+  const handleMenuNavigate = (screen: "SoundSettings" | "Preview") => {
+    setMenuVisible(false);
+    if (screen === "SoundSettings") {
+      navigation.navigate("SoundSettings");
+    } else if (screen === "Preview") {
+      navigation.navigate("WorkoutPreview", {
+        prepTime: config.prepTime,
+        exerciseTime: config.exerciseTime,
+        restTime: config.restTime,
+        rounds: config.rounds,
+      });
+    }
+  };
 
   const handleConfigChange = async (key: keyof TimerConfig, value: number) => {
     const newConfig = { ...config, [key]: value };
@@ -97,6 +198,11 @@ export default function TimerConfigScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
+      <MenuDrawer
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        onNavigate={handleMenuNavigate}
+      />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={{
@@ -154,6 +260,25 @@ export default function TimerConfigScreen() {
             highlightBorder={highlightedCard === "rounds"}
           />
         </View>
+
+        <Pressable
+          onPress={() => navigation.navigate("WorkoutPreview", {
+            prepTime: config.prepTime,
+            exerciseTime: config.exerciseTime,
+            restTime: config.restTime,
+            rounds: config.rounds,
+          })}
+          style={({ pressed }) => [
+            styles.previewButton,
+            { backgroundColor: theme.backgroundSecondary },
+            pressed && { opacity: 0.8 },
+          ]}
+        >
+          <Feather name="eye" size={18} color={Colors.primary} />
+          <ThemedText type="body" style={{ color: Colors.primary }}>
+            {t("menu.preview")}
+          </ThemedText>
+        </Pressable>
       </ScrollView>
 
       <View
@@ -173,7 +298,7 @@ export default function TimerConfigScreen() {
       <TimePickerModal
         visible={activeModal === "prep"}
         onClose={() => setActiveModal(null)}
-        onConfirm={(seconds) => handleConfigChange("prepTime", Math.max(5, seconds))}
+        onConfirm={(seconds) => handleConfigChange("prepTime", Math.max(1, seconds))}
         initialValue={config.prepTime}
         title={t("timerConfig.preparation")}
         maxMinutes={10}
@@ -182,7 +307,7 @@ export default function TimerConfigScreen() {
       <TimePickerModal
         visible={activeModal === "exercise"}
         onClose={() => setActiveModal(null)}
-        onConfirm={(seconds) => handleConfigChange("exerciseTime", Math.max(5, seconds))}
+        onConfirm={(seconds) => handleConfigChange("exerciseTime", Math.max(1, seconds))}
         initialValue={config.exerciseTime}
         title={t("timerConfig.exercise")}
         maxMinutes={60}
@@ -191,7 +316,7 @@ export default function TimerConfigScreen() {
       <TimePickerModal
         visible={activeModal === "rest"}
         onClose={() => setActiveModal(null)}
-        onConfirm={(seconds) => handleConfigChange("restTime", Math.max(5, seconds))}
+        onConfirm={(seconds) => handleConfigChange("restTime", Math.max(1, seconds))}
         initialValue={config.restTime}
         title={t("timerConfig.rest")}
         maxMinutes={30}
@@ -229,6 +354,15 @@ const styles = StyleSheet.create({
   cardsContainer: {
     gap: Spacing.m,
   },
+  previewButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.s,
+    padding: Spacing.m,
+    borderRadius: BorderRadius.m,
+    marginTop: Spacing.l,
+  },
   startButtonContainer: {
     position: "absolute",
     bottom: 0,
@@ -239,5 +373,33 @@ const styles = StyleSheet.create({
   },
   startButton: {
     width: "100%",
+  },
+  menuBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  menuBackdropPress: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  menuDrawer: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 280,
+    paddingHorizontal: Spacing.l,
+  },
+  menuTitle: {
+    marginBottom: Spacing.xl,
+  },
+  menuItems: {
+    gap: Spacing.s,
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.m,
+    padding: Spacing.m,
+    borderRadius: BorderRadius.m,
   },
 });

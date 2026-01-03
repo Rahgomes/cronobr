@@ -7,6 +7,8 @@ import TimerConfigScreen from "@/screens/TimerConfigScreen";
 import ActiveTimerScreen from "@/screens/ActiveTimerScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
 import ProfileScreen from "@/screens/ProfileScreen";
+import SoundSettingsScreen from "@/screens/SoundSettingsScreen";
+import WorkoutPreviewScreen from "@/screens/WorkoutPreviewScreen";
 import HeaderTitle from "@/components/HeaderTitle";
 
 export type RootStackParamList = {
@@ -17,8 +19,15 @@ export type RootStackParamList = {
     restTime: number;
     rounds: number;
   };
+  WorkoutPreview: {
+    prepTime: number;
+    exerciseTime: number;
+    restTime: number;
+    rounds: number;
+  };
   Settings: undefined;
   Profile: undefined;
+  SoundSettings: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -60,6 +69,22 @@ export default function RootStackNavigator() {
         options={{
           ...opaqueScreenOptions,
           headerTitle: t("profile.title"),
+        }}
+      />
+      <Stack.Screen
+        name="SoundSettings"
+        component={SoundSettingsScreen}
+        options={{
+          ...opaqueScreenOptions,
+          headerTitle: t("soundSettings.title"),
+        }}
+      />
+      <Stack.Screen
+        name="WorkoutPreview"
+        component={WorkoutPreviewScreen}
+        options={{
+          ...opaqueScreenOptions,
+          headerTitle: t("preview.title"),
         }}
       />
     </Stack.Navigator>

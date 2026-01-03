@@ -4,6 +4,7 @@ const STORAGE_KEYS = {
   SETTINGS: "@cronobr/settings",
   PROFILE: "@cronobr/profile",
   TIMER_CONFIG: "@cronobr/timer_config",
+  SOUND_SETTINGS: "@cronobr/sound_settings",
 };
 
 export interface Settings {
@@ -25,6 +26,18 @@ export interface TimerConfig {
   rounds: number;
 }
 
+export type SoundType = "none" | "beep1" | "beep2" | "beep3";
+
+export interface SoundSettings {
+  countdownSound: SoundType;
+  roundStartSound: SoundType;
+  roundEndSound: SoundType;
+  halfwaySound: SoundType;
+  beforeEndSound: SoundType;
+  beforeEndSeconds: number;
+  volume: number;
+}
+
 const defaultSettings: Settings = {
   soundEnabled: true,
   vibrationEnabled: true,
@@ -42,6 +55,16 @@ const defaultTimerConfig: TimerConfig = {
   exerciseTime: 30,
   restTime: 15,
   rounds: 5,
+};
+
+const defaultSoundSettings: SoundSettings = {
+  countdownSound: "beep1",
+  roundStartSound: "beep2",
+  roundEndSound: "beep3",
+  halfwaySound: "none",
+  beforeEndSound: "none",
+  beforeEndSeconds: 10,
+  volume: 80,
 };
 
 export async function getSettings(): Promise<Settings> {
@@ -107,5 +130,27 @@ export async function saveTimerConfig(config: Partial<TimerConfig>): Promise<voi
     await AsyncStorage.setItem(STORAGE_KEYS.TIMER_CONFIG, JSON.stringify(updated));
   } catch (error) {
     console.error("Error saving timer config:", error);
+  }
+}
+
+export async function getSoundSettings(): Promise<SoundSettings> {
+  try {
+    const json = await AsyncStorage.getItem(STORAGE_KEYS.SOUND_SETTINGS);
+    if (json) {
+      return { ...defaultSoundSettings, ...JSON.parse(json) };
+    }
+  } catch (error) {
+    console.error("Error loading sound settings:", error);
+  }
+  return defaultSoundSettings;
+}
+
+export async function saveSoundSettings(settings: Partial<SoundSettings>): Promise<void> {
+  try {
+    const current = await getSoundSettings();
+    const updated = { ...current, ...settings };
+    await AsyncStorage.setItem(STORAGE_KEYS.SOUND_SETTINGS, JSON.stringify(updated));
+  } catch (error) {
+    console.error("Error saving sound settings:", error);
   }
 }
