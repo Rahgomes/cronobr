@@ -18,7 +18,7 @@ import { Button } from "@/components/Button";
 import { useI18n } from "@/contexts/I18nContext";
 import { Colors, Spacing, BorderRadius, Fonts } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
-import { getSettings, Settings } from "@/lib/storage";
+import { getSettings, Settings, getSoundSettings, SoundSettings, SoundType } from "@/lib/storage";
 
 type ActiveTimerRouteProp = RouteProp<RootStackParamList, "ActiveTimer">;
 
@@ -72,11 +72,22 @@ export default function ActiveTimerScreen() {
     language: "pt-BR",
     theme: "system",
   });
+  const [soundSettings, setSoundSettings] = useState<SoundSettings>({
+    countdownSound: "beep1",
+    roundStartSound: "beep2",
+    roundEndSound: "beep3",
+    halfwaySound: "none",
+    beforeEndSound: "none",
+    beforeEndSeconds: 10,
+    volume: 80,
+  });
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const triggeredEventsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     getSettings().then(setSettings);
+    getSoundSettings().then(setSoundSettings);
   }, []);
   
   const timerScale = useSharedValue(1);
@@ -123,6 +134,55 @@ export default function ActiveTimerScreen() {
     }
   }, [settings.vibrationEnabled]);
 
+  const playSoundEffect = useCallback((soundType: SoundType) => {
+    if (soundType === "none" || !settings.soundEnabled) return;
+    if (Platform.OS !== "web") {
+      switch (soundType) {
+        case "beep1":
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+          break;
+        case "beep2":
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          break;
+        case "beep3":
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          break;
+      }
+    }
+  }, [settings.soundEnabled]);
+
+  const checkAndTriggerSoundEvents = useCallback((
+    currentPhase: Phase,
+    time: number,
+    phaseTotal: number,
+    round: number
+  ) => {
+    const eventKey = `${currentPhase}-${round}-${time}`;
+    if (triggeredEventsRef.current.has(eventKey)) return;
+
+    if (time <= 5 && time > 0 && currentPhase !== "completed") {
+      if (soundSettings.countdownSound !== "none") {
+        playSoundEffect(soundSettings.countdownSound);
+        triggeredEventsRef.current.add(eventKey);
+      }
+    }
+
+    if (soundSettings.beforeEndSound !== "none" && currentPhase !== "completed") {
+      if (time === soundSettings.beforeEndSeconds) {
+        playSoundEffect(soundSettings.beforeEndSound);
+        triggeredEventsRef.current.add(eventKey);
+      }
+    }
+
+    if (currentPhase === "exercise" && soundSettings.halfwaySound !== "none") {
+      const halfway = Math.floor(phaseTotal / 2);
+      if (time === halfway && halfway > 0) {
+        playSoundEffect(soundSettings.halfwaySound);
+        triggeredEventsRef.current.add(eventKey);
+      }
+    }
+  }, [soundSettings, playSoundEffect]);
+
   const pulseTimer = useCallback(() => {
     timerScale.value = withSequence(
       withTiming(1.05, { duration: 200 }),
@@ -147,10 +207,12 @@ export default function ActiveTimerScreen() {
     );
   }, [phaseIconScale]);
 
-  const transitionToPhase = useCallback((newPhase: Phase, time: number) => {
+  const transitionToPhase = useCallback((newPhase: Phase, time: number, fromPhase?: Phase) => {
     setPhase(newPhase);
     setTimeRemaining(time);
     setTotalPhaseTime(time);
+    
+    triggeredEventsRef.current.clear();
     
     backgroundColor.value = withTiming(phaseConfig[newPhase].color, {
       duration: 400,
@@ -160,7 +222,17 @@ export default function ActiveTimerScreen() {
     progressWidth.value = 0;
     animatePhaseTransition();
     triggerHaptic("medium");
-  }, [backgroundColor, progressWidth, triggerHaptic, animatePhaseTransition, phaseConfig]);
+
+    if (newPhase === "exercise" && fromPhase !== undefined) {
+      playSoundEffect(soundSettings.roundStartSound);
+    }
+    if (fromPhase === "exercise" && newPhase === "rest") {
+      playSoundEffect(soundSettings.roundEndSound);
+    }
+    if (fromPhase === "exercise" && newPhase === "completed") {
+      playSoundEffect(soundSettings.roundEndSound);
+    }
+  }, [backgroundColor, progressWidth, triggerHaptic, animatePhaseTransition, phaseConfig, playSoundEffect, soundSettings]);
 
   useEffect(() => {
     if (!isRunning || isPaused) {
@@ -183,27 +255,29 @@ export default function ActiveTimerScreen() {
           triggerHaptic("light");
         }
 
+        checkAndTriggerSoundEvents(phase, newTime, totalPhaseTime, currentRound);
+
         if (newTime <= 0) {
           if (phase === "preparation") {
             if (rounds === 0) {
-              transitionToPhase("completed", 0);
+              transitionToPhase("completed", 0, "preparation");
               setIsRunning(false);
               triggerHaptic("notification");
             } else {
-              transitionToPhase("exercise", exerciseTime);
+              transitionToPhase("exercise", exerciseTime, "preparation");
             }
           } else if (phase === "exercise") {
             shakeTimer();
             if (currentRound < rounds) {
-              transitionToPhase("rest", restTime);
+              transitionToPhase("rest", restTime, "exercise");
             } else {
-              transitionToPhase("completed", 0);
+              transitionToPhase("completed", 0, "exercise");
               setIsRunning(false);
               triggerHaptic("notification");
             }
           } else if (phase === "rest") {
             setCurrentRound((r) => r + 1);
-            transitionToPhase("exercise", exerciseTime);
+            transitionToPhase("exercise", exerciseTime, "rest");
           }
           return prev;
         }
@@ -217,7 +291,7 @@ export default function ActiveTimerScreen() {
         clearInterval(timerRef.current);
       }
     };
-  }, [isRunning, isPaused, phase, currentRound, rounds, exerciseTime, restTime, totalPhaseTime, progressWidth, pulseTimer, shakeTimer, transitionToPhase, triggerHaptic]);
+  }, [isRunning, isPaused, phase, currentRound, rounds, exerciseTime, restTime, totalPhaseTime, progressWidth, pulseTimer, shakeTimer, transitionToPhase, triggerHaptic, checkAndTriggerSoundEvents]);
 
   const handlePauseResume = () => {
     setIsPaused(!isPaused);
