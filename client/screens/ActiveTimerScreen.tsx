@@ -10,12 +10,17 @@ import Animated, {
   withSequence,
   withTiming,
   Easing,
+  FadeIn,
+  FadeOut,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
+import { SilentModeIndicator } from "@/components/SilentModeIndicator";
 import { useI18n } from "@/contexts/I18nContext";
+import { useScreenLock } from "@/contexts/ScreenLockContext";
+import { useSilentMode } from "@/contexts/SilentModeContext";
 import { Colors, Spacing, BorderRadius, Fonts } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { getSettings, Settings, getSoundSettings, SoundSettings, SoundType } from "@/lib/storage";
@@ -36,6 +41,8 @@ export default function ActiveTimerScreen() {
   const route = useRoute<ActiveTimerRouteProp>();
   const { t } = useI18n();
   const { prepTime, exerciseTime, restTime, rounds } = route.params;
+  const { enableScreenLock, disableScreenLock, preventAccidentalTouch } = useScreenLock();
+  const { isSilentMode } = useSilentMode();
 
   const phaseConfig = {
     preparation: {
@@ -66,6 +73,7 @@ export default function ActiveTimerScreen() {
   const [totalPhaseTime, setTotalPhaseTime] = useState(prepTime);
   const [isRunning, setIsRunning] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
+  const [showDoubleTapHint, setShowDoubleTapHint] = useState(false);
   const [settings, setSettings] = useState<Settings>({
     soundEnabled: true,
     vibrationEnabled: true,
@@ -80,16 +88,36 @@ export default function ActiveTimerScreen() {
     beforeEndSound: "none",
     beforeEndSeconds: 10,
     volume: 80,
+    countdownVibration: "short",
+    roundStartVibration: "long",
+    roundEndVibration: "long",
+    halfwayVibration: "short",
+    beforeEndVibration: "pulsed",
   });
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const triggeredEventsRef = useRef<Set<string>>(new Set());
+  const doubleTapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     getSettings().then(setSettings);
     getSoundSettings().then(setSoundSettings);
   }, []);
-  
+
+  // Gerenciar screen lock quando timer está rodando
+  useEffect(() => {
+    if (isRunning && !isPaused && phase !== "completed") {
+      enableScreenLock();
+    } else {
+      disableScreenLock();
+    }
+
+    // Cleanup ao desmontar componente
+    return () => {
+      disableScreenLock();
+    };
+  }, [isRunning, isPaused, phase, enableScreenLock, disableScreenLock]);
+
   const timerScale = useSharedValue(1);
   const backgroundColor = useSharedValue(phaseConfig.preparation.color);
   const progressWidth = useSharedValue(0);
@@ -294,8 +322,30 @@ export default function ActiveTimerScreen() {
   }, [isRunning, isPaused, phase, currentRound, rounds, exerciseTime, restTime, totalPhaseTime, progressWidth, pulseTimer, shakeTimer, transitionToPhase, triggerHaptic, checkAndTriggerSoundEvents]);
 
   const handlePauseResume = () => {
-    setIsPaused(!isPaused);
-    triggerHaptic("medium");
+    // Se proteção contra toques acidentais não está ativa, comportamento normal
+    if (!preventAccidentalTouch) {
+      setIsPaused(!isPaused);
+      triggerHaptic("medium");
+      return;
+    }
+
+    // Proteção ativa: requer duplo toque rápido (300ms)
+    if (doubleTapTimeoutRef.current) {
+      // Segundo toque detectado - confirmar pausa/retomada
+      clearTimeout(doubleTapTimeoutRef.current);
+      doubleTapTimeoutRef.current = null;
+      setShowDoubleTapHint(false);
+      setIsPaused(!isPaused);
+      triggerHaptic("medium");
+    } else {
+      // Primeiro toque - aguardar segundo toque
+      setShowDoubleTapHint(true);
+      triggerHaptic("light");
+      doubleTapTimeoutRef.current = setTimeout(() => {
+        doubleTapTimeoutRef.current = null;
+        setShowDoubleTapHint(false);
+      }, 300);
+    }
   };
 
   const handleStop = () => {
@@ -313,6 +363,8 @@ export default function ActiveTimerScreen() {
 
   return (
     <Animated.View style={[styles.container, animatedContainerStyle]}>
+      <SilentModeIndicator />
+
       <Pressable
         style={[styles.closeButton, { top: insets.top + Spacing.m }]}
         onPress={handleClose}
@@ -354,6 +406,18 @@ export default function ActiveTimerScreen() {
             <Animated.View style={[styles.progressFill, animatedProgressStyle]} />
           </View>
         </View>
+
+        {showDoubleTapHint && (
+          <Animated.View
+            entering={FadeIn.duration(150)}
+            exiting={FadeOut.duration(150)}
+            style={styles.doubleTapHint}
+          >
+            <ThemedText type="bodySmall" style={[styles.whiteText, styles.hintText]}>
+              {t("screenLock.doubleTapHint")}
+            </ThemedText>
+          </Animated.View>
+        )}
 
         {phase !== "completed" ? (
           <View style={styles.controlsContainer}>
@@ -464,6 +528,17 @@ const styles = StyleSheet.create({
     height: "100%",
     backgroundColor: "#FFFFFF",
     borderRadius: BorderRadius.round,
+  },
+  doubleTapHint: {
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    paddingHorizontal: Spacing.m,
+    paddingVertical: Spacing.s,
+    borderRadius: BorderRadius.m,
+    marginBottom: Spacing.m,
+  },
+  hintText: {
+    textAlign: "center",
+    fontSize: 14,
   },
   controlsContainer: {
     flexDirection: "row",

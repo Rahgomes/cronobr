@@ -8,11 +8,12 @@ import * as Haptics from "expo-haptics";
 import { ThemedText } from "@/components/ThemedText";
 import { Card } from "@/components/Card";
 import { SoundPickerModal } from "@/components/SoundPickerModal";
+import { VibrationPatternPickerModal } from "@/components/VibrationPatternPickerModal";
 import { TimePickerModal } from "@/components/TimePickerModal";
 import { useTheme } from "@/hooks/useTheme";
 import { useI18n } from "@/contexts/I18nContext";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
-import { SoundSettings, SoundType, getSoundSettings, saveSoundSettings } from "@/lib/storage";
+import { SoundSettings, SoundType, VibrationPattern, getSoundSettings, saveSoundSettings } from "@/lib/storage";
 
 type SoundCategory = "countdown" | "roundStart" | "roundEnd" | "halfway" | "beforeEnd";
 
@@ -29,9 +30,15 @@ export default function SoundSettingsScreen() {
     beforeEndSound: "none",
     beforeEndSeconds: 10,
     volume: 80,
+    countdownVibration: "short",
+    roundStartVibration: "long",
+    roundEndVibration: "long",
+    halfwayVibration: "short",
+    beforeEndVibration: "pulsed",
   });
 
   const [activeModal, setActiveModal] = useState<SoundCategory | "beforeEndTime" | null>(null);
+  const [activeVibrationModal, setActiveVibrationModal] = useState<SoundCategory | null>(null);
 
   useEffect(() => {
     loadSettings();
@@ -67,6 +74,13 @@ export default function SoundSettingsScreen() {
     await saveSoundSettings({ beforeEndSeconds: seconds });
   };
 
+  const handleVibrationChange = async (category: SoundCategory, pattern: VibrationPattern) => {
+    const key = `${category}Vibration` as keyof SoundSettings;
+    const newSettings = { ...settings, [key]: pattern };
+    setSettings(newSettings);
+    await saveSoundSettings({ [key]: pattern });
+  };
+
   const getSoundLabel = (sound: SoundType): string => {
     switch (sound) {
       case "none":
@@ -82,12 +96,32 @@ export default function SoundSettingsScreen() {
     }
   };
 
-  const categories: { key: SoundCategory; icon: keyof typeof Feather.glyphMap; settingKey: keyof SoundSettings }[] = [
-    { key: "countdown", icon: "clock", settingKey: "countdownSound" },
-    { key: "roundStart", icon: "play-circle", settingKey: "roundStartSound" },
-    { key: "roundEnd", icon: "stop-circle", settingKey: "roundEndSound" },
-    { key: "halfway", icon: "divide", settingKey: "halfwaySound" },
-    { key: "beforeEnd", icon: "alert-circle", settingKey: "beforeEndSound" },
+  const getVibrationLabel = (pattern: VibrationPattern): string => {
+    switch (pattern) {
+      case "none":
+        return t("vibration.none");
+      case "short":
+        return t("vibration.short");
+      case "long":
+        return t("vibration.long");
+      case "pulsed":
+        return t("vibration.pulsed");
+      default:
+        return pattern;
+    }
+  };
+
+  const categories: {
+    key: SoundCategory;
+    icon: keyof typeof Feather.glyphMap;
+    settingKey: keyof SoundSettings;
+    vibrationKey: keyof SoundSettings;
+  }[] = [
+    { key: "countdown", icon: "clock", settingKey: "countdownSound", vibrationKey: "countdownVibration" },
+    { key: "roundStart", icon: "play-circle", settingKey: "roundStartSound", vibrationKey: "roundStartVibration" },
+    { key: "roundEnd", icon: "stop-circle", settingKey: "roundEndSound", vibrationKey: "roundEndVibration" },
+    { key: "halfway", icon: "divide", settingKey: "halfwaySound", vibrationKey: "halfwayVibration" },
+    { key: "beforeEnd", icon: "alert-circle", settingKey: "beforeEndSound", vibrationKey: "beforeEndVibration" },
   ];
 
   return (
@@ -151,6 +185,29 @@ export default function SoundSettingsScreen() {
                   <Feather name="chevron-right" size={18} color={theme.textSecondary} />
                 </View>
               </Pressable>
+
+              <View style={[styles.divider, { backgroundColor: theme.border }]} />
+
+              <Pressable
+                onPress={() => setActiveVibrationModal(category.key)}
+                style={({ pressed }) => [
+                  styles.subRow,
+                  { backgroundColor: theme.backgroundSecondary },
+                  pressed && { opacity: 0.7 },
+                ]}
+              >
+                <View style={styles.subRowContent}>
+                  <Feather name="smartphone" size={16} color={theme.textSecondary} />
+                  <ThemedText type="bodySmall">{t("vibration.selectPattern")}</ThemedText>
+                </View>
+                <View style={styles.subRowValue}>
+                  <ThemedText type="bodySmall" style={{ color: Colors.primary }}>
+                    {getVibrationLabel(settings[category.vibrationKey] as VibrationPattern)}
+                  </ThemedText>
+                  <Feather name="chevron-right" size={16} color={theme.textSecondary} />
+                </View>
+              </Pressable>
+
               {category.key === "beforeEnd" && settings.beforeEndSound !== "none" ? (
                 <Pressable
                   onPress={() => setActiveModal("beforeEndTime")}
@@ -176,6 +233,17 @@ export default function SoundSettingsScreen() {
           onClose={() => setActiveModal(null)}
           onConfirm={(sound) => handleSoundChange(category.key, sound)}
           currentValue={settings[category.settingKey] as SoundType}
+          title={t(`soundSettings.${category.key}`)}
+        />
+      ))}
+
+      {categories.map((category) => (
+        <VibrationPatternPickerModal
+          key={`vibration-${category.key}`}
+          visible={activeVibrationModal === category.key}
+          onClose={() => setActiveVibrationModal(null)}
+          onConfirm={(pattern) => handleVibrationChange(category.key, pattern)}
+          currentValue={settings[category.vibrationKey] as VibrationPattern}
           title={t(`soundSettings.${category.key}`)}
         />
       ))}
@@ -254,6 +322,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.xs,
   },
+  divider: {
+    height: 1,
+    marginHorizontal: Spacing.m,
+  },
   subRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -263,5 +335,15 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.s,
     marginBottom: Spacing.s,
     borderRadius: BorderRadius.s,
+  },
+  subRowContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.s,
+  },
+  subRowValue: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
   },
 });

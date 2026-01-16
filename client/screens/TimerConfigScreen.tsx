@@ -22,7 +22,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useI18n } from "@/contexts/I18nContext";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
-import { getTimerConfig, saveTimerConfig, TimerConfig } from "@/lib/storage";
+import { getTimerConfig, saveTimerConfig, TimerConfig, getActiveProfileId, clearActiveProfile } from "@/lib/storage";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "TimerConfig">;
 
@@ -35,7 +35,7 @@ function MenuDrawer({
 }: {
   visible: boolean;
   onClose: () => void;
-  onNavigate: (screen: "SoundSettings" | "Preview") => void;
+  onNavigate: (screen: "SoundSettings" | "AdvancedSettings" | "Preview" | "Profiles") => void;
 }) {
   const { theme } = useTheme();
   const { t } = useI18n();
@@ -62,7 +62,9 @@ function MenuDrawer({
   }));
 
   const menuItems = [
+    { key: "Profiles" as const, icon: "folder" as const, label: t("menu.profiles") },
     { key: "SoundSettings" as const, icon: "volume-2" as const, label: t("menu.soundSettings") },
+    { key: "AdvancedSettings" as const, icon: "settings" as const, label: t("menu.advancedSettings") },
     { key: "Preview" as const, icon: "eye" as const, label: t("menu.preview") },
   ];
 
@@ -117,10 +119,14 @@ export default function TimerConfigScreen() {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [highlightedCard, setHighlightedCard] = useState<string | null>(null);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
 
   const loadConfig = useCallback(async () => {
     const loadedConfig = await getTimerConfig();
     setConfig(loadedConfig);
+
+    const activeId = await getActiveProfileId();
+    setActiveProfileId(activeId);
   }, []);
 
   useFocusEffect(
@@ -150,10 +156,14 @@ export default function TimerConfigScreen() {
     });
   }, [navigation, theme]);
 
-  const handleMenuNavigate = (screen: "SoundSettings" | "Preview") => {
+  const handleMenuNavigate = (screen: "SoundSettings" | "AdvancedSettings" | "Preview" | "Profiles") => {
     setMenuVisible(false);
-    if (screen === "SoundSettings") {
+    if (screen === "Profiles") {
+      navigation.navigate("Profiles");
+    } else if (screen === "SoundSettings") {
       navigation.navigate("SoundSettings");
+    } else if (screen === "AdvancedSettings") {
+      navigation.navigate("AdvancedSettings");
     } else if (screen === "Preview") {
       navigation.navigate("WorkoutPreview", {
         prepTime: config.prepTime,
@@ -168,6 +178,13 @@ export default function TimerConfigScreen() {
     const newConfig = { ...config, [key]: value };
     setConfig(newConfig);
     await saveTimerConfig({ [key]: value });
+
+    // Clear active profile when user manually edits configuration
+    if (activeProfileId) {
+      await clearActiveProfile();
+      setActiveProfileId(null);
+    }
+
     setHighlightedCard(key);
     setTimeout(() => setHighlightedCard(null), 300);
   };

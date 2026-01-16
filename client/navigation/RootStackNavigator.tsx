@@ -8,7 +8,10 @@ import ActiveTimerScreen from "@/screens/ActiveTimerScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
 import ProfileScreen from "@/screens/ProfileScreen";
 import SoundSettingsScreen from "@/screens/SoundSettingsScreen";
+import AdvancedSettingsScreen from "@/screens/AdvancedSettingsScreen";
 import WorkoutPreviewScreen from "@/screens/WorkoutPreviewScreen";
+import DynamicPreviewScreen from "@/screens/DynamicPreviewScreen";
+import ProfilesScreen from "@/screens/ProfilesScreen";
 import HeaderTitle from "@/components/HeaderTitle";
 
 export type RootStackParamList = {
@@ -25,9 +28,17 @@ export type RootStackParamList = {
     restTime: number;
     rounds: number;
   };
+  DynamicPreview: {
+    prepTime: number;
+    exerciseTime: number;
+    restTime: number;
+    rounds: number;
+  };
   Settings: undefined;
   Profile: undefined;
   SoundSettings: undefined;
+  AdvancedSettings: undefined;
+  Profiles: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -80,11 +91,36 @@ export default function RootStackNavigator() {
         }}
       />
       <Stack.Screen
+        name="AdvancedSettings"
+        component={AdvancedSettingsScreen}
+        options={{
+          ...opaqueScreenOptions,
+          headerTitle: t("advancedSettings.title"),
+        }}
+      />
+      <Stack.Screen
         name="WorkoutPreview"
         component={WorkoutPreviewScreen}
         options={{
           ...opaqueScreenOptions,
           headerTitle: t("preview.title"),
+        }}
+      />
+      <Stack.Screen
+        name="Profiles"
+        component={ProfilesScreen}
+        options={{
+          ...opaqueScreenOptions,
+          headerTitle: t("profiles.title"),
+        }}
+      />
+      <Stack.Screen
+        name="DynamicPreview"
+        component={DynamicPreviewScreen}
+        options={{
+          presentation: "fullScreenModal",
+          headerShown: false,
+          animation: "fade",
         }}
       />
     </Stack.Navigator>

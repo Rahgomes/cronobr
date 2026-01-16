@@ -1,15 +1,19 @@
 import React, { useEffect } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import { View, StyleSheet, ScrollView, Pressable, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRoute, RouteProp } from "@react-navigation/native";
+import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withDelay,
   withSpring,
   withTiming,
+  withSequence,
   FadeInUp,
+  FadeInDown,
 } from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -20,6 +24,7 @@ import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 type PreviewRouteProp = RouteProp<RootStackParamList, "WorkoutPreview">;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "WorkoutPreview">;
 
 interface TimelineBlock {
   type: "prep" | "exercise" | "rest";
@@ -44,18 +49,35 @@ function TimelineBlockComponent({
 }) {
   const { theme } = useTheme();
   const { t, formatTime } = useI18n();
-  const scale = useSharedValue(0.8);
+  const scale = useSharedValue(0.9);
   const opacity = useSharedValue(0);
+  const translateX = useSharedValue(-20);
 
   useEffect(() => {
-    const delay = index * 100;
+    const delay = index * 80; // Delay escalonado de 80ms (moderado)
+
+    // Fade in
     opacity.value = withDelay(delay, withTiming(1, { duration: 300 }));
-    scale.value = withDelay(delay, withSpring(1, { damping: 15, stiffness: 200 }));
+
+    // Scale com spring suave
+    scale.value = withDelay(
+      delay,
+      withSpring(1, { damping: 12, stiffness: 150 })
+    );
+
+    // Slide from left (sutil)
+    translateX.value = withDelay(
+      delay,
+      withSpring(0, { damping: 15, stiffness: 120 })
+    );
   }, [index]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [{ scale: scale.value }],
+    transform: [
+      { scale: scale.value },
+      { translateX: translateX.value }
+    ],
   }));
 
   const getLabel = () => {
@@ -123,11 +145,24 @@ function TimelineBlockComponent({
 
 export default function WorkoutPreviewScreen() {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation<NavigationProp>();
   const route = useRoute<PreviewRouteProp>();
   const { theme } = useTheme();
   const { t, formatTime } = useI18n();
 
   const { prepTime, exerciseTime, restTime, rounds } = route.params;
+
+  const handleSimulation = () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    navigation.navigate("DynamicPreview", {
+      prepTime,
+      exerciseTime,
+      restTime,
+      rounds,
+    });
+  };
 
   const buildTimeline = (): TimelineBlock[] => {
     const blocks: TimelineBlock[] = [];
@@ -161,7 +196,10 @@ export default function WorkoutPreviewScreen() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View entering={FadeInUp.duration(400)} style={styles.summaryCard}>
+        <Animated.View
+          entering={FadeInUp.duration(400).springify()}
+          style={styles.summaryCard}
+        >
           <Card style={styles.totalCard}>
             <View style={styles.totalContent}>
               <View style={styles.totalInfo}>
@@ -197,9 +235,11 @@ export default function WorkoutPreviewScreen() {
           </Card>
         </Animated.View>
 
-        <ThemedText type="h3" style={styles.sectionTitle}>
-          Timeline
-        </ThemedText>
+        <Animated.View entering={FadeInUp.delay(200).duration(300)}>
+          <ThemedText type="h3" style={styles.sectionTitle}>
+            Timeline
+          </ThemedText>
+        </Animated.View>
 
         <View style={styles.timelineContainer}>
           {timeline.map((block, index) => (
@@ -211,6 +251,22 @@ export default function WorkoutPreviewScreen() {
             />
           ))}
         </View>
+
+        <Animated.View entering={FadeInUp.delay((timeline.length * 80) + 300).duration(300)}>
+          <Pressable
+            onPress={handleSimulation}
+            style={({ pressed }) => [
+              styles.simulationButton,
+              { backgroundColor: Colors.primary },
+              pressed && { opacity: 0.8 },
+            ]}
+          >
+            <Feather name="play-circle" size={24} color="#FFFFFF" />
+            <ThemedText type="button" style={{ color: "#FFFFFF" }}>
+              {t("preview.viewSimulation")}
+            </ThemedText>
+          </Pressable>
+        </Animated.View>
       </ScrollView>
     </View>
   );
@@ -249,6 +305,16 @@ const styles = StyleSheet.create({
   },
   timelineContainer: {
     gap: Spacing.s,
+    marginBottom: Spacing.l,
+  },
+  simulationButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.m,
+    paddingVertical: Spacing.l,
+    borderRadius: BorderRadius.m,
+    marginTop: Spacing.m,
   },
   blockContainer: {
     flexDirection: "row",
