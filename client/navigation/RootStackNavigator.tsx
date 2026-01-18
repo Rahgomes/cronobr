@@ -2,6 +2,7 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { useI18n } from "@/contexts/I18nContext";
+import { WorkoutCategory } from "@/lib/storage";
 
 import TimerConfigScreen from "@/screens/TimerConfigScreen";
 import ActiveTimerScreen from "@/screens/ActiveTimerScreen";
@@ -12,6 +13,9 @@ import AdvancedSettingsScreen from "@/screens/AdvancedSettingsScreen";
 import WorkoutPreviewScreen from "@/screens/WorkoutPreviewScreen";
 import DynamicPreviewScreen from "@/screens/DynamicPreviewScreen";
 import ProfilesScreen from "@/screens/ProfilesScreen";
+import HistoryScreen from "@/screens/HistoryScreen";
+import HistoryDetailScreen from "@/screens/HistoryDetailScreen";
+import CategoryPresetsScreen from "@/screens/CategoryPresetsScreen";
 import HeaderTitle from "@/components/HeaderTitle";
 
 export type RootStackParamList = {
@@ -21,6 +25,9 @@ export type RootStackParamList = {
     exerciseTime: number;
     restTime: number;
     rounds: number;
+    workoutType?: "preset" | "manual";
+    presetName?: string;
+    presetCategory?: WorkoutCategory;
   };
   WorkoutPreview: {
     prepTime: number;
@@ -39,6 +46,9 @@ export type RootStackParamList = {
   SoundSettings: undefined;
   AdvancedSettings: undefined;
   Profiles: undefined;
+  History: undefined;
+  HistoryDetail: { entryId: string };
+  CategoryPresets: { category: WorkoutCategory };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -121,6 +131,30 @@ export default function RootStackNavigator() {
           presentation: "fullScreenModal",
           headerShown: false,
           animation: "fade",
+        }}
+      />
+      <Stack.Screen
+        name="History"
+        component={HistoryScreen}
+        options={{
+          ...opaqueScreenOptions,
+          headerTitle: "Histórico de Treinos",
+        }}
+      />
+      <Stack.Screen
+        name="HistoryDetail"
+        component={HistoryDetailScreen}
+        options={{
+          ...opaqueScreenOptions,
+          headerTitle: "Detalhes do Treino",
+        }}
+      />
+      <Stack.Screen
+        name="CategoryPresets"
+        component={CategoryPresetsScreen}
+        options={{
+          ...opaqueScreenOptions,
+          headerTitle: "Perfis da Categoria",
         }}
       />
     </Stack.Navigator>

@@ -35,7 +35,7 @@ function MenuDrawer({
 }: {
   visible: boolean;
   onClose: () => void;
-  onNavigate: (screen: "SoundSettings" | "AdvancedSettings" | "Preview" | "Profiles") => void;
+  onNavigate: (screen: "SoundSettings" | "AdvancedSettings" | "Profiles" | "History") => void;
 }) {
   const { theme } = useTheme();
   const { t } = useI18n();
@@ -63,9 +63,9 @@ function MenuDrawer({
 
   const menuItems = [
     { key: "Profiles" as const, icon: "folder" as const, label: t("menu.profiles") },
+    { key: "History" as const, icon: "clock" as const, label: "Histórico de Treinos" },
     { key: "SoundSettings" as const, icon: "volume-2" as const, label: t("menu.soundSettings") },
     { key: "AdvancedSettings" as const, icon: "settings" as const, label: t("menu.advancedSettings") },
-    { key: "Preview" as const, icon: "eye" as const, label: t("menu.preview") },
   ];
 
   return (
@@ -75,7 +75,25 @@ function MenuDrawer({
         <Animated.View
           style={[styles.menuDrawer, { backgroundColor: theme.backgroundDefault, paddingTop: insets.top + Spacing.l }, drawerStyle]}
         >
-          <ThemedText type="h2" style={styles.menuTitle}>Menu</ThemedText>
+          {/* Header with Title and Close Button */}
+          <View style={styles.menuHeader}>
+            <ThemedText type="h2" style={styles.menuTitle}>Menu</ThemedText>
+            <Pressable
+              onPress={() => {
+                if (Platform.OS !== "web") {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+                onClose();
+              }}
+              style={({ pressed }) => [
+                styles.closeButton,
+                { opacity: pressed ? 0.5 : 1 }
+              ]}
+            >
+              <Feather name="x" size={24} color={theme.text} />
+            </Pressable>
+          </View>
+
           <View style={styles.menuItems}>
             {menuItems.map((item) => (
               <Pressable
@@ -156,10 +174,12 @@ export default function TimerConfigScreen() {
     });
   }, [navigation, theme]);
 
-  const handleMenuNavigate = (screen: "SoundSettings" | "AdvancedSettings" | "Preview" | "Profiles") => {
+  const handleMenuNavigate = (screen: "SoundSettings" | "AdvancedSettings" | "Preview" | "Profiles" | "History") => {
     setMenuVisible(false);
     if (screen === "Profiles") {
       navigation.navigate("Profiles");
+    } else if (screen === "History") {
+      navigation.navigate("History");
     } else if (screen === "SoundSettings") {
       navigation.navigate("SoundSettings");
     } else if (screen === "AdvancedSettings") {
@@ -406,8 +426,18 @@ const styles = StyleSheet.create({
     width: 280,
     paddingHorizontal: Spacing.l,
   },
+  menuHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.l,
+    paddingHorizontal: Spacing.m,
+  },
   menuTitle: {
-    marginBottom: Spacing.xl,
+    flex: 1,
+  },
+  closeButton: {
+    padding: Spacing.s,
   },
   menuItems: {
     gap: Spacing.s,

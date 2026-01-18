@@ -12,8 +12,10 @@ import { queryClient } from "@/lib/query-client";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { I18nProvider } from "@/contexts/I18nContext";
 import { SoundProvider } from "@/contexts/SoundContext";
+import { SpeechProvider } from "@/contexts/SpeechContext";
 import { SilentModeProvider } from "@/contexts/SilentModeContext";
 import { ScreenLockProvider } from "@/contexts/ScreenLockContext";
+import { HistoryProvider } from "@/contexts/HistoryContext";
 import RootStackNavigator from "@/navigation/RootStackNavigator";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useTheme } from "@/hooks/useTheme";
@@ -41,11 +43,15 @@ export default function App() {
               <ThemeProvider>
                 <I18nProvider>
                   <SoundProvider>
-                    <SilentModeProvider>
-                      <ScreenLockProvider>
-                        <AppContent />
-                      </ScreenLockProvider>
-                    </SilentModeProvider>
+                    <SpeechProvider>
+                      <SilentModeProvider>
+                        <ScreenLockProvider>
+                          <HistoryProvider>
+                            <AppContent />
+                          </HistoryProvider>
+                        </ScreenLockProvider>
+                      </SilentModeProvider>
+                    </SpeechProvider>
                   </SoundProvider>
                 </I18nProvider>
               </ThemeProvider>

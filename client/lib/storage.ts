@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { generateUUID } from "@/utils/uuid";
 
 const STORAGE_KEYS = {
   SETTINGS: "@cronobr/settings",
@@ -8,7 +9,12 @@ const STORAGE_KEYS = {
   APP_PREFERENCES: "@cronobr/app_preferences",
   WORKOUT_PROFILES: "@cronobr/workout_profiles",
   ACTIVE_PROFILE_ID: "@cronobr/active_profile_id",
+  WORKOUT_HISTORY: "@cronobr/workout_history",
+  VIEW_MODE: "@cronobr/view_mode",
+  SPEECH_SETTINGS: "@cronobr/speech_settings",
 };
+
+const MAX_HISTORY_ENTRIES = 100;
 
 export interface Settings {
   soundEnabled: boolean;
@@ -66,6 +72,42 @@ export interface WorkoutProfile {
   isBuiltIn: boolean;
 }
 
+export interface WorkoutHistoryEntry {
+  id: string;
+  timestamp: number;
+  date: string;
+  duration: number;
+  type: "preset" | "manual";
+  presetName?: string;
+  presetCategory?: WorkoutCategory;
+  config: TimerConfig;
+  completedRounds: number;
+  totalRounds: number;
+  wasInterrupted: boolean;
+}
+
+// TTS event types that can be narrated
+export type SpeechEvent =
+  | "preparationStart"
+  | "countdown"
+  | "roundStart"
+  | "exerciseHalfway"
+  | "roundEnd"
+  | "restStart"
+  | "restEnd"
+  | "workoutCompleted"
+  | "workoutInterrupted";
+
+export interface SpeechSettings {
+  enabled: boolean;
+  voiceLanguage: string; // e.g., "pt-BR", "en-US"
+  voiceId: string | null; // Specific voice identifier (null = auto-select)
+  volume: number; // 0-100
+  rate: number; // 0.5-2.0 (speech speed, 1.0 = normal)
+  pitch: number; // 0.5-2.0 (voice pitch, 1.0 = normal)
+  enabledEvents: Record<SpeechEvent, boolean>;
+}
+
 const defaultSettings: Settings = {
   soundEnabled: true,
   vibrationEnabled: true,
@@ -104,6 +146,26 @@ const defaultAppPreferences: AppPreferences = {
   silentModeEnabled: false,
   screenLockEnabled: true,
   preventAccidentalTouch: false,
+};
+
+const defaultSpeechSettings: SpeechSettings = {
+  enabled: false, // Disabled by default (user must opt-in)
+  voiceLanguage: "pt-BR", // Match app language initially
+  voiceId: null, // Auto-select best voice for language
+  volume: 80, // 80% volume
+  rate: 1.0, // Normal speed
+  pitch: 1.0, // Normal pitch
+  enabledEvents: {
+    preparationStart: true,
+    countdown: true,
+    roundStart: true,
+    exerciseHalfway: false, // Disabled by default (per user preference - only for rounds ≥30s)
+    roundEnd: true,
+    restStart: true,
+    restEnd: false, // Redundant with roundStart
+    workoutCompleted: true,
+    workoutInterrupted: true,
+  },
 };
 
 const BUILTIN_PROFILES: WorkoutProfile[] = [
@@ -329,6 +391,29 @@ export async function saveAppPreferences(preferences: Partial<AppPreferences>): 
   }
 }
 
+export async function getSpeechSettings(): Promise<SpeechSettings> {
+  try {
+    const json = await AsyncStorage.getItem(STORAGE_KEYS.SPEECH_SETTINGS);
+    if (json) {
+      return { ...defaultSpeechSettings, ...JSON.parse(json) };
+    }
+  } catch (error) {
+    console.error("Error loading speech settings:", error);
+  }
+  return defaultSpeechSettings;
+}
+
+export async function saveSpeechSettings(settings: Partial<SpeechSettings>): Promise<void> {
+  try {
+    const current = await getSpeechSettings();
+    const updated = { ...current, ...settings };
+    await AsyncStorage.setItem(STORAGE_KEYS.SPEECH_SETTINGS, JSON.stringify(updated));
+  } catch (error) {
+    console.error("Error saving speech settings:", error);
+    throw error;
+  }
+}
+
 export async function getWorkoutProfiles(): Promise<WorkoutProfile[]> {
   try {
     const json = await AsyncStorage.getItem(STORAGE_KEYS.WORKOUT_PROFILES);
@@ -393,5 +478,85 @@ export async function clearActiveProfile(): Promise<void> {
     await AsyncStorage.removeItem(STORAGE_KEYS.ACTIVE_PROFILE_ID);
   } catch (error) {
     console.error("Error clearing active profile:", error);
+  }
+}
+
+// Workout History Functions
+export async function getWorkoutHistory(): Promise<WorkoutHistoryEntry[]> {
+  try {
+    const json = await AsyncStorage.getItem(STORAGE_KEYS.WORKOUT_HISTORY);
+    if (json) {
+      const history: WorkoutHistoryEntry[] = JSON.parse(json);
+      return history.sort((a, b) => b.timestamp - a.timestamp);
+    }
+  } catch (error) {
+    console.error("Error loading workout history:", error);
+  }
+  return [];
+}
+
+export async function addWorkoutToHistory(entry: Omit<WorkoutHistoryEntry, "id" | "timestamp" | "date">): Promise<void> {
+  try {
+    const history = await getWorkoutHistory();
+
+    const newEntry: WorkoutHistoryEntry = {
+      ...entry,
+      id: generateUUID(),
+      timestamp: Date.now(),
+      date: new Date().toISOString(),
+    };
+
+    history.unshift(newEntry);
+
+    if (history.length > MAX_HISTORY_ENTRIES) {
+      history.splice(MAX_HISTORY_ENTRIES);
+    }
+
+    await AsyncStorage.setItem(STORAGE_KEYS.WORKOUT_HISTORY, JSON.stringify(history));
+  } catch (error) {
+    console.error("Error adding workout to history:", error);
+  }
+}
+
+export async function clearWorkoutHistory(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(STORAGE_KEYS.WORKOUT_HISTORY);
+  } catch (error) {
+    console.error("Error clearing workout history:", error);
+  }
+}
+
+export async function getHistoryEntryById(id: string): Promise<WorkoutHistoryEntry | null> {
+  const history = await getWorkoutHistory();
+  return history.find(entry => entry.id === id) || null;
+}
+
+export async function removeWorkoutFromHistory(id: string): Promise<void> {
+  try {
+    const history = await getWorkoutHistory();
+    const filtered = history.filter(entry => entry.id !== id);
+    await AsyncStorage.setItem(STORAGE_KEYS.WORKOUT_HISTORY, JSON.stringify(filtered));
+  } catch (error) {
+    console.error("Error removing workout from history:", error);
+    throw error;
+  }
+}
+
+// View Mode Functions
+export async function getViewMode(): Promise<"grid" | "list"> {
+  try {
+    const mode = await AsyncStorage.getItem(STORAGE_KEYS.VIEW_MODE);
+    return (mode as "grid" | "list") || "grid";
+  } catch (error) {
+    console.error("Error loading view mode:", error);
+    return "grid";
+  }
+}
+
+export async function saveViewMode(mode: "grid" | "list"): Promise<void> {
+  try {
+    await AsyncStorage.setItem(STORAGE_KEYS.VIEW_MODE, mode);
+  } catch (error) {
+    console.error("Error saving view mode:", error);
   }
 }

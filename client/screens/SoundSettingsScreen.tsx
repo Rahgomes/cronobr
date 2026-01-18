@@ -10,6 +10,7 @@ import { Card } from "@/components/Card";
 import { SoundPickerModal } from "@/components/SoundPickerModal";
 import { VibrationPatternPickerModal } from "@/components/VibrationPatternPickerModal";
 import { TimePickerModal } from "@/components/TimePickerModal";
+import { SpeechSettingsSection } from "@/components/SpeechSettingsSection";
 import { useTheme } from "@/hooks/useTheme";
 import { useI18n } from "@/contexts/I18nContext";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
@@ -224,6 +225,20 @@ export default function SoundSettingsScreen() {
             </Card>
           ))}
         </View>
+
+        {/* Divider */}
+        <View style={[styles.sectionDivider, { backgroundColor: theme.border }]} />
+
+        {/* TTS Section Header */}
+        <View style={styles.sectionHeader}>
+          <Feather name="volume-2" size={24} color={Colors.primary} />
+          <ThemedText type="h2" style={{ marginLeft: Spacing.s }}>
+            {t("speech.sectionTitle")}
+          </ThemedText>
+        </View>
+
+        {/* TTS Settings */}
+        <SpeechSettingsSection />
       </ScrollView>
 
       {categories.map((category) => (
@@ -345,5 +360,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.xs,
+  },
+  sectionDivider: {
+    height: 1,
+    marginVertical: Spacing.xl,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.m,
   },
 });
