@@ -4,6 +4,8 @@ import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { useI18n } from "@/contexts/I18nContext";
 import { WorkoutCategory } from "@/lib/storage";
 
+import HomeScreen from "@/screens/HomeScreen";
+import ManualConfigScreen from "@/screens/ManualConfigScreen";
 import TimerConfigScreen from "@/screens/TimerConfigScreen";
 import ActiveTimerScreen from "@/screens/ActiveTimerScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
@@ -16,9 +18,12 @@ import ProfilesScreen from "@/screens/ProfilesScreen";
 import HistoryScreen from "@/screens/HistoryScreen";
 import HistoryDetailScreen from "@/screens/HistoryDetailScreen";
 import CategoryPresetsScreen from "@/screens/CategoryPresetsScreen";
+import AboutScreen from "@/screens/AboutScreen";
 import HeaderTitle from "@/components/HeaderTitle";
 
 export type RootStackParamList = {
+  Home: undefined;
+  ManualConfig: undefined;
   TimerConfig: undefined;
   ActiveTimer: {
     prepTime: number;
@@ -49,6 +54,7 @@ export type RootStackParamList = {
   History: undefined;
   HistoryDetail: { entryId: string };
   CategoryPresets: { category: WorkoutCategory };
+  About: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -59,7 +65,22 @@ export default function RootStackNavigator() {
   const { t } = useI18n();
 
   return (
-    <Stack.Navigator screenOptions={screenOptions}>
+    <Stack.Navigator initialRouteName="Home" screenOptions={screenOptions}>
+      <Stack.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          headerTitle: () => <HeaderTitle />,
+        }}
+      />
+      <Stack.Screen
+        name="ManualConfig"
+        component={ManualConfigScreen}
+        options={{
+          ...opaqueScreenOptions,
+          headerTitle: t("manualConfig.title"),
+        }}
+      />
       <Stack.Screen
         name="TimerConfig"
         component={TimerConfigScreen}
@@ -155,6 +176,14 @@ export default function RootStackNavigator() {
         options={{
           ...opaqueScreenOptions,
           headerTitle: "Perfis da Categoria",
+        }}
+      />
+      <Stack.Screen
+        name="About"
+        component={AboutScreen}
+        options={{
+          ...opaqueScreenOptions,
+          headerTitle: "Sobre",
         }}
       />
     </Stack.Navigator>

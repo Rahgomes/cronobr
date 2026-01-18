@@ -143,10 +143,10 @@ export const translations = {
       summary: "Resumo da Sessão",
     },
     menu: {
+      history: "Histórico de Treinos",
+      settings: "Configurações",
       soundSettings: "Configurações de Som",
-      preview: "Pré-visualizar Treino",
-      advancedSettings: "Configurações Avançadas",
-      profiles: "Perfis de Treino",
+      about: "Sobre",
     },
     profiles: {
       title: "Perfis de Treino",
@@ -244,6 +244,50 @@ export const translations = {
       qualityPremium: "Premium",
       notAvailable: "Narração por voz não disponível neste dispositivo",
       engineUnavailable: "Motor de síntese de voz indisponível",
+    },
+    home: {
+      subtitle: "Escolha sua modalidade de treino",
+      quickStart: {
+        title: "Início Rápido",
+        description: "Configure seu treino manualmente",
+      },
+      lastWorkout: {
+        title: "Último Treino",
+        manual: "Treino Manual",
+        completed: "Concluído",
+        interrupted: "Interrompido",
+        repeat: "Repetir Treino",
+      },
+      modalitiesTitle: "Modalidades",
+      modalities: {
+        hiit: {
+          name: "HIIT / Funcional",
+          description: "Alta intensidade em ciclos curtos",
+        },
+        tabata: {
+          name: "Tabata Clássico",
+          description: "20s de esforço, 10s de descanso",
+        },
+        emom: {
+          name: "EMOM",
+          description: "Um exercício a cada minuto",
+        },
+        amrap: {
+          name: "AMRAP",
+          description: "Máximo de repetições possível",
+        },
+        boxe: {
+          name: "Boxe / Rounds",
+          description: "Rounds de luta com intervalos",
+        },
+        mobilidade: {
+          name: "Mobilidade",
+          description: "Aquecimento e alongamento",
+        },
+      },
+    },
+    manualConfig: {
+      title: "Configuração Manual",
     },
   },
   en: {
@@ -385,10 +429,10 @@ export const translations = {
       summary: "Session Summary",
     },
     menu: {
+      history: "Workout History",
+      settings: "Settings",
       soundSettings: "Sound Settings",
-      preview: "Preview Workout",
-      advancedSettings: "Advanced Settings",
-      profiles: "Workout Profiles",
+      about: "About",
     },
     profiles: {
       title: "Workout Profiles",
@@ -486,6 +530,50 @@ export const translations = {
       qualityPremium: "Premium",
       notAvailable: "Voice narration not available on this device",
       engineUnavailable: "Voice synthesis engine unavailable",
+    },
+    home: {
+      subtitle: "Choose your workout modality",
+      quickStart: {
+        title: "Quick Start",
+        description: "Configure your workout manually",
+      },
+      lastWorkout: {
+        title: "Last Workout",
+        manual: "Manual Workout",
+        completed: "Completed",
+        interrupted: "Interrupted",
+        repeat: "Repeat Workout",
+      },
+      modalitiesTitle: "Modalities",
+      modalities: {
+        hiit: {
+          name: "HIIT / Functional",
+          description: "High intensity in short cycles",
+        },
+        tabata: {
+          name: "Classic Tabata",
+          description: "20s work, 10s rest",
+        },
+        emom: {
+          name: "EMOM",
+          description: "One exercise every minute",
+        },
+        amrap: {
+          name: "AMRAP",
+          description: "As many reps as possible",
+        },
+        boxe: {
+          name: "Boxing / Rounds",
+          description: "Fight rounds with intervals",
+        },
+        mobilidade: {
+          name: "Mobility",
+          description: "Warm-up and stretching",
+        },
+      },
+    },
+    manualConfig: {
+      title: "Manual Configuration",
     },
   },
   es: {
@@ -627,10 +715,10 @@ export const translations = {
       summary: "Resumen de la Sesión",
     },
     menu: {
+      history: "Historial de Entrenamientos",
+      settings: "Configuración",
       soundSettings: "Configuración de Sonido",
-      preview: "Vista Previa del Entrenamiento",
-      advancedSettings: "Configuración Avanzada",
-      profiles: "Perfiles de Entrenamiento",
+      about: "Acerca de",
     },
     profiles: {
       title: "Perfiles de Entrenamiento",
@@ -728,6 +816,50 @@ export const translations = {
       qualityPremium: "Premium",
       notAvailable: "Narración por voz no disponible en este dispositivo",
       engineUnavailable: "Motor de síntesis de voz no disponible",
+    },
+    home: {
+      subtitle: "Elige tu modalidad de entrenamiento",
+      quickStart: {
+        title: "Inicio Rápido",
+        description: "Configura tu entrenamiento manualmente",
+      },
+      lastWorkout: {
+        title: "Último Entrenamiento",
+        manual: "Entrenamiento Manual",
+        completed: "Completado",
+        interrupted: "Interrumpido",
+        repeat: "Repetir Entrenamiento",
+      },
+      modalitiesTitle: "Modalidades",
+      modalities: {
+        hiit: {
+          name: "HIIT / Funcional",
+          description: "Alta intensidad en ciclos cortos",
+        },
+        tabata: {
+          name: "Tabata Clásico",
+          description: "20s esfuerzo, 10s descanso",
+        },
+        emom: {
+          name: "EMOM",
+          description: "Un ejercicio cada minuto",
+        },
+        amrap: {
+          name: "AMRAP",
+          description: "Máximas repeticiones posibles",
+        },
+        boxe: {
+          name: "Boxeo / Rounds",
+          description: "Rounds de combate con intervalos",
+        },
+        mobilidade: {
+          name: "Movilidad",
+          description: "Calentamiento y estiramiento",
+        },
+      },
+    },
+    manualConfig: {
+      title: "Configuración Manual",
     },
   },
   fr: {
@@ -869,10 +1001,10 @@ export const translations = {
       summary: "Résumé de la Séance",
     },
     menu: {
+      history: "Historique des Entraînements",
+      settings: "Paramètres",
       soundSettings: "Paramètres Audio",
-      preview: "Aperçu de l'Entraînement",
-      advancedSettings: "Paramètres Avancés",
-      profiles: "Profils d'Entraînement",
+      about: "À Propos",
     },
     profiles: {
       title: "Profils d'Entraînement",
@@ -970,6 +1102,50 @@ export const translations = {
       qualityPremium: "Premium",
       notAvailable: "Narration vocale non disponible sur cet appareil",
       engineUnavailable: "Moteur de synthèse vocale indisponible",
+    },
+    home: {
+      subtitle: "Choisissez votre modalité d'entraînement",
+      quickStart: {
+        title: "Démarrage Rapide",
+        description: "Configurez votre entraînement manuellement",
+      },
+      lastWorkout: {
+        title: "Dernier Entraînement",
+        manual: "Entraînement Manuel",
+        completed: "Terminé",
+        interrupted: "Interrompu",
+        repeat: "Répéter l'Entraînement",
+      },
+      modalitiesTitle: "Modalités",
+      modalities: {
+        hiit: {
+          name: "HIIT / Fonctionnel",
+          description: "Haute intensité en cycles courts",
+        },
+        tabata: {
+          name: "Tabata Classique",
+          description: "20s effort, 10s repos",
+        },
+        emom: {
+          name: "EMOM",
+          description: "Un exercice chaque minute",
+        },
+        amrap: {
+          name: "AMRAP",
+          description: "Maximum de répétitions possible",
+        },
+        boxe: {
+          name: "Boxe / Rounds",
+          description: "Rounds de combat avec intervalles",
+        },
+        mobilidade: {
+          name: "Mobilité",
+          description: "Échauffement et étirement",
+        },
+      },
+    },
+    manualConfig: {
+      title: "Configuration Manuelle",
     },
   },
 };
