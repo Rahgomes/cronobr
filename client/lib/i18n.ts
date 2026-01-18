@@ -249,7 +249,7 @@ export const translations = {
       subtitle: "Escolha sua modalidade de treino",
       quickStart: {
         title: "Início Rápido",
-        description: "Configure seu treino manualmente",
+        subtitle: "Configure seu treino manualmente",
       },
       lastWorkout: {
         title: "Último Treino",
@@ -281,10 +281,11 @@ export const translations = {
           description: "Rounds de luta com intervalos",
         },
         mobilidade: {
-          name: "Mobilidade",
-          description: "Aquecimento e alongamento",
+          name: "Mobilidade / Aquecimento",
+          description: "Preparo e recupera\u00e7\u00e3o",
         },
       },
+      previewCurrent: "Pr\u00e9-visualizar Treino Atual",
     },
     manualConfig: {
       title: "Configuração Manual",
@@ -535,7 +536,7 @@ export const translations = {
       subtitle: "Choose your workout modality",
       quickStart: {
         title: "Quick Start",
-        description: "Configure your workout manually",
+        subtitle: "Configure your workout manually",
       },
       lastWorkout: {
         title: "Last Workout",
@@ -567,10 +568,11 @@ export const translations = {
           description: "Fight rounds with intervals",
         },
         mobilidade: {
-          name: "Mobility",
-          description: "Warm-up and stretching",
+          name: "Mobility / Warm-up",
+          description: "Prep and recovery",
         },
       },
+      previewCurrent: "Preview Current Workout",
     },
     manualConfig: {
       title: "Manual Configuration",
@@ -821,7 +823,7 @@ export const translations = {
       subtitle: "Elige tu modalidad de entrenamiento",
       quickStart: {
         title: "Inicio Rápido",
-        description: "Configura tu entrenamiento manualmente",
+        subtitle: "Configura tu entrenamiento manualmente",
       },
       lastWorkout: {
         title: "Último Entrenamiento",
@@ -853,13 +855,14 @@ export const translations = {
           description: "Rounds de combate con intervalos",
         },
         mobilidade: {
-          name: "Movilidad",
-          description: "Calentamiento y estiramiento",
+          name: "Movilidad / Calentamiento",
+          description: "Preparaci\u00f3n y recuperaci\u00f3n",
         },
       },
+      previewCurrent: "Vista Previa del Entrenamiento",
     },
     manualConfig: {
-      title: "Configuración Manual",
+      title: "Configuraci\u00f3n Manual",
     },
   },
   fr: {
@@ -1107,7 +1110,7 @@ export const translations = {
       subtitle: "Choisissez votre modalité d'entraînement",
       quickStart: {
         title: "Démarrage Rapide",
-        description: "Configurez votre entraînement manuellement",
+        subtitle: "Configurez votre entraînement manuellement",
       },
       lastWorkout: {
         title: "Dernier Entraînement",
@@ -1139,10 +1142,11 @@ export const translations = {
           description: "Rounds de combat avec intervalles",
         },
         mobilidade: {
-          name: "Mobilité",
-          description: "Échauffement et étirement",
+          name: "Mobilit\u00e9 / \u00c9chauffement",
+          description: "Pr\u00e9paration et r\u00e9cup\u00e9ration",
         },
       },
+      previewCurrent: "Aper\u00e7u de l'Entra\u00eenement Actuel",
     },
     manualConfig: {
       title: "Configuration Manuelle",

@@ -1,18 +1,15 @@
-import React, { useMemo, useCallback } from "react";
-import { View, StyleSheet, ScrollView, Platform } from "react-native";
+import React, { useMemo } from "react";
+import { View, StyleSheet, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 
 import { ThemedText } from "@/components/ThemedText";
-import QuickStartCard from "@/components/QuickStartCard";
-import LastWorkoutCard from "@/components/LastWorkoutCard";
-import ModalityCard from "@/components/ModalityCard";
+import QuickStartCardV2 from "@/components/QuickStartCardV2";
+import ModalidadeCardV2 from "@/components/ModalidadeCardV2";
 import { useTheme } from "@/hooks/useTheme";
 import { useI18n } from "@/contexts/I18nContext";
-import { useHistory } from "@/contexts/HistoryContext";
 import { Colors, Spacing } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { Modality } from "@/types/modality";
@@ -25,20 +22,6 @@ export default function HomeScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { theme } = useTheme();
   const { t } = useI18n();
-  const { history, refreshHistory } = useHistory();
-
-  // Refresh history when screen is focused
-  useFocusEffect(
-    useCallback(() => {
-      refreshHistory();
-    }, [refreshHistory])
-  );
-
-  // Get last workout (most recent by timestamp)
-  const lastWorkout = useMemo(() => {
-    if (history.length === 0) return null;
-    return history.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
-  }, [history]);
 
   // Define modalities with colors and icons
   const modalities: Modality[] = useMemo(
@@ -49,7 +32,7 @@ export default function HomeScreen() {
         displayName: t("home.modalities.hiit.name"),
         technicalName: "HIIT",
         description: t("home.modalities.hiit.description"),
-        icon: "flame-outline" as keyof typeof Ionicons.glyphMap,
+        icon: "flame" as keyof typeof Ionicons.glyphMap,
         color: "#F44336",
       },
       {
@@ -58,7 +41,7 @@ export default function HomeScreen() {
         displayName: t("home.modalities.tabata.name"),
         technicalName: "TABATA",
         description: t("home.modalities.tabata.description"),
-        icon: "repeat-outline" as keyof typeof Ionicons.glyphMap,
+        icon: "repeat" as keyof typeof Ionicons.glyphMap,
         color: "#2196F3",
       },
       {
@@ -67,7 +50,7 @@ export default function HomeScreen() {
         displayName: t("home.modalities.emom.name"),
         technicalName: "EMOM",
         description: t("home.modalities.emom.description"),
-        icon: "time-outline" as keyof typeof Ionicons.glyphMap,
+        icon: "time" as keyof typeof Ionicons.glyphMap,
         color: "#FFC107",
       },
       {
@@ -76,7 +59,7 @@ export default function HomeScreen() {
         displayName: t("home.modalities.amrap.name"),
         technicalName: "AMRAP",
         description: t("home.modalities.amrap.description"),
-        icon: "flash-outline" as keyof typeof Ionicons.glyphMap,
+        icon: "flash" as keyof typeof Ionicons.glyphMap,
         color: "#FF6B35",
       },
       {
@@ -85,7 +68,7 @@ export default function HomeScreen() {
         displayName: t("home.modalities.boxe.name"),
         technicalName: "BOXE",
         description: t("home.modalities.boxe.description"),
-        icon: "fitness-outline" as keyof typeof Ionicons.glyphMap,
+        icon: "fitness" as keyof typeof Ionicons.glyphMap,
         color: "#9C27B0",
       },
       {
@@ -94,7 +77,7 @@ export default function HomeScreen() {
         displayName: t("home.modalities.mobilidade.name"),
         technicalName: "MOBILIDADE",
         description: t("home.modalities.mobilidade.description"),
-        icon: "body-outline" as keyof typeof Ionicons.glyphMap,
+        icon: "leaf" as keyof typeof Ionicons.glyphMap,
         color: "#4CAF50",
       },
     ],
@@ -109,58 +92,50 @@ export default function HomeScreen() {
     navigation.navigate("CategoryPresets", { category });
   };
 
-  const handleRepeatWorkout = () => {
-    if (!lastWorkout) return;
-
-    // Navigate to ActiveTimer with last workout configuration
-    navigation.navigate("ActiveTimer", {
-      prepTime: lastWorkout.config.prepTime,
-      exerciseTime: lastWorkout.config.exerciseTime,
-      restTime: lastWorkout.config.restTime,
-      rounds: lastWorkout.config.rounds,
-      workoutType: lastWorkout.type,
-      presetName: lastWorkout.presetName,
-      presetCategory: lastWorkout.presetCategory,
-    });
-  };
-
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={{
-          paddingTop: Spacing.xl,
-          paddingBottom: insets.bottom + Spacing.xxl,
-          paddingHorizontal: Spacing.m,
-        }}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: insets.top + 16, paddingBottom: insets.bottom + Spacing.xxl },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
         <View style={styles.header}>
-          <ThemedText type="h1">CronôBR</ThemedText>
+          <View style={styles.logoContainer}>
+            <View style={[styles.logoIcon, { backgroundColor: Colors.primary }]}>
+              <Ionicons name="timer-outline" size={24} color="#FFFFFF" />
+            </View>
+            <ThemedText type="h2" style={styles.title}>
+              CronôBR
+            </ThemedText>
+          </View>
           <ThemedText type="body" style={[styles.subtitle, { color: theme.textSecondary }]}>
             {t("home.subtitle")}
           </ThemedText>
         </View>
 
-        {/* Quick Start Card */}
-        <QuickStartCard onPress={handleQuickStart} />
+        {/* Quick Start Card V2 */}
+        <QuickStartCardV2 onPress={handleQuickStart} />
 
-        {/* Last Workout Card (conditional) */}
-        {lastWorkout && <LastWorkoutCard entry={lastWorkout} onRepeat={handleRepeatWorkout} />}
+        {/* Modalities Section */}
+        <View style={styles.modalitiesSection}>
+          <ThemedText type="h3" style={styles.sectionTitle}>
+            {t("home.modalitiesTitle")}
+          </ThemedText>
 
-        {/* Modalities Section Title */}
-        <ThemedText type="h2" style={styles.modalitiesTitle}>
-          {t("home.modalitiesTitle")}
-        </ThemedText>
-
-        {/* Modalities Grid (2 columns) */}
-        <View style={styles.grid}>
-          {modalities.map((modality, index) => (
-            <View key={modality.id} style={styles.gridItem}>
-              <ModalityCard modality={modality} onPress={handleModalityPress} index={index} />
-            </View>
-          ))}
+          <View style={styles.grid}>
+            {modalities.map((modality, index) => (
+              <ModalidadeCardV2
+                key={modality.id}
+                modality={modality}
+                onPress={handleModalityPress}
+                index={index}
+              />
+            ))}
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -174,24 +149,44 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    paddingHorizontal: Spacing.m,
+    paddingBottom: Spacing.xl,
+  },
   header: {
-    alignItems: "center",
     marginBottom: Spacing.l,
   },
-  subtitle: {
-    marginTop: Spacing.xs,
-    textAlign: "center",
+  logoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
   },
-  modalitiesTitle: {
-    marginTop: Spacing.m,
+  logoIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  title: {
+    fontWeight: "700",
+  },
+  subtitle: {
+    fontSize: 15,
+    fontWeight: "400",
+  },
+  modalitiesSection: {
+    marginTop: 0,
+  },
+  sectionTitle: {
+    fontWeight: "600",
     marginBottom: Spacing.m,
   },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
+    justifyContent: "space-between",
     gap: Spacing.m,
-  },
-  gridItem: {
-    width: "48%",
   },
 });
