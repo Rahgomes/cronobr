@@ -1,29 +1,32 @@
-import React, { useState, useCallback } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import React, { useState, useCallback, useEffect } from "react";
+import { View, StyleSheet, ScrollView, Pressable, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { Feather } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
 import { ConfigCard } from "@/components/ConfigCard";
 import { TimePickerModal } from "@/components/TimePickerModal";
 import { RoundsPickerModal } from "@/components/RoundsPickerModal";
+import MenuDrawer from "@/components/MenuDrawer";
 import { useTheme } from "@/hooks/useTheme";
 import { useI18n } from "@/contexts/I18nContext";
 import { Colors, Spacing } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { getTimerConfig, saveTimerConfig, TimerConfig } from "@/lib/storage";
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, "ManualConfig">;
+type Props = NativeStackScreenProps<RootStackParamList, "ManualConfig">;
 
 type ModalType = "prep" | "exercise" | "rest" | "rounds" | null;
 
-export default function ManualConfigScreen() {
+export default function ManualConfigScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation<NavigationProp>();
   const { theme } = useTheme();
   const { t, formatTime } = useI18n();
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const [config, setConfig] = useState<TimerConfig>({
     prepTime: 10,
@@ -36,15 +39,80 @@ export default function ManualConfigScreen() {
   const [highlightedCard, setHighlightedCard] = useState<string | null>(null);
 
   const loadConfig = useCallback(async () => {
+    // Check if preset was passed via route params
+    if (route.params?.preset) {
+      const { preset } = route.params;
+      setConfig({
+        prepTime: preset.prepTime,
+        exerciseTime: preset.exerciseTime,
+        restTime: preset.restTime,
+        rounds: preset.rounds,
+      });
+      return; // Don't load from storage if preset exists
+    }
+
+    // Check if quick start (empty params object)
+    const isQuickStart = route.params && Object.keys(route.params).length === 0;
+    if (isQuickStart) {
+      setConfig({
+        prepTime: 1,
+        exerciseTime: 1,
+        restTime: 1,
+        rounds: 1,
+      });
+      return;
+    }
+
+    // Load from storage for normal manual config
     const loadedConfig = await getTimerConfig();
     setConfig(loadedConfig);
-  }, []);
+  }, [route.params]);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadConfig();
-    }, [loadConfig])
-  );
+  useEffect(() => {
+    loadConfig();
+  }, [loadConfig]);
+
+  // Configure header buttons
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => (
+        <Pressable
+          onPress={() => {
+            if (Platform.OS !== "web") {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            }
+            setMenuVisible(true);
+          }}
+          style={({ pressed }) => ({
+            padding: 8,
+            marginLeft: 8,
+            borderRadius: 8,
+            backgroundColor: pressed ? Colors.primary + "20" : "transparent",
+          })}
+        >
+          <Feather name="menu" size={24} color={theme.text} />
+        </Pressable>
+      ),
+      headerRight: () => (
+        <Pressable
+          onPress={() => {
+            if (Platform.OS !== "web") {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            }
+            navigation.navigate("Settings");
+          }}
+          style={({ pressed }) => ({
+            padding: 8,
+            marginRight: 8,
+            borderRadius: 8,
+            backgroundColor: pressed ? Colors.primary + "20" : "transparent",
+          })}
+        >
+          <Feather name="settings" size={24} color={theme.text} />
+        </Pressable>
+      ),
+    });
+  }, [navigation, theme]);
 
   const handleConfigChange = async (key: keyof TimerConfig, value: number) => {
     const newConfig = { ...config, [key]: value };
@@ -94,9 +162,33 @@ export default function ManualConfigScreen() {
       >
         {/* Title Section */}
         <View style={styles.heroSection}>
-          <ThemedText type="h2">{t("manualConfig.title")}</ThemedText>
+          <ThemedText type="h2">
+            {(() => {
+              const isQuickStart = route.params && Object.keys(route.params).length === 0;
+              const preset = route.params?.preset;
+
+              if (isQuickStart) {
+                return t("manualConfig.quickStartTitle");
+              } else if (preset?.category) {
+                return preset.category;
+              } else {
+                return t("manualConfig.title");
+              }
+            })()}
+          </ThemedText>
           <ThemedText type="bodySmall" style={{ color: theme.textSecondary, textAlign: "center", marginTop: Spacing.xs }}>
-            {t("timerConfig.subtitle")}
+            {(() => {
+              const isQuickStart = route.params && Object.keys(route.params).length === 0;
+              const preset = route.params?.preset;
+
+              if (isQuickStart) {
+                return t("manualConfig.quickStartSubtitle");
+              } else if (preset?.presetName) {
+                return preset.presetName;
+              } else {
+                return t("timerConfig.subtitle");
+              }
+            })()}
           </ThemedText>
         </View>
 
@@ -197,6 +289,13 @@ export default function ManualConfigScreen() {
         title={t("timerConfig.rounds")}
         min={0}
         max={99}
+      />
+
+      {/* Menu Drawer */}
+      <MenuDrawer
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        navigation={navigation}
       />
     </View>
   );

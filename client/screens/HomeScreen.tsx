@@ -1,19 +1,21 @@
-import React, { useMemo } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import React, { useMemo, useState, useEffect } from "react";
+import { View, StyleSheet, ScrollView, Pressable, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, Feather } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 
 import { ThemedText } from "@/components/ThemedText";
 import QuickStartCardV2 from "@/components/QuickStartCardV2";
 import ModalidadeCardV2 from "@/components/ModalidadeCardV2";
+import MenuDrawer from "@/components/MenuDrawer";
 import { useTheme } from "@/hooks/useTheme";
 import { useI18n } from "@/contexts/I18nContext";
-import { Colors, Spacing } from "@/constants/theme";
+import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { Modality } from "@/types/modality";
-import { WorkoutCategory } from "@/lib/storage";
+import { WorkoutCategory, getTimerConfig, TimerConfig } from "@/lib/storage";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Home">;
 
@@ -22,6 +24,65 @@ export default function HomeScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { theme } = useTheme();
   const { t } = useI18n();
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [hasValidConfig, setHasValidConfig] = useState(false);
+  const [currentConfig, setCurrentConfig] = useState<TimerConfig | null>(null);
+
+  // Load config on focus to check if preview should be shown
+  useFocusEffect(
+    React.useCallback(() => {
+      const checkConfig = async () => {
+        const config = await getTimerConfig();
+        setCurrentConfig(config);
+        // Valid if any value > 0 (excluding prep time, since it's optional)
+        const isValid = config.exerciseTime > 0 && config.rounds > 0;
+        setHasValidConfig(isValid);
+      };
+      checkConfig();
+    }, [])
+  );
+
+  // Configure header buttons
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => (
+        <Pressable
+          onPress={() => {
+            if (Platform.OS !== "web") {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            }
+            setMenuVisible(true);
+          }}
+          style={({ pressed }) => ({
+            padding: 8,
+            marginLeft: 8,
+            borderRadius: 8,
+            backgroundColor: pressed ? Colors.primary + "20" : "transparent",
+          })}
+        >
+          <Feather name="menu" size={24} color={theme.text} />
+        </Pressable>
+      ),
+      headerRight: () => (
+        <Pressable
+          onPress={() => {
+            if (Platform.OS !== "web") {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            }
+            navigation.navigate("Settings");
+          }}
+          style={({ pressed }) => ({
+            padding: 8,
+            marginRight: 8,
+            borderRadius: 8,
+            backgroundColor: pressed ? Colors.primary + "20" : "transparent",
+          })}
+        >
+          <Feather name="settings" size={24} color={theme.text} />
+        </Pressable>
+      ),
+    });
+  }, [navigation, theme]);
 
   // Define modalities with colors and icons
   const modalities: Modality[] = useMemo(
@@ -85,7 +146,7 @@ export default function HomeScreen() {
   );
 
   const handleQuickStart = () => {
-    navigation.navigate("ManualConfig");
+    navigation.navigate("ManualConfig", {});
   };
 
   const handleModalityPress = (category: WorkoutCategory) => {
@@ -120,6 +181,33 @@ export default function HomeScreen() {
         {/* Quick Start Card V2 */}
         <QuickStartCardV2 onPress={handleQuickStart} />
 
+        {/* Preview Button (conditionally shown) */}
+        {hasValidConfig && currentConfig && (
+          <Pressable
+            onPress={() => {
+              if (Platform.OS !== "web") {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
+              navigation.navigate("WorkoutPreview", {
+                prepTime: currentConfig.prepTime,
+                exerciseTime: currentConfig.exerciseTime,
+                restTime: currentConfig.restTime,
+                rounds: currentConfig.rounds,
+              });
+            }}
+            style={({ pressed }) => [
+              styles.previewButton,
+              { backgroundColor: theme.backgroundSecondary },
+              pressed && { opacity: 0.8 },
+            ]}
+          >
+            <View style={styles.previewIconContainer}>
+              <Feather name="play" size={16} color="#FFFFFF" />
+            </View>
+            <ThemedText type="bodySmall">{t("home.previewCurrent")}</ThemedText>
+          </Pressable>
+        )}
+
         {/* Modalities Section */}
         <View style={styles.modalitiesSection}>
           <ThemedText type="h3" style={styles.sectionTitle}>
@@ -138,6 +226,13 @@ export default function HomeScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Menu Drawer */}
+      <MenuDrawer
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        navigation={navigation}
+      />
     </View>
   );
 }
@@ -175,6 +270,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 15,
     fontWeight: "400",
+    textAlign: "center"
   },
   modalitiesSection: {
     marginTop: 0,
@@ -188,5 +284,23 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "space-between",
     gap: Spacing.m,
+  },
+  previewButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.s,
+    paddingHorizontal: Spacing.m,
+    borderRadius: BorderRadius.m,
+    marginBottom: Spacing.l,
+    gap: Spacing.xs,
+  },
+  previewIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: Colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

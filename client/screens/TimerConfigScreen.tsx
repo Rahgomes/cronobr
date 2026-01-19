@@ -15,6 +15,7 @@ import Animated, {
 import * as Haptics from "expo-haptics";
 
 import { ThemedText } from "@/components/ThemedText";
+import MenuDrawer from "@/components/MenuDrawer";
 import { useTheme } from "@/hooks/useTheme";
 import { useI18n } from "@/contexts/I18nContext";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
@@ -41,97 +42,6 @@ const MODALITY_CONFIGS: Record<string, ModalityConfig> = {
   boxe: { prepTime: 10, exerciseTime: 180, restTime: 60, rounds: 3 },
   mobilidade: { prepTime: 5, exerciseTime: 30, restTime: 10, rounds: 6 },
 };
-
-function MenuDrawer({
-  visible,
-  onClose,
-  onNavigate,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  onNavigate: (screen: "SoundSettings" | "AdvancedSettings" | "Profiles" | "History") => void;
-}) {
-  const { theme } = useTheme();
-  const { t } = useI18n();
-  const insets = useSafeAreaInsets();
-  const translateX = useSharedValue(-300);
-  const opacity = useSharedValue(0);
-
-  React.useEffect(() => {
-    if (visible) {
-      opacity.value = withTiming(1, { duration: 200 });
-      translateX.value = withTiming(0, { duration: 250 });
-    } else {
-      opacity.value = withTiming(0, { duration: 150 });
-      translateX.value = withTiming(-300, { duration: 200 });
-    }
-  }, [visible]);
-
-  const backdropStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
-
-  const drawerStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-  }));
-
-  const menuItems = [
-    { key: "Profiles" as const, icon: "folder" as const, label: t("menu.profiles") },
-    { key: "History" as const, icon: "clock" as const, label: t("menu.history") },
-    { key: "SoundSettings" as const, icon: "volume-2" as const, label: t("menu.soundSettings") },
-    { key: "AdvancedSettings" as const, icon: "settings" as const, label: t("menu.advancedSettings") },
-  ];
-
-  return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
-      <Animated.View style={[styles.menuBackdrop, backdropStyle]}>
-        <Pressable style={styles.menuBackdropPress} onPress={onClose} />
-        <Animated.View
-          style={[styles.menuDrawer, { backgroundColor: theme.backgroundDefault, paddingTop: insets.top + Spacing.l }, drawerStyle]}
-        >
-          <View style={styles.menuHeader}>
-            <ThemedText type="h2" style={styles.menuTitle}>Menu</ThemedText>
-            <Pressable
-              onPress={() => {
-                if (Platform.OS !== "web") {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }
-                onClose();
-              }}
-              style={({ pressed }) => [
-                styles.closeButton,
-                { opacity: pressed ? 0.5 : 1 }
-              ]}
-            >
-              <Feather name="x" size={24} color={theme.text} />
-            </Pressable>
-          </View>
-
-          <View style={styles.menuItems}>
-            {menuItems.map((item) => (
-              <Pressable
-                key={item.key}
-                onPress={() => {
-                  if (Platform.OS !== "web") {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  }
-                  onNavigate(item.key);
-                }}
-                style={({ pressed }) => [
-                  styles.menuItem,
-                  { backgroundColor: pressed ? theme.backgroundSecondary : "transparent" },
-                ]}
-              >
-                <Feather name={item.icon} size={22} color={Colors.primary} />
-                <ThemedText type="body">{item.label}</ThemedText>
-              </Pressable>
-            ))}
-          </View>
-        </Animated.View>
-      </Animated.View>
-    </Modal>
-  );
-}
 
 function ModalityCard({
   icon,
@@ -319,21 +229,8 @@ export default function TimerConfigScreen() {
     });
   }, [navigation, theme]);
 
-  const handleMenuNavigate = (screen: "SoundSettings" | "AdvancedSettings" | "Profiles" | "History") => {
-    setMenuVisible(false);
-    if (screen === "SoundSettings") {
-      navigation.navigate("SoundSettings");
-    } else if (screen === "AdvancedSettings") {
-      navigation.navigate("AdvancedSettings");
-    } else if (screen === "Profiles") {
-      navigation.navigate("Profiles");
-    } else if (screen === "History") {
-      navigation.navigate("History");
-    }
-  };
-
   const handleQuickStart = () => {
-    navigation.navigate("ManualConfig");
+    navigation.navigate("ManualConfig", {});
   };
 
   const handleModalityPress = (modality: string) => {
@@ -406,7 +303,7 @@ export default function TimerConfigScreen() {
       <MenuDrawer
         visible={menuVisible}
         onClose={() => setMenuVisible(false)}
-        onNavigate={handleMenuNavigate}
+        navigation={navigation}
       />
       <ScrollView
         style={styles.scrollView}
@@ -526,43 +423,5 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     alignItems: "center",
     justifyContent: "center",
-  },
-  menuBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  menuBackdropPress: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  menuDrawer: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 280,
-    paddingHorizontal: Spacing.l,
-  },
-  menuHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.l,
-    paddingHorizontal: Spacing.m,
-  },
-  menuTitle: {
-    flex: 1,
-  },
-  closeButton: {
-    padding: Spacing.s,
-  },
-  menuItems: {
-    gap: Spacing.s,
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.m,
-    padding: Spacing.m,
-    borderRadius: BorderRadius.m,
   },
 });

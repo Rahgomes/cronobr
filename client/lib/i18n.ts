@@ -35,6 +35,10 @@ export const translations = {
       completed: "Treino Completo!",
       congratulations: "Parab\u00e9ns pelo esfor\u00e7o!",
       close: "Fechar",
+      stopModalTitle: "Finalizar treino?",
+      stopModalMessage: "Deseja encerrar o treino atual agora?",
+      stopModalContinue: "Continuar",
+      stopModalFinish: "Finalizar",
     },
     settings: {
       title: "Configura\u00e7\u00f5es",
@@ -143,10 +147,13 @@ export const translations = {
       summary: "Resumo da Sessão",
     },
     menu: {
+      title: "Menu",
       history: "Histórico de Treinos",
       settings: "Configurações",
       soundSettings: "Configurações de Som",
       about: "Sobre",
+      profiles: "Perfis de Treino",
+      advancedSettings: "Configurações Avançadas",
     },
     profiles: {
       title: "Perfis de Treino",
@@ -289,6 +296,8 @@ export const translations = {
     },
     manualConfig: {
       title: "Configuração Manual",
+      quickStartTitle: "Início Rápido",
+      quickStartSubtitle: "Configuração manual",
     },
   },
   en: {
@@ -322,6 +331,10 @@ export const translations = {
       completed: "Workout Complete!",
       congratulations: "Great job on your workout!",
       close: "Close",
+      stopModalTitle: "End workout?",
+      stopModalMessage: "Do you want to finish the current workout now?",
+      stopModalContinue: "Continue",
+      stopModalFinish: "Finish",
     },
     settings: {
       title: "Settings",
@@ -430,10 +443,13 @@ export const translations = {
       summary: "Session Summary",
     },
     menu: {
+      title: "Menu",
       history: "Workout History",
       settings: "Settings",
       soundSettings: "Sound Settings",
       about: "About",
+      profiles: "Workout Profiles",
+      advancedSettings: "Advanced Settings",
     },
     profiles: {
       title: "Workout Profiles",
@@ -576,6 +592,8 @@ export const translations = {
     },
     manualConfig: {
       title: "Manual Configuration",
+      quickStartTitle: "Quick Start",
+      quickStartSubtitle: "Manual configuration",
     },
   },
   es: {
@@ -609,6 +627,10 @@ export const translations = {
       completed: "\u00a1Entrenamiento Completo!",
       congratulations: "\u00a1Felicidades por tu esfuerzo!",
       close: "Cerrar",
+      stopModalTitle: "¿Finalizar entrenamiento?",
+      stopModalMessage: "¿Deseas terminar el entrenamiento actual ahora?",
+      stopModalContinue: "Continuar",
+      stopModalFinish: "Finalizar",
     },
     settings: {
       title: "Configuraci\u00f3n",
@@ -717,10 +739,13 @@ export const translations = {
       summary: "Resumen de la Sesión",
     },
     menu: {
+      title: "Menú",
       history: "Historial de Entrenamientos",
       settings: "Configuración",
       soundSettings: "Configuración de Sonido",
       about: "Acerca de",
+      profiles: "Perfiles de Entrenamiento",
+      advancedSettings: "Configuración Avanzada",
     },
     profiles: {
       title: "Perfiles de Entrenamiento",
@@ -863,6 +888,8 @@ export const translations = {
     },
     manualConfig: {
       title: "Configuraci\u00f3n Manual",
+      quickStartTitle: "Inicio Rápido",
+      quickStartSubtitle: "Configuración manual",
     },
   },
   fr: {
@@ -896,6 +923,10 @@ export const translations = {
       completed: "Entra\u00eenement Termin\u00e9!",
       congratulations: "F\u00e9licitations pour vos efforts!",
       close: "Fermer",
+      stopModalTitle: "Terminer l'entraînement?",
+      stopModalMessage: "Voulez-vous terminer l'entraînement maintenant?",
+      stopModalContinue: "Continuer",
+      stopModalFinish: "Terminer",
     },
     settings: {
       title: "Param\u00e8tres",
@@ -1004,10 +1035,13 @@ export const translations = {
       summary: "Résumé de la Séance",
     },
     menu: {
+      title: "Menu",
       history: "Historique des Entraînements",
       settings: "Paramètres",
       soundSettings: "Paramètres Audio",
       about: "À Propos",
+      profiles: "Profils d'Entraînement",
+      advancedSettings: "Paramètres Avancés",
     },
     profiles: {
       title: "Profils d'Entraînement",
@@ -1150,6 +1184,8 @@ export const translations = {
     },
     manualConfig: {
       title: "Configuration Manuelle",
+      quickStartTitle: "Démarrage Rapide",
+      quickStartSubtitle: "Configuration manuelle",
     },
   },
 };

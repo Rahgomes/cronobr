@@ -54,16 +54,20 @@ export default function CategoryPresetsScreen({ navigation, route }: Props) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
 
+    // Save profile as active
     await applyProfile(profile.id);
     setActiveProfileId(profile.id);
-    navigation.navigate('ActiveTimer', {
-      prepTime: profile.config.prepTime,
-      exerciseTime: profile.config.exerciseTime,
-      restTime: profile.config.restTime,
-      rounds: profile.config.rounds,
-      workoutType: 'preset',
-      presetName: profile.name,
-      presetCategory: profile.category,
+
+    // Navigate to ManualConfig with preset data (allow user to edit before starting)
+    navigation.navigate('ManualConfig', {
+      preset: {
+        prepTime: profile.config.prepTime,
+        exerciseTime: profile.config.exerciseTime,
+        restTime: profile.config.restTime,
+        rounds: profile.config.rounds,
+        presetName: profile.name,
+        category: profile.category,
+      },
     });
   };
 

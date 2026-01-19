@@ -18,6 +18,7 @@ import * as Haptics from "expo-haptics";
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
 import { SilentModeIndicator } from "@/components/SilentModeIndicator";
+import { ConfirmationModal } from "@/components/ConfirmationModal";
 import { useI18n } from "@/contexts/I18nContext";
 import { useScreenLock } from "@/contexts/ScreenLockContext";
 import { useSilentMode } from "@/contexts/SilentModeContext";
@@ -79,6 +80,7 @@ export default function ActiveTimerScreen() {
   const [isPaused, setIsPaused] = useState(false);
   const [showDoubleTapHint, setShowDoubleTapHint] = useState(false);
   const [showSavedToast, setShowSavedToast] = useState(false);
+  const [showStopModal, setShowStopModal] = useState(false);
   const [settings, setSettings] = useState<Settings>({
     soundEnabled: true,
     vibrationEnabled: true,
@@ -442,7 +444,12 @@ export default function ActiveTimerScreen() {
     }, 3000);
   }, [addEntry, prepTime, exerciseTime, restTime, rounds, currentRound, profileMetadata]);
 
-  const handleStop = async () => {
+  const handleStop = () => {
+    setShowStopModal(true); // Show modal instead of immediate stop
+  };
+
+  const handleConfirmStop = async () => {
+    setShowStopModal(false);
     setIsRunning(false);
     triggerHaptic("heavy");
 
@@ -457,6 +464,11 @@ export default function ActiveTimerScreen() {
     await saveToHistory(true);
 
     navigation.goBack();
+  };
+
+  const handleContinue = () => {
+    setShowStopModal(false);
+    triggerHaptic("light");
   };
 
   const handleClose = () => {
@@ -588,6 +600,18 @@ export default function ActiveTimerScreen() {
           </View>
         </Animated.View>
       )}
+
+      {/* Stop Confirmation Modal */}
+      <ConfirmationModal
+        visible={showStopModal}
+        onClose={handleContinue}
+        onConfirm={handleConfirmStop}
+        title={t("activeTimer.stopModalTitle")}
+        message={t("activeTimer.stopModalMessage")}
+        confirmText={t("activeTimer.stopModalFinish")}
+        cancelText={t("activeTimer.stopModalContinue")}
+        variant="warning"
+      />
     </Animated.View>
   );
 }

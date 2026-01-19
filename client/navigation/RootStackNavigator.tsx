@@ -21,9 +21,18 @@ import CategoryPresetsScreen from "@/screens/CategoryPresetsScreen";
 import AboutScreen from "@/screens/AboutScreen";
 import HeaderTitle from "@/components/HeaderTitle";
 
+export type PresetConfig = {
+  prepTime: number;
+  exerciseTime: number;
+  restTime: number;
+  rounds: number;
+  presetName?: string;
+  category?: WorkoutCategory;
+};
+
 export type RootStackParamList = {
   Home: undefined;
-  ManualConfig: undefined;
+  ManualConfig: { preset?: PresetConfig };
   TimerConfig: undefined;
   ActiveTimer: {
     prepTime: number;
