@@ -1,33 +1,30 @@
 # Marca CronôBR
 
-**Nome decidido (07/11, Ramon):** CronôBR, com acento circunflexo no segundo "o". Título candidato
-nas lojas: "CronôBR: Tabata e HIIT". Pendente: trocar "CronoBR" no cabeçalho e nas traduções
-(`client/components/HeaderTitle.tsx`, `client/lib/i18n.ts`); `app.json` e `AboutScreen` já usam "CronôBR".
+| Decisão | Valor | Quando |
+| --- | --- | --- |
+| Nome | **CronôBR** (circunflexo no segundo "o") | 07/11, Ramon |
+| Logo | **Conceito 2, "C de tempo"**: C branco em arco de progresso + play, em quadrado laranja | 07/11, Ramon |
+| Título nas lojas (candidato) | CronôBR: Tabata e HIIT | super PRD 00 |
 
-## Conceitos de logo (escolher 1)
+## Kit (`final/`)
 
-| Folha | Opções |
-| --- | --- |
-| `M02-logo-conceitos-acento.png` | 1 Anel · 2 C de tempo · 3 Intervalos · 4 Pulso |
-| `M03-logo-conceitos-novos.png`  | 5 Clássico (versão chapada do ícone 3D atual) · 6 Acento · 7 Ampulheta · 8 Monograma |
-| `M01-logo-conceitos.png`        | Primeira rodada, sem acento (arquivo histórico) |
+Tudo é gerado por `final/gerar.py` (vetor → PNG). Não edite PNG à mão: mude o script e rode
+`python3 -I docs/marca/final/gerar.py`. Fonte do wordmark: Poppins Bold (licença OFL, em `final/fonte/`),
+convertida em curvas, então os SVG não dependem de fonte instalada.
 
-As imagens são **conceito**. O logo final é redesenhado em vetor (SVG), porque PNG gerado por IA
-não escala nem tem medidas exatas.
+| Pasta | Arquivos | Uso |
+| --- | --- | --- |
+| `svg/` | `icone`, `icone-escuro`, `simbolo-{laranja,branco,preto}`, `lockup-fundo-{escuro,claro}`, `wordmark-fundo-{escuro,claro}`, `og-1200x630` | Site, documentos, qualquer tamanho |
+| `png/` | `icone-{1024,512,192,48}`, `lockup-*@2x`, `simbolo-laranja-512`, `og-1200x630` | Redes, página institucional, prévia de link |
+| `app/` | `icon`, `android-icon-{foreground,background,monochrome}`, `splash-icon`, `favicon` | Vão para `assets/images/` do app na fase de código |
 
-## Kit final (depois da escolha)
+## Uso
 
-```
-docs/marca/final/
-  svg/      icone.svg · icone-mono.svg · lockup-horizontal-escuro.svg · lockup-horizontal-claro.svg · wordmark.svg
-  png/      icone-1024.png · icone-512.png · icone-192.png · lockup-*-2x.png · og-1200x630.png
-  app/      → copiados para assets/images: icon.png, splash-icon.png, favicon.png,
-            android-icon-foreground.png, android-icon-background.png, android-icon-monochrome.png
-  GUIA.md   cores, área de respiro, tamanho mínimo, usos certos e errados
-```
+- Cores: laranja #FF6B35 · branco #FFFFFF · quase preto #121212 · cinzas #2A2A2A / #B0B0B0.
+- Fundo escuro: lockup com "Cronô" branco. Fundo claro: "Cronô" #121212. "BR" sempre laranja.
+- Área de respiro: no mínimo a altura do play em volta do logo. Tamanho mínimo do ícone: 24 px.
+- Não usar: degradê, sombra, contorno, símbolo esticado, "CronoBR" sem acento.
+- Pendente na fase de código: copiar `final/app/*` para `assets/images/` e trocar "CronoBR" no cabeçalho
+  e nas traduções (`client/components/HeaderTitle.tsx`, `client/lib/i18n.ts`).
 
-- Os PNG saem de um script a partir dos SVG, sem edição manual, e podem ser refeitos quando quiser.
-- Os ícones adaptativos do Android hoje são o padrão do Expo (chevron azul) e serão trocados pelo kit.
-- O mesmo kit serve para a página institucional (lockup, favicon, imagem de compartilhamento 1200×630).
-
-Cores: laranja #FF6B35 · branco #FFFFFF · quase preto #121212 · cinzas #2A2A2A / #B0B0B0.
+Conceitos que não foram escolhidos ficam em `arquivado/`.
