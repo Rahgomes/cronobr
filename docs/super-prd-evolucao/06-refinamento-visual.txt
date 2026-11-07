@@ -1,0 +1,38 @@
+Refine a interface existente do CronoBR.
+
+Antes de editar, examine as telas atuais, os componentes reutilizáveis, o tema e as imagens de referência do repositório.
+
+Preserve a identidade laranja, preto e cinza.
+O tema atual usa #FF6B35 como laranja principal. Valide contraste antes de reutilizá-lo com textos e botões.
+
+Se houver ferramenta de geração de imagem disponível, produza uma imagem-conceito das telas inicial, editor e sessão ativa.
+Use a imagem como referência visual e implemente componentes nativos reais. Caso a ferramenta esteja indisponível, prossiga com os componentes do projeto e informe essa limitação.
+
+PRIORIDADES
+- Abrir e iniciar uma tarefa simples com poucos toques.
+- Exibir última rotina e favoritos.
+- Deixar personalização avançada acessível de forma progressiva.
+- Destacar o contador durante a execução.
+- Diferenciar preparar, executar, descansar e concluir por texto, som e cor.
+- Tornar claros os descansos entre etapas e entre blocos.
+- Manter ações frequentes em posições consistentes.
+- Exibir estados de salvamento, erro, vazio e importação concluída.
+- Evitar excesso de cartões, ícones decorativos e textos repetidos.
+
+ACESSIBILIDADE
+- Contraste adequado e números tabulares.
+- Tamanho de texto ajustável sem cortes.
+- Alvos de toque confortáveis.
+- VoiceOver e TalkBack.
+- Alternativa às ações que dependem de arrastar.
+- Movimento reduzido.
+- Tema claro, escuro e preferência do sistema.
+- Retrato e paisagem quando úteis.
+- Tablets, telas pequenas e áreas seguras.
+
+Evite anunciar cada segundo continuamente no leitor de tela.
+Priorize mudanças de fase e controles acessíveis.
+
+Valide pt-BR, inglês, espanhol e francês com textos de comprimentos diferentes. Preserve nomes de rotinas escritos pelo usuário.
+
+Entregue capturas das telas reais implementadas e registre dispositivos ou dimensões usadas. Confira que o refinamento preservou os fluxos, dados e testes das etapas anteriores.

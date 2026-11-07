@@ -1,0 +1,64 @@
+Implemente exportação e importação offline compatíveis entre Android e iOS.
+
+Ofereça:
+1. Compartilhar uma rotina.
+2. Exportar um backup com rotinas e preferências.
+3. Incluir histórico opcionalmente.
+4. Importar arquivo com prévia antes de aplicar.
+
+FORMATO
+Defina um formato documentado e versionado, como .cronobr, com:
+- Identificação do formato.
+- schemaVersion.
+- Versão do aplicativo.
+- Data da exportação.
+- Tipo: rotina compartilhada ou backup.
+- Conteúdo validado.
+
+Use identificadores estáveis, durações numéricas com unidade explícita e datas interoperáveis. Preserve nomes e caracteres Unicode.
+
+Uma rotina compartilhada deve conter apenas o necessário para executá-la.
+Evite incluir histórico e informações pessoais nesse fluxo.
+
+PORTABILIDADE
+- Android exporta e iOS importa.
+- iOS exporta e Android importa.
+- Não dependa de caminhos locais do aparelho de origem.
+- Represente sons internos por identificadores portáveis.
+- Se a voz específica não existir no destino, escolha uma alternativa compatível com o idioma e informe a adaptação.
+- Permissões, compras, tokens e identificadores de publicidade ficam fora do backup.
+- Configurações específicas do aparelho devem ser adaptadas.
+- Se áudio personalizado ainda não tiver sido implementado, deixe explícito o suporte atual.
+- Caso arquivos de áudio sejam incluídos no futuro, use pacote com manifesto, limites e validação.
+
+IMPORTAÇÃO SEGURA
+- Validar tamanho, estrutura, tipos, versões, limites e referências.
+- Rejeitar arquivos incompatíveis antes de alterar dados.
+- Apresentar resumo do conteúdo.
+- Permitir adicionar como cópia.
+- Tratar duplicatas por identificador e conteúdo.
+- Importar novamente o mesmo arquivo deve ter comportamento previsível.
+- Atualização de rotina existente exige escolha explícita.
+- Restaurar backup completo exige confirmação e cópia recuperável do estado anterior.
+- Uma falha durante a importação não pode deixar metade dos dados aplicada.
+- Bloquear ou adiar restauração que interfira em sessão ativa.
+- Tratar arquivos como dados, nunca como código.
+
+FLUXO NATIVO
+Usar seleção e compartilhamento de arquivos do sistema.
+Testar abertura a partir de Arquivos, Downloads e aplicativos de mensagens, conforme suporte de cada plataforma.
+Oferecer importação dentro do CronoBR como caminho confiável.
+
+TESTES
+- Exportar, importar e comparar o significado dos dados.
+- Android → iOS e iOS → Android.
+- Acentos, emoji e nomes longos.
+- Versão antiga suportada.
+- Versão futura incompatível.
+- Arquivo truncado, inválido ou grande demais.
+- Duplicatas e conflitos.
+- Falha de gravação.
+- Voz indisponível.
+- Backup com e sem histórico.
+
+Critério de aceite: recuperar uma biblioteca em outro sistema, preservando tempos, ordem, blocos e repetições.

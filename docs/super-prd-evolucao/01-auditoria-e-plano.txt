@@ -1,0 +1,44 @@
+Aplique o contexto permanente. Faça uma auditoria do estado atual do CronoBR e monte o plano de evolução. Nesta etapa, entregue diagnóstico e plano, sem implementar funcionalidades.
+
+Na cópia anteriormente examinada foram encontrados:
+- React Native 0.81.5 e Expo SDK 54.
+- AsyncStorage para configurações, histórico e preferências.
+- TimerConfig com preparação, exercício, descanso e rodadas.
+- Categorias Tabata, HIIT, EMOM, AMRAP, boxe e circuito.
+- Traduções pt-BR, inglês, espanhol e francês.
+- Função saveCustomProfile cuja ligação com a interface precisava ser confirmada.
+- Contagem decrementada por setInterval.
+- Efeitos nomeados como beep implementados com feedback háptico.
+- Histórico limitado a 100 entradas.
+- Código de servidor e banco que exige verificar uso real.
+
+Confira cada item no código atual.
+
+Entregue uma matriz com:
+funcionalidade, entrada na interface, implementação real, persistência, testes existentes e lacunas.
+
+Diferencie funcionalidades completas, parciais e apenas representadas na interface. Confira especialmente se cada modalidade executa o comportamento correto.
+
+Mapeie:
+- Navegação e início rápido.
+- Criação e reutilização de rotinas.
+- Contador, pausa, retomada, conclusão e histórico.
+- Som, fala, vibração e modo silencioso.
+- Tela bloqueada, navegação para fora e recuperação após encerramento.
+- Migrações e falhas de gravação.
+- Traduções e acessibilidade.
+- Dependência de rede no início do app.
+
+Execute os checks existentes, quando o ambiente permitir.
+Registre falhas anteriores às mudanças.
+
+Organize a implementação nesta ordem:
+1. Modelo temporal e preservação dos dados.
+2. Execução em segundo plano e áudio.
+3. Editor, biblioteca e modalidades.
+4. Backup e importação Android/iOS.
+5. Refinamento visual.
+6. Recursos adicionais.
+7. Monetização e preparação para lançamento.
+
+Inclua riscos, dependências e critérios objetivos de aceite.

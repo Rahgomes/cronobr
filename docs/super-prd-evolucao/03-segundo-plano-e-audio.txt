@@ -1,0 +1,56 @@
+Implemente a execução em segundo plano e os avisos do CronoBR usando a base temporal da etapa anterior.
+
+Primeiro investigue as APIs disponíveis nas versões instaladas.
+Faça uma prova técnica mínima por plataforma antes da integração final.
+Se for necessária atualização de SDK ou módulo nativo, explique o motivo, a compatibilidade e o impacto.
+
+Diferencie:
+- App visível.
+- App em segundo plano.
+- Tela bloqueada.
+- Processo encerrado pelo sistema.
+- Encerramento forçado pelo usuário.
+- Reinício do aparelho.
+
+Defina o comportamento suportado em cada caso.
+
+ANDROID
+Use os mecanismos nativos adequados à execução e aos avisos.
+Verifique requisitos de serviço em primeiro plano, notificações, permissões e políticas aplicáveis à finalidade do app.
+
+IOS
+Valide a estratégia de áudio e notificações.
+Considere os limites de agendamento, interrupções e suspensão.
+Use capacidades de segundo plano apenas para finalidades legítimas.
+Não use áudio silencioso como artifício para manter o processo ativo.
+
+ÁUDIO
+- Implemente beeps reais com arquivos locais licenciados ou originais.
+- Inclua sinais distinguíveis para preparação, início, descanso, conclusão e aviso antecipado.
+- Permita voz, beep e vibração com controles independentes.
+- Inclua prévia audível nas configurações.
+- Mantenha os sons essenciais disponíveis offline.
+- Se a voz selecionada não estiver instalada ou disponível offline, use alternativa local e explique a escolha.
+- Evite falas sobrepostas e filas de contagem atrasadas.
+- Teste mistura de áudio e redução temporária da música.
+- Restaure corretamente o comportamento do áudio após o aviso.
+- Respeite modo silencioso e escolhas do usuário.
+- Explique limitações reais do volume por plataforma.
+- Trate conexão e desconexão de fones e Bluetooth.
+
+VALIDAÇÃO
+Teste em builds nativos, com registro de aparelho e sistema:
+- Tela bloqueada durante uma sessão.
+- Spotify ou outro player.
+- Vídeo em outro aplicativo.
+- Chamada recebida.
+- Notificações negadas.
+- Economia de bateria.
+- Fones conectados e desconectados.
+- Pausa e retomada pelos controles disponíveis.
+- Sessão longa.
+
+Meça a diferença entre o instante previsto e o aviso observado.
+Não considere teste unitário ou Expo Go evidência suficiente do funcionamento nativo em segundo plano.
+
+Critério de aceite: informar precisamente quais cenários funcionam, com evidência, e quais permanecem limitados.

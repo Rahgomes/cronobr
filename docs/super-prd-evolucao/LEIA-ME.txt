@@ -1,0 +1,43 @@
+PACOTE DE PROMPTS — CRONOBR
+Preparado em 07/11/2026.
+
+Copie esta pasta para o seu projeto. Estes arquivos contêm o contexto e os oito prompts definidos na conversa, organizados para execução por etapas.
+
+COMO USAR
+1. Abra o projeto real do CronoBR na ferramenta de programação.
+2. Apresente o arquivo 00-contexto-permanente.txt à IA no início do chat.
+3. Execute 01-auditoria-e-plano.txt.
+4. Execute os demais arquivos na ordem numérica, um por vez, conferindo os resultados e pendências antes de avançar.
+5. Ao iniciar outro chat, reapresente o contexto permanente, o prompt da etapa e o estado das etapas anteriores.
+
+Os prompts precisam ser lidos pela IA: apenas copiar a pasta não inicia a execução.
+
+EXEMPLO DE PEDIDO
+Leia cronobr/00-contexto-permanente.txt e execute cronobr/01-auditoria-e-plano.txt neste projeto. Ao concluir, entregue os resultados e os critérios pendentes.
+
+CONTEÚDO
+00 — Contexto permanente.
+01 — Auditoria da base e plano executável.
+02 — Contador confiável e preservação dos dados.
+03 — Segundo plano, sons e convivência com música.
+04 — Rotinas, modalidades e uso simples.
+05 — Backup e transferência Android/iOS.
+06 — Refinamento visual e acessibilidade.
+07 — Temporizadores simultâneos e cadência.
+08 — Testes de lançamento, anúncios e apresentação nas lojas.
+
+REFERÊNCIA DA ANÁLISE
+Repositório: https://github.com/Rahgomes/cronobr
+Commit examinado: 0ee3239b0759c44735d483841ae202ff35ef3eb9.
+A análise anterior foi estática. A etapa 01 deve conferir o estado atual do projeto. A imagem de referência está em ui/home-nova-interface-cronobr.png no repositório examinado.
+
+Título candidato: CronoBR: Tabata e HIIT.
+Disponibilidade do nome nas lojas e eventual verificação de marca permanecem pendentes.
+
+Os relatos enviados foram sintetizados no contexto permanente. Os anexos brutos e o código do aplicativo não fazem parte deste pacote.
+
+REFERÊNCIAS PARA CONFERÊNCIA
+Google Play: https://support.google.com/googleplay/android-developer/answer/9859152?hl=pt-BR
+App Store: https://developer.apple.com/help/app-store-connect/reference/app-information/app-information
+Expo Audio: https://docs.expo.dev/versions/latest/sdk/audio/
+Consulte sempre a documentação correspondente às versões efetivamente instaladas.

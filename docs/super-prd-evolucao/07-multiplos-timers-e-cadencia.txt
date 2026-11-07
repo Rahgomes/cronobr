@@ -1,0 +1,33 @@
+Implemente os recursos adicionais após confirmar os critérios críticos das etapas anteriores.
+
+VÁRIOS TEMPORIZADORES
+- Criar temporizadores independentes com nome.
+- Iniciar, pausar, repetir e encerrar individualmente.
+- Mostrar uma visão compacta com os ativos.
+- Preservar estado ao navegar e reabrir.
+- Usar a base temporal existente.
+- Definir limite suportado e testado.
+- Diferenciar claramente conclusão de cada temporizador.
+- Resolver colisões de avisos com uma política documentada.
+- Confirmar o comportamento quando também houver um treino ativo.
+- Evitar múltiplos serviços ou loops desnecessários.
+
+CADÊNCIA
+- Oferecer metrônomo opcional com BPM configurável.
+- Pulso visual e sonoro.
+- Prévia antes de iniciar.
+- Funcionamento offline.
+- Integrar à etapa de treino quando suportado.
+- Definir prioridade entre pulso, narração e aviso de transição.
+- Usar agendamento de áudio apropriado à precisão necessária.
+- Medir variação dos intervalos entre batidas.
+- Considerar latência de Bluetooth.
+- Não basear precisão musical em setInterval de JavaScript.
+
+Comece com cadência simples. Recursos de composição musical, compassos complexos e padrões de bateria ficam para evolução específica.
+
+MODELOS ADICIONAIS
+Quando puderem reutilizar o mecanismo existente, ofereça modelos editáveis para estudo/foco e tarefas pessoais.
+Para movimentos orientados por profissional, permita cadastrar a sequência recebida, os nomes e os tempos.
+
+Teste timers concluindo juntos, sessão ativa com cadência, mudança de áudio, tela bloqueada e consumo de recursos.

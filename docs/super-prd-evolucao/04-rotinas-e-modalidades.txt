@@ -1,0 +1,66 @@
+Implemente os fluxos de criação, execução e reutilização das rotinas.
+
+Organize a experiência em três entradas claras:
+1. Cronômetro.
+2. Temporizador.
+3. Treinos intervalados.
+
+Inclua acesso rápido à última rotina e aos favoritos.
+
+CRONÔMETRO
+- Iniciar, pausar, retomar e zerar.
+- Marcar voltas.
+- Mostrar tempo total e duração de cada volta.
+- Proteger contra zerar acidentalmente uma sessão ativa.
+
+TEMPORIZADOR
+- Configuração rápida.
+- Nome opcional.
+- Repetir ao concluir.
+- Indicar claramente o encerramento.
+
+EDITOR DE ROTINAS
+- Nomear, salvar, duplicar, editar, excluir e reordenar.
+- Adicionar e inserir etapas no meio.
+- Definir nome e duração por etapa.
+- Repetir blocos e configurar descanso entre eles.
+- Desabilitar temporariamente uma etapa sem apagá-la.
+- Diferenciar preparação inicial, pausa entre exercícios e descanso entre blocos.
+- Exibir prévia ordenada e duração total antes de começar.
+- Manter rascunho ao navegar para fora.
+- Confirmar descarte quando necessário.
+
+MODALIDADES
+Implemente comportamentos coerentes:
+- Tabata com modelo inicial editável.
+- HIIT com esforço e recuperação configuráveis.
+- EMOM com início em fronteiras de minuto e conclusão manual antecipada para aproveitar o restante como descanso.
+- AMRAP com limite total de tempo e registro manual de rodadas.
+- Boxe com rounds e descansos.
+- Circuito com exercícios de durações diferentes.
+- Corrida/caminhada alternadas.
+- Mobilidade e alongamento com etapas e lados nomeados.
+- Sequência personalizada.
+
+Use a mesma base de execução sempre que o comportamento permitir.
+Modalidades devem ter explicações breves em linguagem comum.
+
+Etapas por repetições precisam de avanço manual ou outra interação explicitamente definida. Não invente contagem automática de movimentos.
+
+DURANTE A SESSÃO
+Mostrar:
+- Nome da rotina e da etapa atual.
+- Próxima etapa.
+- Rodada e bloco.
+- Tempo da etapa.
+- Progresso total compatível com etapas manuais.
+- Pausa, retomada e encerramento.
+- Proteção opcional contra toques acidentais.
+
+Etapas manuais tornam a duração total parcialmente estimada.
+Apresente isso de forma clara na prévia.
+
+HISTÓRICO
+Mostrar sessões concluídas e interrompidas, duração ativa e opção de repetir a configuração registrada. Incluir calendário simples e nota opcional.
+
+Teste os fluxos completos pela interface e confirme persistência após fechar e reabrir o aplicativo.

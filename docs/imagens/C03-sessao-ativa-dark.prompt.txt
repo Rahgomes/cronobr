@@ -1,0 +1,41 @@
+Use your image generation tool to create exactly ONE image, 1536x1024 landscape (or 1024x1536 if the screen says mobile). Do not write code or files. Reply only with the generated file path.
+
+The CENTER CONTENT is what matters most: render it exactly as specified. Sidebar and header follow the base rules but may be simplified.
+
+=== BASE RULES (apply all) ===
+Product: CronoBR, an interval workout timer app (Tabata, HIIT, EMOM, AMRAP, boxing rounds, circuits, stopwatch)
+for Android and iOS. Works offline, no login. Store title: "CronoBR: Tabata e HIIT".
+Format: ONE mobile phone screen, portrait, 390x844 logical, shown flat and front-facing on a plain #1A1A1A backdrop
+(no hand, no perspective, no device photo). All UI text in Brazilian Portuguese, spelled correctly, with realistic
+FICTIONAL data. The user is "Lucas". Saved routines: "Tabata de quinta", "HIIT 20 min", "Boxe 6 rounds", "Mobilidade manhã".
+
+Brand mark (only where the screen asks for the logo): an orange #FF6B35 stopwatch ring with a small gap at the top
+right and a short crown on top; wordmark "CronoBR" in a bold geometric sans, "Crono" white and "BR" orange.
+
+Design language: dark theme, near-black #121212 background, surfaces #1E1E1E and #2A2A2A, borders #333333.
+One accent color: orange #FF6B35 for the primary action and highlights only (white text on orange buttons, bold).
+Big numbers in tabular figures, extra-bold, high contrast. Large touch targets (>= 56 tall for main buttons),
+primary actions reachable with the thumb in the lower half of the screen. Cards radius 16-20, buttons fully rounded.
+Few cards, few icons, no decorative emoji, no rocket, no glassmorphism, no gradients, no stock photos, no ads.
+Icons: simple line icons (Feather-like), monochrome gray #B0B0B0, orange only when active.
+
+Workout phase colors (always text + color, never color alone): Preparar amber #FFC107, Exercício green #4CAF50,
+Descanso blue #2196F3, Descanso entre blocos indigo #5C6BC0, Concluído orange #FF6B35.
+Text: primary #FFFFFF, secondary #B0B0B0 (never thinner than regular weight). Body 16, labels 14, titles 24-28 bold.
+
+=== SCREEN ===
+SCREEN: Active workout session (timer running), mobile portrait, dark, the most important screen of the app.
+Top bar: left a round gray "X" button "Encerrar"; center small gray text "Circuito de sexta"; right a round gray
+lock icon button "Travar toques".
+Phase label: a wide pill in green #4CAF50 with dark text "EXERCÍCIO".
+Current step name very large and bold, white: "Agachamento".
+CENTER: a huge circular progress ring (green arc on dark gray track, thick stroke) and inside it the countdown
+"0:27" in giant extra-bold tabular figures (the biggest element on the screen, about 40% of the width height),
+and under it small gray "de 0:40".
+Below the ring, two compact stat columns side by side: "Rodada 2 de 3" and "Bloco A · 1 de 2".
+A thin horizontal total progress bar across the width with labels "Total 6:12 / 18:30" left and "-12:18" right.
+"Próxima" card (surface #1E1E1E): blue phase bar on the left, small gray label "Próxima", text "Pausa · 0:15",
+then gray "depois: Flexão 0:30".
+Bottom control row, thumb zone: left round gray button "Voltar etapa" (skip-back icon), center a BIG round orange
+button 88 wide with a white pause icon labeled "Pausar" below, right round gray button "Pular" (skip-forward icon).
+Tiny row above the controls with three small toggle icons and labels: "Voz", "Beep", "Vibração" (all on).

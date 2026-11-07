@@ -1,0 +1,43 @@
+Implemente a base temporal e a evolução do modelo de dados identificadas na auditoria.
+
+CONTADOR
+- Use uma fonte de tempo apropriada para calcular o tempo decorrido.
+- Atualizações da interface não devem determinar o tempo real.
+- Considere suspensão, atraso de callbacks, mudança de horário do aparelho, pausa, retomada e reabertura.
+- Escolha e documente a estratégia para relógio monotônico e recuperação persistida. Trate explicitamente reinício do aparelho.
+- Defina estados claros: pronto, executando, pausado, concluído e interrompido.
+- Separe cálculo de estado dos efeitos de áudio e vibração.
+- Evite duplicação de eventos, listeners e registros de histórico.
+- Ao retornar após suspensão, calcule a fase atual corretamente. Não reproduza em sequência todos os avisos já vencidos.
+- Trate duração zero, entradas inválidas, muitas rodadas e sessões longas com limites explícitos e mensagens úteis.
+- Defina a presença ou ausência de descanso após a última rodada. A prévia e a execução devem concordar.
+
+DADOS
+Modele o necessário para:
+- Rotinas com identificador estável, nome, modalidade e versão.
+- Etapas com nome e duração próprios.
+- Blocos repetidos com descanso entre blocos.
+- Etapas opcionais de preparação e encerramento.
+- Etapas por repetições com avanço manual, quando aplicável.
+- Histórico com cópia da configuração executada.
+- Sessão em andamento e preferências.
+
+Preserve a compatibilidade com TimerConfig e os dados já gravados.
+Não escolha outro banco apenas por preferência. Justifique a solução pela necessidade de consistência, volume e migração.
+
+Garanta migração recuperável, tratamento de gravações concorrentes e proteção contra perda de dados em falha parcial.
+Reavalie o limite de histórico e evite truncamento silencioso.
+
+TESTES
+- Pausar e retomar várias vezes.
+- Callback atrasado atravessando mais de uma fase.
+- Retorno após o horário de conclusão.
+- Alteração do relógio civil.
+- Etapas de duração zero.
+- Descanso final.
+- Duração total da prévia versus execução.
+- Conclusão registrada uma única vez.
+- Migração de dados antigos.
+- Gravação interrompida ou armazenamento indisponível.
+
+Critério de aceite: o estado temporal permanece correto mesmo quando a interface deixa de receber atualizações regulares.

@@ -1,0 +1,63 @@
+Prepare uma versão candidata do CronoBR para validação, sem publicar.
+
+QUALIDADE
+- Execute análise de tipos, lint e testes.
+- Adicione testes unitários para o motor temporal, cálculo de duração, migrações e importação.
+- Adicione testes de integração para editor, persistência e histórico.
+- Automatize fluxos críticos de ponta a ponta com ferramenta compatível com a base.
+- Use fixtures representando dados de versões anteriores.
+- Evite testes que apenas repetem detalhes internos da implementação.
+
+FLUXOS CRÍTICOS
+1. Primeira abertura offline.
+2. Criar rotina, salvar, fechar e repetir.
+3. Concluir uma sessão e registrar histórico uma única vez.
+4. Interromper e retomar.
+5. Exportar no Android e importar no iOS.
+6. Exportar no iOS e importar no Android.
+7. Atualizar app com dados antigos.
+8. Recusar permissões.
+9. Ouvir música com tela bloqueada.
+10. Usar texto ampliado e leitor de tela.
+
+PERFORMANCE
+Meça em aparelho:
+- Tempo de abertura.
+- Responsividade dos controles.
+- Precisão das transições.
+- Memória e bateria em sessão longa.
+- Comportamento com biblioteca e histórico volumosos.
+
+MONETIZAÇÃO
+Implemente banner discreto em posições apropriadas, inicialmente com IDs de teste.
+Mantenha espaço suficiente dos controles de treino.
+A indisponibilidade de anúncio deve permitir uso normal do app.
+Não adicione intersticiais nesta etapa.
+Teste carregamento, falha, offline e ausência de preenchimento.
+Implemente consentimento e declarações exigidas pelos SDKs e mercados atendidos, com base na documentação oficial atual.
+
+LOJAS
+Prepare textos localizados com:
+- Marca CronoBR.
+- Título candidato: CronoBR: Tabata e HIIT.
+- Benefícios efetivamente testados.
+- Descrição curta e descrição completa.
+- Lista de capturas necessárias.
+- Informações de privacidade correspondentes ao comportamento real.
+- Instruções claras de backup e importação.
+
+Verifique os limites atuais dos campos e a disponibilidade do nome nos consoles quando houver acesso.
+Não prometa funcionamento ilimitado em segundo plano.
+
+RELATÓRIO FINAL
+Apresente uma matriz Android/iOS com cada requisito:
+aprovado, reprovado ou ainda não testado.
+
+Relacione:
+- Evidência dos testes.
+- Defeitos que impedem lançamento.
+- Limitações conhecidas.
+- Validações que dependem de aparelhos ou contas.
+- Próximos passos concretos.
+
+A ausência de aparelho ou ambiente deve ser registrada como teste pendente. Não substitua essa evidência por uma afirmação de aprovação.
