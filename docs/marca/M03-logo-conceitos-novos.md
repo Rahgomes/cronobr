@@ -1,0 +1,22 @@
+# M03 — Mais 4 conceitos (5 a 8), nome "CronôBR"
+
+O 5 é a versão chapada do ícone atual (cronômetro 3D em fundo laranja), para comparar com o que já existia.
+
+```
+Create ONE brand exploration sheet, 1536x1024 landscape, plain #121212 background, for "CronôBR", an interval
+workout timer app. Show FOUR numbered logo concepts side by side, each with an app icon (rounded square 1:1) on top
+and below it the horizontal lockup icon + wordmark.
+WORDMARK (critical): spelled exactly C-r-o-n-ô-B-R, "CronôBR", the second "o" carries a clearly visible circumflex
+accent (ô). "Cronô" white, "BR" orange #FF6B35, bold geometric sans.
+Palette only: orange #FF6B35, white, near-black #121212, gray #2A2A2A / #B0B0B0. Flat vector, no 3D, no gradients,
+must read well at 48 px. Each concept clearly different from the others.
+5. "Clássico": a flat white stopwatch (round face, crown and two small side buttons, one orange hand pointing to
+   about two o'clock, four small tick marks) on a solid orange #FF6B35 rounded-square icon.
+6. "Acento": the circumflex hat of the ô reimagined as the stopwatch crown: a bold orange "ô" letterform where the
+   circle is a stopwatch dial and the chevron accent sits on top like the crown; icon on near-black.
+7. "Ampulheta de intervalos": a geometric hourglass made of two triangles, top orange, bottom gray, inside a thin
+   white circle; icon on near-black.
+8. "Monograma CB": a compact monogram where an orange "C" progress arc wraps a white bold "B", with a small dot
+   at the arc end like a timer marker; icon on orange background with near-black mark.
+Under each concept a tiny gray caption: "5. Clássico", "6. Acento", "7. Ampulheta", "8. Monograma". No other text.
+```

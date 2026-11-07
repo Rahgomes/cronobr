@@ -60,5 +60,13 @@ geradas ou licenciadas. As do conceito são ilustrativas.
 ## P7 — Marca
 
 - Hoje o ícone é um cronômetro 3D prateado em fundo degradê. Os ícones adaptativos do Android (`assets/images/android-icon-*`) ainda são o **padrão do Expo** (chevron azul), o que precisa ser corrigido.
-- O nome aparece como "CronôBR" em `app.json` e `AboutScreen` e como "CronoBR" no cabeçalho, nas traduções e no super PRD. Falta escolher um só.
-- Conceitos de logo: `docs/marca/M01-logo-conceitos.png` (Anel, C de tempo, Intervalos, Pulso).
+- Nome decidido: **CronôBR** (com acento). Faltam o cabeçalho e as traduções, que ainda dizem "CronoBR".
+- Conceitos de logo: 8 opções em `docs/marca/` (ver `MARCA.md`).
+
+## P8 — Sons e vozes (para a etapa 03)
+
+O Ramon quer opções para escolher. O pacote inicial, gerado no ElevenLabs:
+
+- Vozes: algumas masculinas e algumas femininas, com tom humano, em pt-BR (depois EN, ES e FR).
+- Sons por fase: gongo, sino de boxe, apito, beep curto e longo, e um som de conclusão.
+- O usuário escolhe um som por fase e a voz; os três canais seguem independentes (P4).
