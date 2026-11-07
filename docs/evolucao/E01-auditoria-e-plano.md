@@ -66,17 +66,27 @@ Legenda: ✅ completa · 🟡 parcial · 🖼️ só na interface · ❌ ausente
 - **Interface:** o que está na tela promete mais do que entrega (Mobilidade, EMOM, AMRAP, silencioso).
 - **Base técnica:** 1 erro de tipo, formatação nunca aplicada, zero testes, servidor sem uso.
 
-## 4. Decisões propostas (para aprovar)
+## 4. Decisões (aprovadas pelo Ramon em 07/11, revisão 2)
 
-| # | Decisão | Recomendação | Por quê |
-| --- | --- | --- | --- |
-| D01 | Navegação | **Manter** React Navigation (não migrar para Expo Router) | Funciona; migrar não resolve nenhuma dor do super PRD |
-| D02 | Armazenamento | **`expo-sqlite`** para rotinas, histórico e sessão; AsyncStorage só para preferências | Transação resolve gravação parcial e concorrente; histórico sem limite de 100; migração versionada. Escolha justificada pela consistência, não por gosto |
-| D03 | Servidor Express/Drizzle e React Query | **Remover** | Fase offline; nada usa. Menos dependências e menos superfície |
-| D04 | Motor de tempo | Função pura `estado(rotina, marcos, agora)` com relógio monotônico; marcos (início, pausas) gravados | Reabrir/voltar do segundo plano recalcula a fase certa sem tocar avisos vencidos |
-| D05 | Testes | Jest (`jest-expo`) + RNTL na integração; **E2E com Playwright no build web** (o servidor não tem emulador Android, sem `/dev/kvm`); Maestro no aparelho do Ramon para o nativo | Mesmo esquema do ManiVez; o que só o nativo prova fica "pendente de aparelho" |
-| D06 | Validação nativa | **Development build** (EAS) a partir da E03 | Expo Go não prova segundo plano, notificação nem áudio com música; precisa conta Expo |
-| D07 | Nome | "CronôBR" em todo lugar | Decidido em 07/11 |
+O Ramon liberou mudança estrutural: o CronôBR é **reescrito** na base do ManiVez, levando a essência
+(presets, textos traduzidos, tema, regras de sessão), não o código.
+
+| # | Decisão | Por quê |
+| --- | --- | --- |
+| D01 | **Expo SDK 58 + Expo Router** (rotas em `src/app`), mesma base do ManiVez (RN 0.88, React 19.3, TS strict, React Compiler) | SDK 54 está 4 versões atrás; Router é o padrão atual do Expo (rota tipada, link profundo para abrir arquivo `.cronobr`, web pronto). Reaproveita a receita e o kit de UI do ManiVez |
+| D02 | **`expo-sqlite`** para rotinas, histórico e sessão; preferências em armazenamento simples | Transação resolve gravação parcial e concorrente; histórico sem limite; migração versionada |
+| D03 | **Remover** Express, Drizzle e React Query | Fase offline; backend futuro será **Firebase** (como no ManiVez), nunca Express |
+| D04 | Motor de tempo puro, tempo derivado do relógio, marcos gravados | Aprovado |
+| D05 | Jest + RNTL (unitário e componente), Playwright + axe no build web (E2E), Maestro no aparelho para o nativo | Aprovado. Cobertura de todos os tipos, como no ManiVez |
+| D06 | Conta Expo do Ramon (`rahgomes`), **projeto novo `cronobr`**; nada no projeto do ManiVez | Prévia web por EAS Hosting e builds de desenvolvimento por EAS Build |
+| D07 | Nome "CronôBR" | Decidido |
+| D08 | **Nenhum diálogo ou seletor nativo**: confirmação, seletor de tempo, rodadas, som e voz viram `Sheet` e `Dialog` próprios do kit | Visual igual em Android e iOS; testável. O kit do ManiVez já tem `sheet`, `dialog`, `select`, `time-field` |
+| D09 | Camadas do ManiVez: `src/app` (rota fina), `src/features/<x>` (tela + teste ao lado), `src/ui` (kit), `src/data` (repositórios + fake), `src/domain` (regra pura) | Regras do `AGENTS.md` do ManiVez valem aqui: tokens sem hex solto, a11y em todo tocável, arquivo até ~250 linhas |
+| D10 | Backup entre aparelhos **sem nuvem**: arquivo `.cronobr` exportado pelo compartilhar do sistema (WhatsApp, e-mail, Drive, Arquivos) e importado no outro celular, **Android ↔ iOS** nos dois sentidos | Já é o escopo da E05; abrir o arquivo direto no app usa o link profundo do Router (D01). Sincronização automática fica para a fase Firebase |
+
+Credencial: o token do Expo hoje está em `/root/.secrets/manivez.env` (`MANIVEZ_EXPO_TOKEN`), mas é
+da **conta**, não do projeto. Proposta: mover para `/root/.secrets/expo.env` (`EXPO_TOKEN`) e os dois
+apps lerem dele.
 
 ## 5. Plano por etapa
 
@@ -85,7 +95,7 @@ E2E verdes nos fluxos que tocou.
 
 | Etapa | PRD | Entrega | Depende | Aceite objetivo |
 | --- | --- | --- | --- | --- |
-| E00 | — | Fundação: corrigir erro de tipo, prettier, lint limpo, Jest + RNTL + Playwright, CI, remover servidor (D03) | — | `tsc`, `lint` e testes verdes no CI |
+| E00 | Fundação | Projeto novo SDK 58 + Router com as camadas do ManiVez (D01, D09), kit de UI com Sheet/Dialog (D08), tokens e marca, i18n migrada, Jest + RNTL + Playwright + axe, CI, projeto `cronobr` no EAS e prévia web; código antigo vai para `legado/` até ser portado | — | `typecheck`, `lint` e testes verdes no CI; prévia web no ar |
 | E02 | Contador e dados | Motor de tempo puro (D04), modelo de rotina com etapas e blocos, SQLite + migração dos dados antigos (D02), sessão recuperável, histórico sem truncar, X com confirmação | E00 | Os 10 testes do super PRD 02 passando; dados v1 migram sem perda (fixture) |
 | E03 | Segundo plano e áudio | Prova técnica por plataforma, notificações, sons reais (pacote ElevenLabs, P8), voz com fila, vibração por evento, ducking | E02 + D06 | Matriz de cenários com evidência de aparelho |
 | E04 | Rotinas e modalidades | Início (C01b), editor (C02), 3 visualizações da sessão (P1), trava (P2), voltar/pular (P3), cronômetro, temporizador, modalidades com comportamento próprio, histórico com calendário | E02 | Fluxos completos por E2E + persistência após reabrir |

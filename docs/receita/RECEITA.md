@@ -30,7 +30,7 @@ Esta pasta é a versão em teste. Quando estabilizar, sobe para um lugar compart
 | 5  | Tokens e prompt-base               | essencial | **extrair** | Existente: o prompt-base sai do `theme` atual, não de uma marca nova |
 | 6  | Telas                              | essencial | refinar | **P4 Com imagem:** `.md` → `tela-gen` → conferência (máx. 2 refações). **Direto no código:** pula a imagem; o `.md` da tela continua obrigatório (é ele que vira teste e briefing). **Referência externa:** a referência entra no `.md` como anexo |
 | 7  | Fluxo V2                           | opcional | opcional | — |
-| 8  | Fundação técnica                   | essencial | **endurecer** | Existente: adicionar o que falta (testes, CI, lint) sem trocar a stack. Trocar navegação ou estado só com decisão D## justificada. Local: sem emulador do Firebase |
+| 8  | Fundação técnica                   | essencial | **endurecer ou reescrever** | Existente **endurecer**: adicionar o que falta (testes, CI, lint) sem trocar a stack. Existente **reescrever** (stack defasada, sem testes, interface que promete o que não faz): projeto novo na base do último app da receita, código antigo em `legado/` até ser portado. Local: sem emulador do Firebase |
 | 9  | Prova vertical (2 jornadas)        | essencial | essencial | Existente: escolher a jornada mais usada e a mais arriscada (no timer: contador confiável) |
 | 10 | Demais jornadas por lote           | essencial | essencial | — |
 | 11 | Teste fechado                      | depende | depende | P5 Expo: troca por rodada de validação em aparelho com roteiro e registro |
@@ -79,3 +79,6 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   app feito por gerador: **configuração na interface sem efeito no código** (beep que vibra,
   vibração configurada e ignorada, "modo silencioso" que não detecta). Regra para a etapa 0:
   para cada controle de configuração, seguir até onde ele é lido.
+- **07/11 — Decisão de trilha:** a auditoria mostrou SDK 4 versões atrás, zero testes e
+  configurações sem efeito; o Ramon optou por **reescrever** na base do ManiVez (SDK 58, Expo
+  Router, camadas e kit de UI). Virou a variação "reescrever" da etapa 8.
