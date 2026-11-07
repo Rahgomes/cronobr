@@ -74,3 +74,8 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   Vídeos ficam fora do git (`.gitignore`); o documento não cita o nome dos apps.
 - **07/11 — Armadilha:** esperar processo com `while pgrep -f ...` casa com o próprio comando e
   nunca termina; usar `wait` ou PID.
+- **07/11 — Etapa 0 (auditoria) no CronôBR:** ler storage, tela de sessão e contexts (~2.000 linhas)
+  bastou para a matriz; os checks rodaram pela fila `heavy` em paralelo à leitura. Achado típico de
+  app feito por gerador: **configuração na interface sem efeito no código** (beep que vibra,
+  vibração configurada e ignorada, "modo silencioso" que não detecta). Regra para a etapa 0:
+  para cada controle de configuração, seguir até onde ele é lido.
