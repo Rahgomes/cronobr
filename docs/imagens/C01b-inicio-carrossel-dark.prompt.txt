@@ -1,0 +1,40 @@
+Use your image generation tool to create exactly ONE image, 1536x1024 landscape (or 1024x1536 if the screen says mobile). Do not write code or files. Reply only with the generated file path.
+
+The CENTER CONTENT is what matters most: render it exactly as specified. Sidebar and header follow the base rules but may be simplified.
+
+=== BASE RULES (apply all) ===
+Product: CronoBR, an interval workout timer app (Tabata, HIIT, EMOM, AMRAP, boxing rounds, circuits, stopwatch)
+for Android and iOS. Works offline, no login. Store title: "CronoBR: Tabata e HIIT".
+Format: ONE mobile phone screen, portrait, 390x844 logical, shown flat and front-facing on a plain #1A1A1A backdrop
+(no hand, no perspective, no device photo). All UI text in Brazilian Portuguese, spelled correctly, with realistic
+FICTIONAL data. The user is "Lucas". Saved routines: "Tabata de quinta", "HIIT 20 min", "Boxe 6 rounds", "Mobilidade manhã".
+
+Brand mark (only where the screen asks for the logo): an orange #FF6B35 stopwatch ring with a small gap at the top
+right and a short crown on top; wordmark "CronoBR" in a bold geometric sans, "Crono" white and "BR" orange.
+
+Design language: dark theme, near-black #121212 background, surfaces #1E1E1E and #2A2A2A, borders #333333.
+One accent color: orange #FF6B35 for the primary action and highlights only (white text on orange buttons, bold).
+Big numbers in tabular figures, extra-bold, high contrast. Large touch targets (>= 56 tall for main buttons),
+primary actions reachable with the thumb in the lower half of the screen. Cards radius 16-20, buttons fully rounded.
+Few cards, few icons, no decorative emoji, no rocket, no glassmorphism, no gradients, no stock photos, no ads.
+Icons: simple line icons (Feather-like), monochrome gray #B0B0B0, orange only when active.
+
+Workout phase colors (always text + color, never color alone): Preparar amber #FFC107, Exercício green #4CAF50,
+Descanso blue #2196F3, Descanso entre blocos indigo #5C6BC0, Concluído orange #FF6B35.
+Text: primary #FFFFFF, secondary #B0B0B0 (never thinner than regular weight). Body 16, labels 14, titles 24-28 bold.
+
+=== SCREEN ===
+SCREEN: Início (home), mobile portrait, dark. Same header and greeting as before: small logo left, gear button right,
+"Bom treino, Lucas".
+HERO card "Última rotina" / "Tabata de quinta" / "8 rodadas · 20s exercício · 10s descanso · 4 min" with orange pill "Repetir".
+Row of three tiles: "Cronômetro", "Temporizador", "Intervalado".
+Section title "Modelos" with link "Ver todos". A HORIZONTAL CAROUSEL of large cards (about 160 wide x 200 tall,
+radius 20), the third card cut at the right edge to show it scrolls. Each card has a full-bleed moody athletic photo
+background (dark, desaturated, with a black gradient at the bottom for legibility), and at the bottom left white bold
+title + one gray line + a small orange duration pill:
+  "Tabata" / "20s forte, 10s leve, 8 vezes" / "4 min" (person doing burpees),
+  "Boxe" / "Rounds com descanso" / "3 min por round" (boxing gloves),
+  "EMOM" / "Um exercício a cada minuto" (kettlebell).
+Small dots indicator under the carousel.
+Section "Favoritas" with two compact rows: "HIIT 20 min · 20:00" and "Boxe 6 rounds · 23:00", each with a round orange play button.
+Bottom fixed full-width orange button "Nova rotina".

@@ -69,3 +69,8 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
 - **07/11 — O que não deu:** a porta 8765 do servidor já servia a prévia do ManiVez e a captura
   pegou o app errado. Regra: conferir a porta livre e o `<title>` antes de capturar.
 - **07/11 — O que mudou:** criada a etapa 0 (auditoria) e as trilhas por perfil.
+- **07/11 — Vídeos de referência:** extrair quadros (`ffmpeg fps=1/3,tile=6x2`) + transcrever a
+  narração (Groq Whisper) custou ~3 min para 6 min de vídeo e deu a análise completa sem Gemini.
+  Vídeos ficam fora do git (`.gitignore`); o documento não cita o nome dos apps.
+- **07/11 — Armadilha:** esperar processo com `while pgrep -f ...` casa com o próprio comando e
+  nunca termina; usar `wait` ou PID.
