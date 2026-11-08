@@ -44,7 +44,11 @@ const V1: Migration = (tx) =>
     ) STRICT;
   `);
 
-export const MIGRATIONS: readonly Migration[] = [V1];
+/** E04: ordem escolhida pela pessoa em "Suas rotinas" (menor primeiro; nova entra no topo). */
+const V2: Migration = (tx) =>
+  tx.exec('ALTER TABLE routines ADD COLUMN position INTEGER NOT NULL DEFAULT 0');
+
+export const MIGRATIONS: readonly Migration[] = [V1, V2];
 
 export async function schemaVersion(db: SqlDb): Promise<number> {
   const row = await db.first<{ user_version: number }>('PRAGMA user_version');

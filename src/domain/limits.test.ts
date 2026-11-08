@@ -78,7 +78,7 @@ describe('limites da rotina', () => {
       'O bloco precisa de pelo menos 1 etapa.',
     ]);
     expect(messages(routine({ blocks: [block({ steps: [step({ kind: 'rest' })] })] }))).toEqual([
-      'O bloco precisa de pelo menos 1 etapa de exercício.',
+      'O bloco precisa de pelo menos 1 exercício ativo.',
     ]);
     expect(messages(routine({ blocks: [block({ repeat: 0 })] }))).toEqual([
       'O bloco precisa de pelo menos 1 rodada.',

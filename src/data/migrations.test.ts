@@ -34,7 +34,7 @@ describe('migrações', () => {
     expect(await schemaVersion(db)).toBe(0);
     expect(await tables(db)).toEqual([]);
     await migrate(db);
-    expect(await schemaVersion(db)).toBe(1);
+    expect(await schemaVersion(db)).toBe(MIGRATIONS.length);
   });
 
   it('passos seguintes rodam em ordem a partir da versão atual', async () => {
@@ -45,7 +45,15 @@ describe('migrações', () => {
     );
     await migrate(db, [...MIGRATIONS, v2]);
     expect(v2).toHaveBeenCalledTimes(1);
-    expect(await schemaVersion(db)).toBe(2);
+    expect(await schemaVersion(db)).toBe(MIGRATIONS.length + 1);
+  });
+
+  it('V2: banco da E02 (v1) com rotinas ganha a ordem sem perder nada', async () => {
+    const db = serialDb(nodeSqlite());
+    await migrate(db, MIGRATIONS.slice(0, 1));
+    await db.run("INSERT INTO routines VALUES ('r', 'R', 'hiit', 1, 'custom', '{}', 0, 0)");
+    await migrate(db);
+    expect(await db.all('SELECT id, position FROM routines')).toEqual([{ id: 'r', position: 0 }]);
   });
 
   it('banco de versão mais nova (app voltou de versão): recusa com mensagem clara', async () => {

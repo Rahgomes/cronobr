@@ -26,9 +26,10 @@ describe('rotinas', () => {
     await repos.routines.save(routine({ id: 'a', name: 'A', updatedAt: 1 }));
     await repos.routines.save(routine({ id: 'b', name: 'B', updatedAt: 2 }));
     await repos.routines.save(routine({ id: 'a', name: 'A2', version: 2, updatedAt: 3 }));
+    // Nova entra no topo; atualizar mantém o lugar.
     expect((await repos.routines.list()).map((r) => [r.id, r.name, r.version])).toEqual([
-      ['a', 'A2', 2],
       ['b', 'B', 1],
+      ['a', 'A2', 2],
     ]);
     expect(await repos.routines.get('b')).toMatchObject({ name: 'B' });
     expect(await repos.routines.get('nada')).toBeNull();
@@ -38,10 +39,56 @@ describe('rotinas', () => {
     const { db, repos } = await setup();
     await repos.routines.save(routine({ id: 'ok' }));
     await db.run(
-      "INSERT INTO routines VALUES ('ruim', 'x', 'tabata', 1, 'custom', '{quebrado', 0, 0)",
+      "INSERT INTO routines (id, name, modality, version, origin, data, created_at, updated_at) VALUES ('ruim', 'x', 'tabata', 1, 'custom', '{quebrado', 0, 0)",
     );
     expect((await repos.routines.list()).map((r) => r.id)).toEqual(['ok']);
     expect(await repos.routines.get('ruim')).toBeNull();
+  });
+});
+
+describe('rotinas: ordem e exclusão', () => {
+  it('reordenar grava a ordem escolhida; apagar some da lista e o histórico fica', async () => {
+    const { repos } = await setup();
+    for (const id of ['a', 'b', 'c']) await repos.routines.save(routine({ id, name: id }));
+    expect((await repos.routines.list()).map((r) => r.id)).toEqual(['c', 'b', 'a']);
+    await repos.routines.reorder(['a', 'c', 'b']);
+    expect((await repos.routines.list()).map((r) => r.id)).toEqual(['a', 'c', 'b']);
+    await repos.session.finish({
+      id: 'h',
+      routine: routine({ id: 'c', name: 'c' }),
+      status: 'completed',
+      startedAt: 0,
+      endedAt: 1,
+      activeMs: 1,
+      workDone: 1,
+      workTotal: 1,
+      source: 'app',
+    });
+    await repos.routines.remove('c');
+    expect((await repos.routines.list()).map((r) => r.id)).toEqual(['a', 'b']);
+    expect((await repos.history.get('h'))?.routine.name).toBe('c');
+  });
+
+  it('reordenar é tudo ou nada', async () => {
+    const { raw, repos } = await setup();
+    for (const id of ['a', 'b']) await repos.routines.save(routine({ id, name: id }));
+    raw.failOn('position = ? WHERE id = ?');
+    await expect(repos.routines.reorder(['a', 'b'])).rejects.toThrow();
+    expect((await repos.routines.list()).map((r) => r.id)).toEqual(['b', 'a']);
+  });
+
+  it('etapa desativada sobrevive à gravação', async () => {
+    const { repos } = await setup();
+    const r = routine({ id: 'd' });
+    const off = {
+      ...r,
+      blocks: r.blocks.map((b) => ({
+        ...b,
+        steps: b.steps.map((s, i) => (i === 1 ? { ...s, disabled: true } : s)),
+      })),
+    };
+    await repos.routines.save(off);
+    expect((await repos.routines.get('d'))?.blocks[0]?.steps[1]?.disabled).toBe(true);
   });
 });
 

@@ -6,7 +6,12 @@ import type { Routine } from '@/domain/routine';
 export interface RoutinesRepo {
   list(): Promise<Routine[]>;
   get(id: string): Promise<Routine | null>;
+  /** Nova entra no topo; atualizar mantém o lugar. */
   save(routine: Routine): Promise<void>;
+  /** Apaga a rotina. O histórico guarda a cópia que rodou, então nada some de lá. */
+  remove(id: string): Promise<void>;
+  /** Grava a ordem da lista (ids na ordem desejada). */
+  reorder(ids: readonly string[]): Promise<void>;
 }
 
 export interface HistoryPage {

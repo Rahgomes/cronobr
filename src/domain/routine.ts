@@ -25,6 +25,8 @@ export interface Step {
   seconds: number | null;
   /** Meta de repetições, mostrada na tela. Obrigatória quando `seconds` é null. */
   reps: number | null;
+  /** Desativada sem apagar (E04): fica no editor, fora da execução e da prévia. */
+  disabled?: boolean | undefined;
 }
 
 export interface Block {

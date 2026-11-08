@@ -132,4 +132,10 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   `aria-pressed` no react-native-web. Interruptor e chip precisam do atributo `aria-*` explícito.
 - **08/11 — Sons por síntese:** um script em Python gera o pacote (beep, sino, gongo, apito,
   conclusão) e o mesmo .wav serve ao app e à notificação. Sem licença de terceiros para cuidar.
+- **08/11 — RNTL 14 é assíncrono até no `unmount`:** sem `await`, o `DialogHost` da primeira
+  montagem continua registrado e o diálogo da segunda some. Chamada de callback fora do
+  `fireEvent` (ex.: o `usePreventRemove` simulado) vai em `await act(async () => …)`.
+- **08/11 — Inativo-que-explica no web:** o `Pressable` do react-native-web sobrescreve
+  `aria-disabled` com a prop `disabled`; botão que fica clicável para explicar o motivo é lido
+  como ativo e o axe reprova o contraste. Onde a ação não existe, escrever o motivo no lugar.
 

@@ -54,13 +54,15 @@ export function buildTimeline(routine: Routine): Segment[] {
   const drafts: Draft[] = [];
   if (routine.prepSeconds > 0) drafts.push(plain('prep', 'Preparação', routine.prepSeconds));
 
-  const blocks = routine.blocks.filter((block) => block.steps.length > 0 && block.repeat > 0);
-  blocks.forEach((block, position) => {
-    const blockIndex = routine.blocks.indexOf(block);
-    const lastWork = block.steps.map((step) => step.kind).lastIndexOf('work');
+  // Etapa desativada some da execução; bloco sem etapa ativa também.
+  const blocks = routine.blocks
+    .map((block, index) => ({ block, index, steps: block.steps.filter((s) => !s.disabled) }))
+    .filter(({ block, steps }) => steps.length > 0 && block.repeat > 0);
+  blocks.forEach(({ block, index: blockIndex, steps }, position) => {
+    const lastWork = steps.map((step) => step.kind).lastIndexOf('work');
     for (let round = 1; round <= block.repeat; round += 1) {
       const isLastRound = round === block.repeat;
-      block.steps.forEach((step, stepIndex) => {
+      steps.forEach((step, stepIndex) => {
         if (isLastRound && step.kind === 'rest' && stepIndex > lastWork) return;
         drafts.push(stepDraft(step, blockIndex, round, block.repeat));
       });

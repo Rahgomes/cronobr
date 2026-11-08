@@ -1,9 +1,13 @@
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { useRepos } from '@/data/data-context';
 import { presetsOf } from '@/domain/presets';
-import { MODALITIES, type Modality } from '@/domain/routine';
+import { MODALITIES, type Modality, type Routine } from '@/domain/routine';
 import { RoutineRow } from '@/features/home/routine-row';
+import { useFavorites } from '@/features/routines/favorites';
+import { RoutineOptions } from '@/features/routines/routine-options';
 import { Button } from '@/ui/button';
 import { PhotoFade, PhotoFill } from '@/ui/photo-card';
 import { Screen } from '@/ui/screen';
@@ -23,6 +27,24 @@ function isModality(value: string | undefined): value is Modality {
 /** Uma modalidade: foto no topo e os modelos prontos dela. Criar e editar modelos entra na E04. */
 export function ModalityScreen({ id }: { id: string | undefined }) {
   const styles = useThemedStyles(makeStyles);
+  const repos = useRepos();
+  const favorites = useFavorites();
+  const [mine, setMine] = useState<Routine[]>([]);
+  const [options, setOptions] = useState<Routine | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      repos.routines.list().then(
+        (all) => {
+          if (active) setMine(all.filter((r) => r.modality === id));
+        },
+        () => undefined,
+      );
+      return () => {
+        active = false;
+      };
+    }, [repos, id]),
+  );
   if (!isModality(id) || presetsOf(id).length === 0) {
     return (
       <Screen
@@ -43,6 +65,19 @@ export function ModalityScreen({ id }: { id: string | undefined }) {
   }
   const info = MODALITY[id];
   const presets = presetsOf(id);
+  const row = (routine: Routine) => (
+    <RoutineRow
+      key={routine.id}
+      routine={routine}
+      favorite={favorites.ids.includes(routine.id)}
+      onPress={() => {
+        router.push({ pathname: '/sessao', params: { rotina: routine.id } });
+      }}
+      onMore={() => {
+        setOptions(routine);
+      }}
+    />
+  );
   return (
     <Screen>
       <View style={styles.hero}>
@@ -66,16 +101,47 @@ export function ModalityScreen({ id }: { id: string | undefined }) {
       </View>
       <View style={styles.list}>
         <SectionTitle>{presets.length === 1 ? 'Modelo pronto' : 'Modelos prontos'}</SectionTitle>
-        {presets.map((routine) => (
-          <RoutineRow
-            key={routine.id}
-            routine={routine}
-            onPress={() => {
-              router.push({ pathname: '/sessao', params: { rotina: routine.id } });
-            }}
-          />
-        ))}
+        {presets.map((routine) => row(routine))}
+        <Text variant="caption" color="textMuted">
+          {'Em "⋯", edite uma cópia do modelo do seu jeito.'}
+        </Text>
       </View>
+      {mine.length > 0 ? (
+        <View style={styles.list}>
+          <SectionTitle>{`Suas rotinas de ${info.label}`}</SectionTitle>
+          {mine.map((routine) => row(routine))}
+        </View>
+      ) : null}
+      <Button
+        label={`Criar rotina de ${info.label}`}
+        kind="secondary"
+        onPress={() => {
+          router.push({ pathname: '/rotina/[id]', params: { id: 'nova', modalidade: id } });
+        }}
+      />
+      <RoutineOptions
+        routine={options}
+        actions={
+          options
+            ? {
+                favorite: favorites.ids.includes(options.id),
+                toggleFavorite: () => {
+                  favorites.toggle(options.id);
+                },
+                edit: () => {
+                  router.push(
+                    options.origin === 'preset'
+                      ? { pathname: '/rotina/[id]', params: { id: 'nova', de: options.id } }
+                      : { pathname: '/rotina/[id]', params: { id: options.id } },
+                  );
+                },
+              }
+            : null
+        }
+        onClose={() => {
+          setOptions(null);
+        }}
+      />
     </Screen>
   );
 }

@@ -3,14 +3,19 @@ import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { useRepos } from '@/data/data-context';
+import { copyRoutine } from '@/domain/editor';
 import type { Session } from '@/domain/engine';
 import { clock, relativeDay } from '@/domain/format';
 import { recentRoutines, type RecentRoutine } from '@/domain/history';
-import { PRESET_MODALITIES, presetsOf } from '@/domain/presets';
+import { PRESET_MODALITIES, PRESETS, presetsOf } from '@/domain/presets';
 import type { Routine } from '@/domain/routine';
 import { buildTimeline, summarize } from '@/domain/timeline';
+import { idGenerator } from '@/features/editor/ids';
 import { MODALITY } from '@/features/modality/catalog';
+import { useFavorites } from '@/features/routines/favorites';
+import { RoutineOptions, type RoutineOptionActions } from '@/features/routines/routine-options';
 import { BrandMark } from '@/ui/brand-mark';
+import { Button } from '@/ui/button';
 import { Carousel } from '@/ui/carousel';
 import { Notice } from '@/ui/notice';
 import { PhotoBadge, PhotoCard } from '@/ui/photo-card';
@@ -43,6 +48,9 @@ function models(count: number) {
 export function HomeScreen() {
   const repos = useRepos();
   const [data, setData] = useState<HomeData | null>(null);
+  const [reloads, setReloads] = useState(0);
+  const favorites = useFavorites();
+  const [options, setOptions] = useState<Routine | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -64,8 +72,56 @@ export function HomeScreen() {
       return () => {
         active = false;
       };
-    }, [repos]),
+      // `reloads` força a releitura depois de duplicar, mover ou apagar.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [repos, reloads]),
   );
+  const reload = () => {
+    setReloads((n) => n + 1);
+  };
+
+  const mine = data?.mine ?? [];
+  const byId = new Map([...PRESETS, ...mine].map((r) => [r.id, r]));
+  const favoriteRoutines = favorites.ids.flatMap((id) => byId.get(id) ?? []);
+  const open = (routine: Routine) => {
+    router.push({ pathname: '/sessao', params: { rotina: routine.id } });
+  };
+  const optionActions = (routine: Routine): RoutineOptionActions => {
+    const index = mine.findIndex((r) => r.id === routine.id);
+    const own = index >= 0;
+    const reorder = (to: number) => () => {
+      const ids = mine.map((r) => r.id);
+      const [moved] = ids.splice(index, 1);
+      if (moved) ids.splice(to, 0, moved);
+      void repos.routines.reorder(ids).then(reload);
+    };
+    return {
+      favorite: favorites.ids.includes(routine.id),
+      toggleFavorite: () => {
+        favorites.toggle(routine.id);
+      },
+      edit: () => {
+        router.push(
+          own
+            ? { pathname: '/rotina/[id]', params: { id: routine.id } }
+            : { pathname: '/rotina/[id]', params: { id: 'nova', de: routine.id } },
+        );
+      },
+      duplicate: own
+        ? () => {
+            const copy = copyRoutine(routine, idGenerator(), Date.now());
+            void repos.routines.save(copy).then(reload);
+          }
+        : undefined,
+      moveUp: own && index > 0 ? reorder(index - 1) : null,
+      moveDown: own && index < mine.length - 1 ? reorder(index + 1) : null,
+      remove: own
+        ? () => {
+            void repos.routines.remove(routine.id).then(reload);
+          }
+        : undefined,
+    };
+  };
 
   return (
     <Screen>
@@ -166,20 +222,56 @@ export function HomeScreen() {
         })}
       </Carousel>
 
-      {data && data.mine.length > 0 ? (
+      {favoriteRoutines.length > 0 ? (
         <View style={styles.list}>
-          <SectionTitle>Suas rotinas</SectionTitle>
-          {data.mine.map((routine) => (
+          <SectionTitle>Favoritas</SectionTitle>
+          {favoriteRoutines.map((routine) => (
             <RoutineRow
               key={routine.id}
               routine={routine}
+              favorite
               onPress={() => {
-                router.push({ pathname: '/sessao', params: { rotina: routine.id } });
+                open(routine);
+              }}
+              onMore={() => {
+                setOptions(routine);
               }}
             />
           ))}
         </View>
       ) : null}
+
+      <View style={styles.list}>
+        {mine.length > 0 ? <SectionTitle>Suas rotinas</SectionTitle> : null}
+        {mine.map((routine) => (
+          <RoutineRow
+            key={routine.id}
+            routine={routine}
+            favorite={favorites.ids.includes(routine.id)}
+            onPress={() => {
+              open(routine);
+            }}
+            onMore={() => {
+              setOptions(routine);
+            }}
+          />
+        ))}
+        <Button
+          label="Nova rotina"
+          kind="secondary"
+          onPress={() => {
+            router.push({ pathname: '/rotina/[id]', params: { id: 'nova' } });
+          }}
+        />
+      </View>
+
+      <RoutineOptions
+        routine={options}
+        actions={options ? optionActions(options) : null}
+        onClose={() => {
+          setOptions(null);
+        }}
+      />
     </Screen>
   );
 }

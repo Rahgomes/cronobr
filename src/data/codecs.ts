@@ -14,6 +14,7 @@ const stepShape = z.object({
   kind: z.enum(['work', 'rest']),
   seconds: int.nullable(),
   reps: int.nullable(),
+  disabled: z.boolean().optional(),
 });
 
 export const routineShape: z.ZodType<Routine> = z.object({

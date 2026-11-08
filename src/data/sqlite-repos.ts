@@ -35,8 +35,9 @@ export async function upsertRoutine(
   mode: 'replace' | 'keep' = 'replace',
 ) {
   await tx.run(
-    `INSERT INTO routines (id, name, modality, version, origin, data, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO routines
+       (id, name, modality, version, origin, data, created_at, updated_at, position)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, (SELECT COALESCE(MIN(position), 0) - 1 FROM routines))
      ON CONFLICT (id) DO ${
        mode === 'replace'
          ? `UPDATE SET name = excluded.name, modality = excluded.modality,
@@ -73,7 +74,7 @@ function routinesRepo(db: SqlDb): RoutinesRepo {
   return {
     async list() {
       const rows = await db.all<{ data: string }>(
-        'SELECT data FROM routines ORDER BY updated_at DESC, id',
+        'SELECT data FROM routines ORDER BY position, updated_at DESC, id',
       );
       return rows.flatMap((row) => decode(routineShape, row.data) ?? []);
     },
@@ -82,6 +83,15 @@ function routinesRepo(db: SqlDb): RoutinesRepo {
       return row ? decode(routineShape, row.data) : null;
     },
     save: (routine) => db.transaction((tx) => upsertRoutine(tx, routine)),
+    async remove(id) {
+      await db.run('DELETE FROM routines WHERE id = ?', [id]);
+    },
+    reorder: (ids) =>
+      db.transaction(async (tx) => {
+        for (const [position, id] of ids.entries()) {
+          await tx.run('UPDATE routines SET position = ? WHERE id = ?', [position, id]);
+        }
+      }),
   };
 }
 

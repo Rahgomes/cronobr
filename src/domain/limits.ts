@@ -61,6 +61,7 @@ const stepSchema = z
       .min(1, 'Informe pelo menos 1 repetição.')
       .max(LIMITS.repsMax, `As repetições podem ir até ${String(LIMITS.repsMax)}.`)
       .nullable(),
+    disabled: z.boolean().optional(),
   })
   .refine((step) => step.seconds !== null || step.reps !== null, {
     message: 'Etapa sem tempo precisa de repetições.',
@@ -89,10 +90,12 @@ const blockSchema = z
       ),
     restAfterSeconds: seconds('o descanso entre blocos', 0, LIMITS.blockRestMaxSeconds),
   })
-  .refine((block) => block.steps.length === 0 || block.steps.some((step) => step.kind === 'work'), {
-    message: 'O bloco precisa de pelo menos 1 etapa de exercício.',
-    path: ['steps'],
-  });
+  .refine(
+    (block) =>
+      block.steps.length === 0 ||
+      block.steps.some((step) => step.kind === 'work' && !step.disabled),
+    { message: 'O bloco precisa de pelo menos 1 exercício ativo.', path: ['steps'] },
+  );
 
 const routineSchema = z
   .object({
