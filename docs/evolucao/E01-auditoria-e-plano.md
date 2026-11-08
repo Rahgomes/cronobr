@@ -104,6 +104,8 @@ E2E verdes nos fluxos que tocou.
 | E07 | Vários timers e cadência | Após critérios críticos de E02–E04 | E03, E04 | Testes de colisão e precisão |
 | E08 | Lançamento | Banner com ID de teste (P5), textos de loja, relatório Android/iOS | Tudo | Matriz aprovado/reprovado/não testado |
 
+**Situação:** E00 concluída em 08/11 (ver `docs/evolucao/E00-fundacao.md`).
+
 **Ordem recomendada para começar:** E00 → E02. A E04 pode andar em paralelo à E03 depois da E02,
 porque usa o mesmo motor e não depende de aparelho.
 

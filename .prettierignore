@@ -1,0 +1,12 @@
+docs/
+pnpm-lock.yaml
+**/lib/
+**/.expo/
+**/android/
+**/ios/
+**/out/
+**/.next/
+**/test-results/
+**/playwright-report/
+**/.lighthouseci/
+legado/

@@ -24,7 +24,8 @@ convertida em curvas, então os SVG não dependem de fonte instalada.
 - Fundo escuro: lockup com "Cronô" branco. Fundo claro: "Cronô" #121212. "BR" sempre laranja.
 - Área de respiro: no mínimo a altura do play em volta do logo. Tamanho mínimo do ícone: 24 px.
 - Não usar: degradê, sombra, contorno, símbolo esticado, "CronoBR" sem acento.
-- Pendente na fase de código: copiar `final/app/*` para `assets/images/` e trocar "CronoBR" no cabeçalho
-  e nas traduções (`client/components/HeaderTitle.tsx`, `client/lib/i18n.ts`).
+- Aplicado no app novo (E00): `assets/images/` usa o kit de `final/app/` e o lockup no `BrandMark`.
+- Contraste: no escuro o botão laranja leva texto #121212; no claro o laranja de texto e botão é
+  #C2410C (branco sobre #FF6B35 reprova, 2,9:1). Ver `src/ui/tokens.ts` e `theme.test.ts`.
 
 Conceitos que não foram escolhidos ficam em `arquivado/`.

@@ -1,0 +1,2 @@
+# pnpm 10 bloqueia scripts de instalação; liberar só depois de ler o script.
+onlyBuiltDependencies: []

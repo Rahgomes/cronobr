@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qualidade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm knip
+
+  seguranca:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: google/osv-scanner-action/osv-scanner-action@v2.2.3
+        with:
+          scan-args: --lockfile=pnpm-lock.yaml
+
+  # Jornadas no build web com axe (WCAG 2.2 AA), tema claro e escuro.
+  e2e-web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm export:web
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-relatorio
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
+
+  # Prévia web em cronobr--previa.expo.app, só depois dos gates verdes na main.
+  previa-web:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [qualidade, seguranca, e2e-web]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: previa-web
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm export:web
+      - run: npx -y eas-cli@24.14.0 deploy --non-interactive --alias previa
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}

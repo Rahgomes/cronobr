@@ -42,3 +42,6 @@ app-example
 /ios
 /android
 docs/videos-concorrentes/
+playwright-report/
+test-results/
+coverage/

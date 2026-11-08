@@ -1,0 +1,22 @@
+# O10 (PRD 21): alerta de dependência vulnerável e PR semanal só de correção (patch), agrupado.
+# Versão menor e maior seguem o plano de atualização do SDK (receita, O9): o Expo fixa as versões.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 3
+    groups:
+      correcoes:
+        update-types: [patch]
+    ignore:
+      - dependency-name: '*'
+        update-types: [version-update:semver-minor, version-update:semver-major]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

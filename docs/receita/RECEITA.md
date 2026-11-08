@@ -82,3 +82,13 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
 - **07/11 — Decisão de trilha:** a auditoria mostrou SDK 4 versões atrás, zero testes e
   configurações sem efeito; o Ramon optou por **reescrever** na base do ManiVez (SDK 58, Expo
   Router, camadas e kit de UI). Virou a variação "reescrever" da etapa 8.
+- **08/11 — E00 (fundação por reescrita):** copiar só o pedaço do kit de UI que a 1ª tela usa
+  (o knip barra o resto como arquivo sem uso); o restante vem quando a tela pedir. Pegadinhas:
+  `cp x.ts*` não copia `x.test.tsx`; copiar os testes **depois** pode sobrescrever um teste já
+  adaptado (aconteceu com `theme.test.ts`); o padrão do contexto de tema fora do provider deve
+  continuar claro, senão todos os testes do kit que comparam com `colors` quebram.
+- **08/11 — Contraste da marca:** branco sobre o laranja #FF6B35 dá 2,9:1 e reprova. Solução sem
+  trocar a marca: no escuro o botão laranja leva texto #121212 (7,3:1); no claro o "primário" vira
+  #C2410C, que aguenta texto branco e serve de texto laranja sobre branco. Medido em `theme.test.ts`.
+- **08/11 — Projeto EAS de app novo:** `eas init` não escreve em `app.config.ts`; ele cria o projeto
+  e imprime o `projectId`, que vai fixo no config. Token da conta Expo agora em `/root/.secrets/expo.env`.
