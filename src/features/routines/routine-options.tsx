@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import type { Routine } from '@/domain/routine';
 import { useOptionalFilePort } from '@/features/transfer/file-port';
 import { shareRoutine } from '@/features/transfer/transfer-actions';
+import { useT } from '@/i18n/i18n-context';
 import { Button } from '@/ui/button';
 import { dialog } from '@/ui/dialog';
 import { Sheet } from '@/ui/sheet';
@@ -28,6 +29,7 @@ export function RoutineOptions({
   actions: RoutineOptionActions | null;
   onClose: () => void;
 }) {
+  const t = useT();
   const visible = routine !== null && actions !== null;
   const files = useOptionalFilePort();
   const preset = routine?.origin === 'preset';
@@ -40,18 +42,18 @@ export function RoutineOptions({
       {visible ? (
         <View style={styles.list}>
           <Button
-            label={actions.favorite ? 'Tirar das favoritas' : 'Favoritar'}
+            label={actions.favorite ? t.routineOptions.unfavorite : t.routineOptions.favorite}
             kind="secondary"
             onPress={run(actions.toggleFavorite)}
           />
           <Button
-            label={preset ? 'Editar uma cópia' : 'Editar'}
+            label={preset ? t.routineOptions.editCopy : t.routineOptions.edit}
             kind="secondary"
             onPress={run(actions.edit)}
           />
           {files ? (
             <Button
-              label="Compartilhar"
+              label={t.routineOptions.share}
               kind="secondary"
               onPress={() => {
                 onClose();
@@ -60,27 +62,31 @@ export function RoutineOptions({
             />
           ) : null}
           {actions.duplicate ? (
-            <Button label="Duplicar" kind="secondary" onPress={run(actions.duplicate)} />
+            <Button
+              label={t.routineOptions.duplicate}
+              kind="secondary"
+              onPress={run(actions.duplicate)}
+            />
           ) : null}
           {actions.moveUp ? (
-            <Button label="Mover para cima" kind="text" onPress={run(actions.moveUp)} />
+            <Button label={t.routineOptions.moveUp} kind="text" onPress={run(actions.moveUp)} />
           ) : null}
           {actions.moveDown ? (
-            <Button label="Mover para baixo" kind="text" onPress={run(actions.moveDown)} />
+            <Button label={t.routineOptions.moveDown} kind="text" onPress={run(actions.moveDown)} />
           ) : null}
           {actions.remove ? (
             <Button
-              label="Apagar rotina"
+              label={t.routineOptions.deleteRoutine}
               kind="text"
               onPress={() => {
                 const remove = actions.remove;
                 if (!remove) return;
                 dialog.alert(
-                  `Apagar "${routine.name}"?`,
-                  'Os treinos já feitos com ela continuam no histórico.',
+                  t.routineOptions.deleteTitle(routine.name),
+                  t.routineOptions.deleteMessage,
                   [
-                    { text: 'Cancelar', style: 'cancel' },
-                    { text: 'Apagar', style: 'destructive', onPress: run(remove) },
+                    { text: t.routineOptions.cancel, style: 'cancel' },
+                    { text: t.routineOptions.delete, style: 'destructive', onPress: run(remove) },
                   ],
                 );
               }}

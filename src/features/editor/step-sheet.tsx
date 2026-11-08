@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { clock } from '@/domain/format';
 import { LIMITS } from '@/domain/limits';
 import type { Step } from '@/domain/routine';
+import { useT } from '@/i18n/i18n-context';
 import { Button } from '@/ui/button';
 import { Chip } from '@/ui/chip';
 import { Sheet } from '@/ui/sheet';
@@ -31,6 +32,7 @@ export function StepSheet({
   actions: StepActions;
   onClose: () => void;
 }) {
+  const t = useT();
   if (!step)
     return (
       <Sheet title="" visible={false} onClose={onClose}>
@@ -39,9 +41,9 @@ export function StepSheet({
     );
   const byReps = step.seconds === null;
   return (
-    <Sheet title={step.name || 'Etapa'} visible onClose={onClose}>
+    <Sheet title={step.name || t.editor.step} visible onClose={onClose}>
       <TextField
-        label="Nome da etapa"
+        label={t.editor.stepName}
         value={step.name}
         maxLength={LIMITS.nameMax}
         onChangeText={(name) => {
@@ -50,14 +52,14 @@ export function StepSheet({
       />
       <View style={styles.chips}>
         <Chip
-          label="Exercício"
+          label={t.editor.work}
           selected={step.kind === 'work'}
           onPress={() => {
             actions.change({ kind: 'work' });
           }}
         />
         <Chip
-          label="Descanso"
+          label={t.editor.rest}
           selected={step.kind === 'rest'}
           onPress={() => {
             actions.change({ kind: 'rest', seconds: step.seconds });
@@ -67,14 +69,14 @@ export function StepSheet({
       {step.kind === 'work' ? (
         <View style={styles.chips}>
           <Chip
-            label="Por tempo"
+            label={t.editor.byTime}
             selected={!byReps}
             onPress={() => {
               actions.change({ seconds: step.seconds ?? 30 });
             }}
           />
           <Chip
-            label="Por repetições"
+            label={t.editor.byReps}
             selected={byReps}
             onPress={() => {
               actions.change({ seconds: null });
@@ -85,7 +87,7 @@ export function StepSheet({
       {byReps ? (
         <>
           <Stepper
-            label="Repetições"
+            label={t.editor.reps}
             value={step.reps ?? 10}
             min={1}
             max={LIMITS.repsMax}
@@ -94,12 +96,12 @@ export function StepSheet({
             }}
           />
           <Text variant="caption" color="textMuted">
-            {'Sem contagem automática: na hora, você toca em "Concluí" para seguir.'}
+            {t.editor.manualHint}
           </Text>
         </>
       ) : (
         <Stepper
-          label="Tempo"
+          label={t.editor.time}
           value={step.seconds ?? 30}
           min={5}
           max={LIMITS.stepMaxSeconds}
@@ -111,16 +113,16 @@ export function StepSheet({
         />
       )}
       <Toggle
-        label="Etapa ativa"
-        hint="Desativada fica guardada, mas não roda."
+        label={t.editor.activeStep}
+        hint={t.editor.activeHint}
         value={!step.disabled}
         onChange={(on) => {
           actions.change({ disabled: !on });
         }}
       />
       <Toggle
-        label="Os dois lados"
-        hint="Roda uma vez para cada lado: esquerdo, depois direito."
+        label={t.editor.bothSides}
+        hint={t.editor.sidesHint}
         value={step.sides === true}
         onChange={(on) => {
           actions.change({ sides: on });
@@ -128,8 +130,8 @@ export function StepSheet({
       />
       {step.kind === 'work' && step.seconds !== null ? (
         <Toggle
-          label="Pode terminar antes"
-          hint='Como no EMOM: "Terminei" transforma o resto do tempo em descanso.'
+          label={t.editor.early}
+          hint={t.editor.earlyHint}
           value={step.early === true}
           onChange={(on) => {
             actions.change({ early: on });
@@ -137,20 +139,20 @@ export function StepSheet({
         />
       ) : null}
       <View style={styles.actions}>
-        <Button label="Inserir etapa depois" kind="secondary" onPress={actions.insertAfter} />
-        <Button label="Duplicar" kind="secondary" onPress={actions.duplicate} />
+        <Button label={t.editor.insertAfter} kind="secondary" onPress={actions.insertAfter} />
+        <Button label={t.editor.duplicate} kind="secondary" onPress={actions.duplicate} />
         {actions.moveUp ? (
-          <Button label="Mover para cima" kind="text" onPress={actions.moveUp} />
+          <Button label={t.editor.moveUp} kind="text" onPress={actions.moveUp} />
         ) : null}
         {actions.moveDown ? (
-          <Button label="Mover para baixo" kind="text" onPress={actions.moveDown} />
+          <Button label={t.editor.moveDown} kind="text" onPress={actions.moveDown} />
         ) : null}
         {/* Sem botão morto: o motivo fica escrito (no web o inativo-que-explica perde o aria-disabled). */}
         {actions.remove ? (
-          <Button label="Apagar etapa" kind="text" onPress={actions.remove} />
+          <Button label={t.editor.deleteStep} kind="text" onPress={actions.remove} />
         ) : (
           <Text variant="caption" color="textMuted">
-            O bloco precisa de pelo menos uma etapa.
+            {t.editor.stepRequired}
           </Text>
         )}
       </View>

@@ -140,11 +140,11 @@ export function EditorScreen({
   };
 
   usePreventRemove(dirty && leaving === null, () => {
-    dialog.alert('Sair do editor?', 'Suas alterações ficam guardadas como rascunho.', [
-      { text: 'Continuar editando', style: 'cancel' },
-      { text: 'Descartar alterações', style: 'destructive', onPress: discard },
+    dialog.alert(t.editor.leaveTitle, t.editor.leaveMessage, [
+      { text: t.editor.continueEditing, style: 'cancel' },
+      { text: t.editor.discardChanges, style: 'destructive', onPress: discard },
       {
-        text: 'Sair e guardar rascunho',
+        text: t.editor.leaveDraft,
         onPress: () => {
           // O banco atende em fila: esta leitura só volta depois da última gravação do
           // rascunho. Sair antes deixava reabrir e ler o rascunho antigo (CI carregado).
@@ -174,7 +174,7 @@ export function EditorScreen({
       <Screen
         footer={
           <Button
-            label="Voltar"
+            label={t.editor.back}
             onPress={() => {
               router.back();
             }}
@@ -182,7 +182,7 @@ export function EditorScreen({
         }
       >
         <Text variant="title" accessibilityRole="header">
-          Rotina não encontrada
+          {t.editor.missing}
         </Text>
       </Screen>
     );
@@ -262,10 +262,10 @@ export function EditorScreen({
     remove:
       draft.blocks.length > 1
         ? () => {
-            dialog.alert('Apagar o bloco?', 'As etapas dele saem da rotina.', [
-              { text: 'Cancelar', style: 'cancel' },
+            dialog.alert(t.editor.deleteBlockTitle, t.editor.deleteBlockMessage, [
+              { text: t.editor.cancel, style: 'cancel' },
               {
-                text: 'Apagar',
+                text: t.editor.delete,
                 style: 'destructive',
                 onPress: () => {
                   update(edit.removeBlock(draft, b));
@@ -286,7 +286,7 @@ export function EditorScreen({
         <View style={styles.footer}>
           <View style={styles.footerItem}>
             <Button
-              label="Salvar"
+              label={t.editor.save}
               kind="secondary"
               disabled={!check.ok}
               disabledHint={problem ?? undefined}
@@ -297,7 +297,7 @@ export function EditorScreen({
           </View>
           <View style={styles.footerItem}>
             <Button
-              label="Salvar e começar"
+              label={t.editor.saveStart}
               disabled={!check.ok}
               disabledHint={problem ?? undefined}
               onPress={() => {
@@ -308,29 +308,29 @@ export function EditorScreen({
         </View>
       }
     >
-      <TopBar title={existed ? 'Editar rotina' : 'Nova rotina'} />
+      <TopBar title={existed ? t.editor.editRoutine : t.editor.newRoutine} />
 
       {load.recovered ? (
         <Notice
           tone="soft"
           action={{
-            label: 'Descartar rascunho',
+            label: t.editor.discardDraft,
             onPress: () => {
-              dialog.alert('Descartar o rascunho?', 'As alterações não salvas somem.', [
-                { text: 'Cancelar', style: 'cancel' },
-                { text: 'Descartar', style: 'destructive', onPress: dropDraft },
+              dialog.alert(t.editor.discardDraftTitle, t.editor.discardDraftMessage, [
+                { text: t.editor.cancel, style: 'cancel' },
+                { text: t.editor.discard, style: 'destructive', onPress: dropDraft },
               ]);
             },
           }}
         >
-          Rascunho recuperado: você saiu sem salvar da última vez.
+          {t.editor.recovered}
         </Notice>
       ) : null}
 
       <TextField
-        label="Nome da rotina"
+        label={t.editor.routineName}
         value={draft.name}
-        placeholder="Ex.: Circuito de sexta"
+        placeholder={t.editor.routinePlaceholder}
         maxLength={LIMITS.nameMax}
         onChangeText={(name) => {
           update(edit.routine(draft, { name }));
@@ -341,7 +341,7 @@ export function EditorScreen({
         showsHorizontalScrollIndicator={false}
         style={styles.bleed}
         contentContainerStyle={styles.modalities}
-        accessibilityLabel="Modalidade"
+        accessibilityLabel={t.editor.modality}
       >
         {EDITABLE.map((m) => (
           <Chip
@@ -357,18 +357,16 @@ export function EditorScreen({
 
       <Card style={styles.total}>
         <View>
-          <Text color="textMuted">Total{summary.manualCount > 0 ? ' estimado' : ''}</Text>
+          <Text color="textMuted">{t.editor.total(summary.manualCount > 0)}</Text>
           <Text variant="display" tabular>
             {clock(summary.knownMs)}
           </Text>
         </View>
         <View style={styles.totalSide}>
-          <Text color="textMuted">
-            {`${String(draft.blocks.length)} ${draft.blocks.length === 1 ? 'bloco' : 'blocos'} · ${String(summary.segments)} etapas`}
-          </Text>
+          <Text color="textMuted">{t.editor.summary(draft.blocks.length, summary.segments)}</Text>
           {summary.manualCount > 0 ? (
             <Text variant="caption" color="textMuted">
-              {`+ ${String(summary.manualCount)} por repetições, no seu ritmo`}
+              {t.editor.manualCount(summary.manualCount)}
             </Text>
           ) : null}
         </View>
@@ -376,7 +374,7 @@ export function EditorScreen({
 
       <Card>
         <Stepper
-          label="Preparação"
+          label={t.editor.prep}
           value={draft.prepSeconds}
           min={0}
           max={LIMITS.prepMaxSeconds}
@@ -395,7 +393,7 @@ export function EditorScreen({
             <Card style={styles.block}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`${block.name}, ${String(block.repeat)} rodadas. Editar bloco`}
+                accessibilityLabel={t.editor.editBlockLabel(block.name, block.repeat)}
                 onPress={() => {
                   setBlockAt(b);
                 }}
@@ -405,20 +403,24 @@ export function EditorScreen({
                   {block.name}
                 </Text>
                 <View style={styles.repeat}>
-                  <Text variant="label">{`×${String(block.repeat)}`}</Text>
+                  <Text variant="label">{t.editor.repeatCount(block.repeat)}</Text>
                 </View>
                 <MaterialCommunityIcons name="pencil-outline" size={20} color={colors.textMuted} />
               </Pressable>
               {block.steps.map((step, s) => {
                 const amount =
                   step.seconds === null
-                    ? `${String(step.reps ?? 0)} rep`
+                    ? t.editor.repetitions(step.reps ?? 0)
                     : clock(step.seconds * 1000);
                 return (
                   <Pressable
                     key={step.id}
                     accessibilityRole="button"
-                    accessibilityLabel={`${step.name}, ${amount}${step.disabled ? ', desativada' : ''}. Editar etapa`}
+                    accessibilityLabel={t.editor.editStepLabel(
+                      step.name,
+                      amount,
+                      step.disabled === true,
+                    )}
                     onPress={() => {
                       setStepAt([b, s]);
                     }}
@@ -431,7 +433,7 @@ export function EditorScreen({
                       </Text>
                       {step.disabled ? (
                         <Text variant="caption" color="textMuted">
-                          desativada
+                          {t.editor.disabled}
                         </Text>
                       ) : null}
                     </View>
@@ -442,9 +444,9 @@ export function EditorScreen({
                 );
               })}
               <Button
-                label="+ Adicionar etapa"
+                label={t.editor.addStep}
                 kind="text"
-                accessibilityLabel={`Adicionar etapa em ${block.name}`}
+                accessibilityLabel={t.editor.addStepLabel(block.name)}
                 onPress={() => {
                   update(edit.addStep(draft, b, block.steps.length - 1, 'work', newId, t.words));
                   setStepAt([b, block.steps.length]);
@@ -454,7 +456,7 @@ export function EditorScreen({
             {!last && block.restAfterSeconds > 0 ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Descanso entre blocos, ${clock(block.restAfterSeconds * 1000)}. Editar`}
+                accessibilityLabel={t.editor.editRestLabel(clock(block.restAfterSeconds * 1000))}
                 onPress={() => {
                   setBlockAt(b);
                 }}
@@ -462,7 +464,7 @@ export function EditorScreen({
               >
                 <View style={[styles.bar, styles.rest]} />
                 <Text variant="label" style={styles.flex}>
-                  Descanso entre blocos
+                  {t.editor.blockRest}
                 </Text>
                 <Text variant="label" tabular>
                   {clock(block.restAfterSeconds * 1000)}
@@ -474,10 +476,10 @@ export function EditorScreen({
       })}
 
       <Button
-        label="+ Adicionar bloco"
+        label={t.editor.addBlock}
         kind="text"
         disabled={draft.blocks.length >= LIMITS.blocksMax}
-        disabledHint={`A rotina pode ter até ${String(LIMITS.blocksMax)} blocos.`}
+        disabledHint={t.editor.blocksLimit(LIMITS.blocksMax)}
         onPress={() => {
           update(edit.addBlock(draft, newId, t.words));
         }}
@@ -485,19 +487,19 @@ export function EditorScreen({
 
       <Card>
         <Stepper
-          label="Encerramento"
+          label={t.editor.cooldown}
           value={draft.cooldownSeconds}
           min={0}
           max={LIMITS.cooldownMaxSeconds}
           step={15}
-          format={(s) => (s === 0 ? 'Sem' : clock(s * 1000))}
+          format={(s) => (s === 0 ? t.editor.none : clock(s * 1000))}
           onChange={(cooldownSeconds) => {
             update(edit.routine(draft, { cooldownSeconds }));
           }}
         />
       </Card>
 
-      <SectionTitle>Prévia</SectionTitle>
+      <SectionTitle>{t.editor.preview}</SectionTitle>
       <Card>
         {timeline.slice(0, PREVIEW_MAX).map((segment) => (
           <View key={segment.index} style={styles.previewRow}>
@@ -509,15 +511,15 @@ export function EditorScreen({
             </Text>
             <Text tabular>
               {segment.durationMs === null
-                ? `${String(segment.reps ?? 0)} rep`
+                ? t.editor.repetitions(segment.reps ?? 0)
                 : clock(segment.durationMs)}
             </Text>
           </View>
         ))}
         {timeline.length > PREVIEW_MAX ? (
-          <Text color="textMuted">{`e mais ${String(timeline.length - PREVIEW_MAX)} etapas`}</Text>
+          <Text color="textMuted">{t.editor.moreSteps(timeline.length - PREVIEW_MAX)}</Text>
         ) : null}
-        {timeline.length === 0 ? <Text color="textMuted">Nenhuma etapa ativa.</Text> : null}
+        {timeline.length === 0 ? <Text color="textMuted">{t.editor.noSteps}</Text> : null}
       </Card>
 
       {problem ? <Notice tone="danger">{problem}</Notice> : null}

@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { clock } from '@/domain/format';
 import type { Routine } from '@/domain/routine';
 import { buildTimeline, summarize } from '@/domain/timeline';
+import { useT } from '@/i18n/i18n-context';
 import { Text } from '@/ui/text';
 import type { Colors } from '@/ui/theme';
 import { useColors, useThemedStyles } from '@/ui/theme-context';
@@ -22,16 +23,17 @@ export function RoutineRow({
   onMore?: (() => void) | undefined;
   favorite?: boolean;
 }) {
+  const t = useT();
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const summary = summarize(buildTimeline(routine));
-  const detail = `${clock(summary.knownMs)} · ${String(summary.workCount)} exercícios`;
+  const detail = t.home.routineDetail(clock(summary.knownMs), summary.workCount);
   return (
     <View style={styles.wrap}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${routine.name}, ${detail}${favorite ? ', favorita' : ''}`}
-        accessibilityHint="Abre o treino"
+        accessibilityLabel={t.home.routineLabel(routine.name, detail, favorite)}
+        accessibilityHint={t.home.openHint}
         onPress={onPress}
         style={({ pressed }) => [styles.row, pressed && styles.pressed]}
       >
@@ -49,7 +51,7 @@ export function RoutineRow({
       {onMore ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Opções de ${routine.name}`}
+          accessibilityLabel={t.home.optionsLabel(routine.name)}
           onPress={onMore}
           hitSlop={4}
           style={({ pressed }) => [styles.more, pressed && styles.pressed]}

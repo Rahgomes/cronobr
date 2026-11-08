@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { clock } from '@/domain/format';
 import { LIMITS } from '@/domain/limits';
 import type { Block } from '@/domain/routine';
+import { useT } from '@/i18n/i18n-context';
 import { Button } from '@/ui/button';
 import { Sheet } from '@/ui/sheet';
 import { Stepper } from '@/ui/stepper';
@@ -29,6 +30,7 @@ export function BlockSheet({
   actions: BlockActions;
   onClose: () => void;
 }) {
+  const t = useT();
   if (!block)
     return (
       <Sheet title="" visible={false} onClose={onClose}>
@@ -36,9 +38,9 @@ export function BlockSheet({
       </Sheet>
     );
   return (
-    <Sheet title={block.name || 'Bloco'} visible onClose={onClose}>
+    <Sheet title={block.name || t.editor.block} visible onClose={onClose}>
       <TextField
-        label="Nome do bloco"
+        label={t.editor.blockName}
         value={block.name}
         maxLength={LIMITS.nameMax}
         onChangeText={(name) => {
@@ -46,7 +48,7 @@ export function BlockSheet({
         }}
       />
       <Stepper
-        label="Rodadas"
+        label={t.editor.rounds}
         value={block.repeat}
         min={1}
         max={LIMITS.repeatMax}
@@ -56,11 +58,11 @@ export function BlockSheet({
       />
       {last ? (
         <Text variant="caption" color="textMuted">
-          Último bloco: depois dele vem o encerramento, sem descanso entre blocos.
+          {t.editor.lastBlockHint}
         </Text>
       ) : (
         <Stepper
-          label="Descanso depois"
+          label={t.editor.restAfter}
           value={block.restAfterSeconds}
           min={0}
           max={LIMITS.blockRestMaxSeconds}
@@ -73,17 +75,17 @@ export function BlockSheet({
       )}
       <View style={styles.actions}>
         {actions.moveUp ? (
-          <Button label="Mover bloco para cima" kind="text" onPress={actions.moveUp} />
+          <Button label={t.editor.moveBlockUp} kind="text" onPress={actions.moveUp} />
         ) : null}
         {actions.moveDown ? (
-          <Button label="Mover bloco para baixo" kind="text" onPress={actions.moveDown} />
+          <Button label={t.editor.moveBlockDown} kind="text" onPress={actions.moveDown} />
         ) : null}
         {/* Sem botão morto: o motivo fica escrito (no web o inativo-que-explica perde o aria-disabled). */}
         {actions.remove ? (
-          <Button label="Apagar bloco" kind="text" onPress={actions.remove} />
+          <Button label={t.editor.deleteBlock} kind="text" onPress={actions.remove} />
         ) : (
           <Text variant="caption" color="textMuted">
-            A rotina precisa de pelo menos um bloco.
+            {t.editor.blockRequired}
           </Text>
         )}
       </View>

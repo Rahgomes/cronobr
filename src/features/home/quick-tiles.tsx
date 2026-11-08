@@ -3,6 +3,7 @@ import { router, type Href } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { useT } from '@/i18n/i18n-context';
 import { Text } from '@/ui/text';
 import type { Colors } from '@/ui/theme';
 import { useColors, useThemedStyles } from '@/ui/theme-context';
@@ -10,29 +11,29 @@ import { radius, space } from '@/ui/tokens';
 
 type Icon = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
-const TILES: { label: string; hint: string; icon: Icon; href: Href }[] = [
-  {
-    label: 'Cronômetro',
-    hint: 'Conta para cima, com voltas',
-    icon: 'timer-outline',
-    href: '/cronometro',
-  },
-  { label: 'Temporizador', hint: 'Um tempo só', icon: 'timer-sand', href: '/temporizador' },
-  {
-    label: 'Intervalado',
-    hint: 'Exercício e descanso em rodadas',
-    icon: 'sync',
-    href: '/intervalado',
-  },
-];
-
 /** As três entradas da Início (C01b): resolvem a maior parte dos treinos em dois toques. */
 export function QuickTiles() {
+  const t = useT();
+  const tiles: { label: string; hint: string; icon: Icon; href: Href }[] = [
+    {
+      label: t.home.stopwatch,
+      hint: t.home.stopwatchHint,
+      icon: 'timer-outline',
+      href: '/cronometro',
+    },
+    { label: t.home.timer, hint: t.home.timerHint, icon: 'timer-sand', href: '/temporizador' },
+    {
+      label: t.home.interval,
+      hint: t.home.intervalHint,
+      icon: 'sync',
+      href: '/intervalado',
+    },
+  ];
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
   return (
     <View style={styles.row}>
-      {TILES.map((tile) => (
+      {tiles.map((tile) => (
         <Pressable
           key={tile.label}
           accessibilityRole="button"

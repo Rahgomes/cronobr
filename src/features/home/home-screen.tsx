@@ -41,10 +41,6 @@ const RECENT_MAX = 8;
 const MODALITY_CARD = { width: 216, height: 280 };
 const RECENT_CARD = { width: 184, height: 184 };
 
-function models(count: number) {
-  return count === 1 ? '1 modelo' : `${String(count)} modelos`;
-}
-
 /** Início (C01b): recentes e modalidades em carrossel com foto; a lista completa fica um toque adiante. */
 export function HomeScreen() {
   const repos = useRepos();
@@ -161,22 +157,22 @@ export function HomeScreen() {
         <Notice
           tone="alert"
           action={{
-            label: 'Continuar treino',
+            label: t.home.continueWorkout,
             onPress: () => {
               router.push('/sessao');
             },
           }}
         >
-          {`Treino em andamento: ${data.active.routine.name}`}
+          {t.home.inProgress(data.active.routine.name)}
         </Notice>
       ) : null}
 
       {data && data.recent.length > 0 ? (
         <Carousel
-          title="Recentes"
+          title={t.home.recent}
           itemWidth={RECENT_CARD.width}
           seeAll={{
-            label: 'Ver histórico',
+            label: t.home.viewHistory,
             onPress: () => {
               router.push('/historico');
             },
@@ -191,8 +187,8 @@ export function HomeScreen() {
                 {...RECENT_CARD}
                 photo={MODALITY[routine.modality].photo}
                 title={routine.name}
-                subtitle={`${total} · ${when}`}
-                accessibilityLabel={`Repetir ${routine.name}, ${total}, feito ${when}`}
+                subtitle={t.home.recentDetail(total, when)}
+                accessibilityLabel={t.home.repeatLabel(routine.name, total, when)}
                 onPress={() => {
                   router.push({ pathname: '/sessao', params: { repetir: entryId } });
                 }}
@@ -203,10 +199,10 @@ export function HomeScreen() {
       ) : null}
 
       <Carousel
-        title="Modalidades"
+        title={t.home.modalities}
         itemWidth={MODALITY_CARD.width}
         seeAll={{
-          label: 'Ver todas',
+          label: t.home.seeAll,
           onPress: () => {
             router.push('/modalidades');
           },
@@ -214,7 +210,7 @@ export function HomeScreen() {
       >
         {presets.modalities.map((modality) => {
           const info = MODALITY[modality];
-          const count = models(presets.of(modality).length);
+          const count = t.home.models(presets.of(modality).length);
           return (
             <PhotoCard
               key={modality}
@@ -223,7 +219,7 @@ export function HomeScreen() {
               title={info.label}
               subtitle={info.tagline}
               badge={<PhotoBadge label={count} />}
-              accessibilityLabel={`${info.label}: ${info.tagline}, ${count}`}
+              accessibilityLabel={t.home.modalityLabel(info.label, info.tagline, count)}
               onPress={() => {
                 router.push({ pathname: '/modalidade/[id]', params: { id: modality } });
               }}
@@ -234,7 +230,7 @@ export function HomeScreen() {
 
       {favoriteRoutines.length > 0 ? (
         <View style={styles.list}>
-          <SectionTitle>Favoritas</SectionTitle>
+          <SectionTitle>{t.home.favorites}</SectionTitle>
           {favoriteRoutines.map((routine) => (
             <RoutineRow
               key={routine.id}
@@ -252,7 +248,7 @@ export function HomeScreen() {
       ) : null}
 
       <View style={styles.list}>
-        {mine.length > 0 ? <SectionTitle>Suas rotinas</SectionTitle> : null}
+        {mine.length > 0 ? <SectionTitle>{t.home.yourRoutines}</SectionTitle> : null}
         {mine.map((routine) => (
           <RoutineRow
             key={routine.id}
@@ -267,7 +263,7 @@ export function HomeScreen() {
           />
         ))}
         <Button
-          label="Nova rotina"
+          label={t.home.newRoutine}
           kind="secondary"
           onPress={() => {
             router.push({ pathname: '/rotina/[id]', params: { id: 'nova' } });
