@@ -23,6 +23,8 @@ test('editor: copiar um modelo, ajustar, salvar e achar na Início depois de rec
   ).toBeVisible();
 
   await page.getByRole('button', { name: 'Salvar', exact: true }).click();
+  // Salvar grava e volta: a modalidade já lista a rotina, então a gravação terminou.
+  await expect(page.getByRole('button', { name: /^Tabata da manhã, / })).toBeVisible();
   await page.goto('/');
   await page.reload();
   await expect(page.getByText('Suas rotinas')).toBeVisible();
