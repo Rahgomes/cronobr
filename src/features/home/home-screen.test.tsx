@@ -68,6 +68,19 @@ describe('Início', () => {
     expect(router.push).toHaveBeenCalledWith('/avisos');
   });
 
+  it('três entradas rápidas: cronômetro, temporizador e intervalado', async () => {
+    const { repos } = await appRepos();
+    await renderApp(<HomeScreen />, repos);
+    for (const [name, href] of [
+      ['Cronômetro', '/cronometro'],
+      ['Temporizador', '/temporizador'],
+      ['Intervalado', '/intervalado'],
+    ] as const) {
+      await fireEvent.press(await screen.findByRole('button', { name }));
+      expect(router.push).toHaveBeenLastCalledWith(href);
+    }
+  });
+
   it('recentes: um card por rotina, o mais novo primeiro, e tocar repete aquele registro', async () => {
     const { repos } = await appRepos();
     const tabata = must(presetById('tabata-classic'));

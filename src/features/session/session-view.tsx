@@ -1,5 +1,5 @@
 import { router, usePreventRemove } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { AccessibilityInfo, StyleSheet, View } from 'react-native';
 
 import { useRepos } from '@/data/data-context';
@@ -32,12 +32,21 @@ function announce(events: SessionEvent[]) {
   }
 }
 
+/** Temporizador em repetição: tempo entre o fim e o recomeço, para dar para parar. */
+export const AGAIN_DELAY_MS = 3000;
+
 export function SessionView({
   initial,
   clockSource = systemClock,
+  autoStart = false,
+  again,
 }: {
   initial: Session;
   clockSource?: Clock;
+  /** Começa sozinha ao abrir (recomeço do temporizador em repetição). */
+  autoStart?: boolean;
+  /** "Repetir ao concluir": recomeça depois de AGAIN_DELAY_MS, a não ser que a pessoa pare. */
+  again?: (() => void) | undefined;
 }) {
   const repos = useRepos();
   const { port, prefs } = useCues();
@@ -60,6 +69,22 @@ export function SessionView({
   const { session, snap, timeline } = runner;
   const active = session.status === 'running' || session.status === 'paused';
   const running = session.status === 'running';
+
+  useEffect(() => {
+    if (autoStart && runner.session.status === 'ready') runner.start();
+    // Só na abertura.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const finished = session.status === 'completed';
+  const [looping, setLooping] = useState(true);
+  useEffect(() => {
+    if (!finished || !again || !looping) return;
+    const id = setTimeout(again, AGAIN_DELAY_MS);
+    return () => {
+      clearTimeout(id);
+    };
+  }, [finished, again, looping]);
 
   // Tela acesa só rodando; ao sair da tela de sessão, nada fica agendado nem aceso.
   useEffect(() => {
@@ -85,21 +110,35 @@ export function SessionView({
   if (session.status === 'completed' || session.status === 'interrupted') {
     const done = session.status === 'completed';
     const result = historyFromSession(session, timeline);
+    const timer = session.routine.modality === 'temporizador';
+    const restarting = done && again !== undefined && looping;
     return (
       <Screen
         footer={
-          <Button
-            label="Voltar ao início"
-            onPress={() => {
-              router.replace('/');
-            }}
-          />
+          restarting ? (
+            <Button
+              label="Parar de repetir"
+              onPress={() => {
+                setLooping(false);
+              }}
+            />
+          ) : (
+            <Button
+              label="Voltar ao início"
+              onPress={() => {
+                router.replace('/');
+              }}
+            />
+          )
         }
       >
         <View style={styles.content}>
           <Text variant="display" accessibilityRole="header">
-            {done ? 'Treino concluído' : 'Treino encerrado'}
+            {done ? (timer ? 'Tempo esgotado' : 'Treino concluído') : 'Treino encerrado'}
           </Text>
+          {restarting ? (
+            <Notice tone="alert">{`Recomeça em ${String(AGAIN_DELAY_MS / 1000)} segundos.`}</Notice>
+          ) : null}
           <Card>
             <Text variant="label">{session.routine.name}</Text>
             <Text color="textMuted">Tempo ativo: {duration(session.activeMs)}</Text>

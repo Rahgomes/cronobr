@@ -37,3 +37,15 @@ export function relativeDay(when: number, now: number): string {
   if (days < 60) return `há ${String(Math.floor(days / 7))} semanas`;
   return `há ${String(Math.floor(days / 30))} meses`;
 }
+
+/** Cronômetro: "0:05.3", "12:34.5", "1:02:03.4". Trunca (não arredonda): nunca mostra adiantado. */
+export function stopwatchTime(ms: number): string {
+  const tenths = Math.floor(Math.max(0, ms) / 100);
+  const total = Math.floor(tenths / 10);
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const ss = String(total % 60).padStart(2, '0');
+  const tail = `${ss}.${String(tenths % 10)}`;
+  if (hours > 0) return `${String(hours)}:${String(minutes).padStart(2, '0')}:${tail}`;
+  return `${String(minutes)}:${tail}`;
+}

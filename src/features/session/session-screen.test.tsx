@@ -10,6 +10,7 @@ import { must } from '@/test/domain';
 import { router, usePreventRemove } from '@/test/expo-router-mock';
 
 import { SessionScreen } from './session-screen';
+import { AGAIN_DELAY_MS } from './session-view';
 import { TICK_MS } from './use-session-runner';
 
 jest.mock('expo-router', () => jest.requireActual<object>('@/test/expo-router-mock'));
@@ -288,6 +289,80 @@ describe('sessão', () => {
       await fireEvent.press(screen.getByRole('button', { name: 'Encerrar' }));
       expect(port.schedule).toHaveBeenLastCalledWith([]);
       expect(port.keepAwake).toHaveBeenLastCalledWith(false);
+    });
+  });
+
+  describe('início rápido', () => {
+    it('intervalado vindo da rota: prévia com o total', async () => {
+      const env = await appRepos();
+      await renderApp(
+        <SessionScreen
+          routineId={undefined}
+          quick={{ kind: 'intervalo', prepSeconds: 0, workSeconds: 20, restSeconds: 10, rounds: 2 }}
+          clockSource={fakeClock()}
+        />,
+        env.repos,
+      );
+      expect(
+        await screen.findByRole('header', { name: 'Intervalado 0:20/0:10 × 2' }),
+      ).toBeOnTheScreen();
+      expect(screen.getByText('Duração total: 0:50')).toBeOnTheScreen();
+    });
+
+    it('fora dos limites: rotina não encontrada', async () => {
+      const env = await appRepos();
+      await renderApp(
+        <SessionScreen
+          routineId={undefined}
+          quick={{ kind: 'temporizador', seconds: 0, name: '' }}
+          clockSource={fakeClock()}
+        />,
+        env.repos,
+      );
+      expect(
+        await screen.findByRole('header', { name: 'Rotina não encontrada' }),
+      ).toBeOnTheScreen();
+    });
+
+    it('temporizador em repetição: "Tempo esgotado", recomeça sozinho e dá para parar', async () => {
+      const env = await appRepos();
+      const clock = fakeClock();
+      await renderApp(
+        <SessionScreen
+          routineId={undefined}
+          quick={{ kind: 'temporizador', seconds: 5, name: 'Prancha' }}
+          loop
+          clockSource={clock}
+        />,
+        env.repos,
+        fakePort(),
+      );
+      await fireEvent.press(await screen.findByRole('button', { name: 'Começar' }));
+      clock.advance(6_000);
+      await act(() => {
+        jest.advanceTimersByTime(TICK_MS);
+      });
+      expect(await screen.findByRole('header', { name: 'Tempo esgotado' })).toBeOnTheScreen();
+      expect(screen.getByText('Recomeça em 3 segundos.')).toBeOnTheScreen();
+      await act(() => {
+        jest.advanceTimersByTime(AGAIN_DELAY_MS);
+      });
+      // Nova sessão já rodando, sem passar pela prévia.
+      expect(await screen.findByRole('button', { name: 'Pausar' })).toBeOnTheScreen();
+      await waitFor(async () => {
+        expect(await env.repos.history.count()).toBe(1);
+      });
+
+      clock.advance(6_000);
+      await act(() => {
+        jest.advanceTimersByTime(TICK_MS);
+      });
+      await fireEvent.press(await screen.findByRole('button', { name: 'Parar de repetir' }));
+      await act(() => {
+        jest.advanceTimersByTime(AGAIN_DELAY_MS * 2);
+      });
+      expect(screen.getByRole('header', { name: 'Tempo esgotado' })).toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: 'Voltar ao início' })).toBeOnTheScreen();
     });
   });
 

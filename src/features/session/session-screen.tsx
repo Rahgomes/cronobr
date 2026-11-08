@@ -5,6 +5,8 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useRepos } from '@/data/data-context';
 import { createSession, restore, type Session } from '@/domain/engine';
 import { presetById } from '@/domain/presets';
+import { quickRoutine, type QuickSetup } from '@/domain/quick';
+import type { Routine } from '@/domain/routine';
 import { buildTimeline } from '@/domain/timeline';
 import { Button } from '@/ui/button';
 import { Screen } from '@/ui/screen';
@@ -16,7 +18,9 @@ import { newSessionId, systemClock, type Clock } from './clock';
 import { SessionView } from './session-view';
 
 type Load =
-  { status: 'loading' } | { status: 'ready'; session: Session } | { status: 'missing' | 'failed' };
+  | { status: 'loading' }
+  | { status: 'ready'; session: Session; autoStart: boolean }
+  | { status: 'missing' | 'failed' };
 
 /**
  * Entrada da sessão. Sessão em andamento sempre tem prioridade: abrir outra rotina não pode
@@ -25,32 +29,48 @@ type Load =
 export function SessionScreen({
   routineId,
   repeatId,
+  quick = null,
+  loop = false,
   clockSource = systemClock,
 }: {
   routineId: string | undefined;
   /** Id de um registro do histórico: repete exatamente a rotina que rodou ali. */
   repeatId?: string | undefined;
+  /** Início rápido: a rotina vem pela rota, sem estar salva. */
+  quick?: QuickSetup | null;
+  /** Temporizador "repetir ao concluir": ao acabar, recomeça sozinho. */
+  loop?: boolean;
   clockSource?: Clock;
 }) {
   const repos = useRepos();
   const colors = useColors();
   const [load, setLoad] = useState<Load>({ status: 'loading' });
+  const quickKey = quick ? JSON.stringify(quick) : '';
 
   useEffect(() => {
     let active = true;
+    const pick = async (): Promise<Routine | null> => {
+      if (quick) {
+        const built = quickRoutine(quick);
+        return built.ok ? built.routine : null;
+      }
+      if (repeatId) return (await repos.history.get(repeatId))?.routine ?? null;
+      if (routineId) return presetById(routineId) ?? (await repos.routines.get(routineId));
+      return null;
+    };
     const resolve = async (): Promise<Load> => {
       const saved = await repos.session.load();
       if (saved) {
         const now = clockSource.now();
-        return { status: 'ready', session: restore(saved, buildTimeline(saved.routine), now) };
+        return {
+          status: 'ready',
+          session: restore(saved, buildTimeline(saved.routine), now),
+          autoStart: false,
+        };
       }
-      const routine = repeatId
-        ? ((await repos.history.get(repeatId))?.routine ?? null)
-        : routineId
-          ? (presetById(routineId) ?? (await repos.routines.get(routineId)))
-          : null;
+      const routine = await pick();
       return routine
-        ? { status: 'ready', session: createSession(newSessionId(), routine) }
+        ? { status: 'ready', session: createSession(newSessionId(), routine), autoStart: false }
         : { status: 'missing' };
     };
     void resolve()
@@ -61,10 +81,33 @@ export function SessionScreen({
     return () => {
       active = false;
     };
-  }, [repos, routineId, repeatId, clockSource]);
+    // `quick` muda de identidade a cada render da rota: a chave é o conteúdo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [repos, routineId, repeatId, clockSource, quickKey]);
 
-  if (load.status === 'ready')
-    return <SessionView initial={load.session} clockSource={clockSource} />;
+  if (load.status === 'ready') {
+    const routine = load.session.routine;
+    return (
+      <SessionView
+        // Sessão nova = runner novo (repetir ao concluir troca a sessão na mesma tela).
+        key={load.session.id}
+        initial={load.session}
+        clockSource={clockSource}
+        autoStart={load.autoStart}
+        again={
+          loop
+            ? () => {
+                setLoad({
+                  status: 'ready',
+                  session: createSession(newSessionId(), routine),
+                  autoStart: true,
+                });
+              }
+            : undefined
+        }
+      />
+    );
+  }
   if (load.status === 'missing' || load.status === 'failed') {
     const missing = load.status === 'missing';
     return (

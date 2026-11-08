@@ -19,6 +19,7 @@ import { SectionTitle } from '@/ui/section-title';
 import { space } from '@/ui/tokens';
 import { RoundAction } from '@/ui/top-bar';
 
+import { QuickTiles } from './quick-tiles';
 import { RoutineRow } from './routine-row';
 
 interface HomeData {
@@ -87,6 +88,8 @@ export function HomeScreen() {
           />
         </View>
       </View>
+
+      <QuickTiles />
 
       {data?.active ? (
         <Notice
