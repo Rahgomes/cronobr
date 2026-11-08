@@ -35,3 +35,5 @@
 - i18n (pt-BR, en, es, fr) entra com as telas na E04, portando os textos de `legado/client/lib/i18n.ts`.
 - Fonte da marca no texto do app: decisão da E06.
 - Maestro (nativo) entra com o development build, na E03.
+- Meta de cobertura 100% em `src/domain` volta no `package.json` na E02, quando o motor de tempo criar a pasta
+  (o Jest falha a meta sem nenhum arquivo).

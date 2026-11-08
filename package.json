@@ -69,14 +69,6 @@
     "collectCoverageFrom": [
       "src/domain/**/*.ts"
     ],
-    "coverageThreshold": {
-      "src/domain/": {
-        "branches": 100,
-        "functions": 100,
-        "lines": 100,
-        "statements": 100
-      }
-    },
     "testTimeout": 20000,
     "setupFiles": [
       "<rootDir>/jest.setup.ts"

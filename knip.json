@@ -2,6 +2,5 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "entry": ["src/app/**/*.tsx", "e2e/**/*.ts"],
   "project": ["src/**/*.{ts,tsx}", "e2e/**/*.ts"],
-  "ignoreDependencies": ["lefthook"],
   "ignoreExportsUsedInFile": { "type": true, "interface": true }
 }

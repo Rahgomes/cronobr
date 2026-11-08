@@ -1,0 +1,18 @@
+# Vulnerabilidades aceitas: todas em ferramenta de desenvolvimento (Jest, Expo CLI, Metro), nenhuma
+# entra no app publicado. Correção só em versão maior que o Expo 58 e o Jest 30 não aceitam; o prazo
+# força revisar de novo. Revisado em 2026-11-08.
+
+[[IgnoredVulns]]
+id = "GHSA-gcqx-w48m-w2h4"
+ignoreUntil = 2027-02-08
+reason = "deepmerge 4.3.1 via jest-config: mescla só a configuração do próprio repo, não entrada de usuário; sem versão corrigida"
+
+[[IgnoredVulns]]
+id = "GHSA-3g3m-2fjr-6pw4"
+ignoreUntil = 2027-02-08
+reason = "glob 10/13 via babel-plugin-istanbul (Jest) e @expo/cli: padrões vêm do repo e da CLI, não de usuário; correção só na 14.x"
+
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2027-02-08
+reason = "minimatch 9/10 via @expo/fingerprint e ferramentas de build: padrões fixos do repo, sem entrada externa; correção só na 11.x"
