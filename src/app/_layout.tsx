@@ -8,6 +8,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { DataProvider } from '@/data/data-context';
 import { CueProvider } from '@/features/cues/cue-context';
 import { createExpoPort } from '@/features/cues/expo-port';
+import { createFilePort } from '@/features/transfer/expo-file-port';
+import { FilePortProvider } from '@/features/transfer/file-port';
 import { Button } from '@/ui/button';
 import { DialogHost } from '@/ui/dialog';
 import { HintProvider } from '@/ui/hint';
@@ -60,6 +62,7 @@ function AppStack() {
 
 export default function RootLayout() {
   const [port] = useState(createExpoPort);
+  const [files] = useState(createFilePort);
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
@@ -68,7 +71,9 @@ export default function RootLayout() {
           <HintProvider>
             <DataProvider>
               <CueProvider port={port}>
-                <AppStack />
+                <FilePortProvider port={files}>
+                  <AppStack />
+                </FilePortProvider>
               </CueProvider>
             </DataProvider>
           </HintProvider>

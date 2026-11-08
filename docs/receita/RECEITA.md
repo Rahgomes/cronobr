@@ -159,4 +159,10 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   `test.use({ timezoneId })`; no Jest, montar as datas com `new Date(a, m, d, h)` (hora local).
 - **08/11 — `getByLabel` pega rótulo parcial:** "Nota" casava com "Salvar nota" e com o botão da
   tela anterior ainda na pilha. Usar `{ exact: true }`.
+- **08/11 — E05, arquivo como porta:** ler/compartilhar/escolher arquivo atrás de uma porta (como
+  os avisos) deixou testar exportar e importar com banco real sem módulo nativo, e a web ganhou
+  download e seletor do navegador com o mesmo código de tela. No E2E, `waitForEvent('download')`
+  e `waitForEvent('filechooser')` cobrem o caminho inteiro.
+- **08/11 — Rótulo repetido na pilha:** botão "Voltar" num diálogo colidiu com o "Voltar" do topo.
+  Verbo da ação no diálogo ("Desfazer"), nunca um rótulo de navegação.
 

@@ -58,7 +58,20 @@ const V4: Migration = (tx) => tx.exec('ALTER TABLE history ADD COLUMN rounds_log
 /** E04: nota opcional do treino, escrita depois no histórico. */
 const V5: Migration = (tx) => tx.exec('ALTER TABLE history ADD COLUMN note TEXT');
 
-export const MIGRATIONS: readonly Migration[] = [V1, V2, V3, V4, V5];
+/**
+ * E05: cópia do estado anterior a uma restauração de backup (um lugar só). O conteúdo é um arquivo
+ * .cronobr completo, então desfazer é importar de novo.
+ */
+const V6: Migration = (tx) =>
+  tx.exec(`
+    CREATE TABLE restore_point (
+      slot INTEGER PRIMARY KEY CHECK (slot = 1),
+      created_at INTEGER NOT NULL,
+      data TEXT NOT NULL
+    ) STRICT;
+  `);
+
+export const MIGRATIONS: readonly Migration[] = [V1, V2, V3, V4, V5, V6];
 
 export async function schemaVersion(db: SqlDb): Promise<number> {
   const row = await db.first<{ user_version: number }>('PRAGMA user_version');

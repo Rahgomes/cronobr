@@ -136,6 +136,13 @@ export function HomeScreen() {
             }}
           />
           <RoundAction
+            icon="backup-restore"
+            label="Backup e transferência"
+            onPress={() => {
+              router.push('/backup');
+            }}
+          />
+          <RoundAction
             icon="cog-outline"
             label="Som e avisos"
             onPress={() => {

@@ -2,9 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useRepos } from '@/data/data-context';
 
-const FAVORITES_KEY = 'favoritos';
+export const FAVORITES_KEY = 'favoritos';
 
-const parseFavorites = (raw: unknown): string[] =>
+export const parseFavorites = (raw: unknown): string[] =>
   Array.isArray(raw) ? raw.filter((v): v is string => typeof v === 'string') : [];
 
 /**

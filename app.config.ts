@@ -3,6 +3,11 @@ import type { ExpoConfig } from 'expo/config';
 // Projeto EAS próprio do CronôBR na conta rahgomes (nunca o do ManiVez).
 const EAS_PROJECT_ID = '800a228d-1c5a-4086-ae71-04b104faf449';
 
+// Arquivo .cronobr (E05, docs/spec/formato-cronobr.md): JSON com extensão própria. O iPhone
+// precisa do tipo declarado para oferecer "Abrir no CronôBR"; o Android recebe pelo filtro de
+// intenção (WhatsApp e Downloads costumam mandar como octet-stream ou json).
+const CRONOBR_UTI = 'com.cronobr.app.arquivo';
+
 const config: ExpoConfig = {
   name: 'CronôBR',
   slug: 'cronobr',
@@ -17,6 +22,29 @@ const config: ExpoConfig = {
     supportsTablet: true,
     // Aviso de troca de fase fura o modo Foco (finalidade legítima de timer, E03).
     entitlements: { 'com.apple.developer.usernotifications.time-sensitive': true },
+    infoPlist: {
+      UTExportedTypeDeclarations: [
+        {
+          UTTypeIdentifier: CRONOBR_UTI,
+          UTTypeDescription: 'Arquivo do CronôBR',
+          UTTypeConformsTo: ['public.json', 'public.data'],
+          UTTypeTagSpecification: {
+            'public.filename-extension': ['cronobr'],
+            'public.mime-type': ['application/vnd.cronobr+json'],
+          },
+        },
+      ],
+      CFBundleDocumentTypes: [
+        {
+          CFBundleTypeName: 'Arquivo do CronôBR',
+          CFBundleTypeRole: 'Viewer',
+          LSHandlerRank: 'Owner',
+          LSItemContentTypes: [CRONOBR_UTI],
+        },
+      ],
+      // O sistema entrega uma cópia (Inbox): o app nunca guarda caminho do aparelho de origem.
+      LSSupportsOpeningDocumentsInPlace: false,
+    },
   },
   android: {
     package: 'com.cronobr.app',
@@ -29,6 +57,18 @@ const config: ExpoConfig = {
     // Timer é função principal do app: a política da Play permite USE_EXACT_ALARM (concedida
     // na instalação). Sem ela, o Android pode atrasar o aviso de troca de fase em minutos.
     permissions: ['android.permission.USE_EXACT_ALARM'],
+    intentFilters: [
+      {
+        action: 'VIEW',
+        category: ['DEFAULT', 'BROWSABLE'],
+        data: [
+          { scheme: 'content', mimeType: 'application/vnd.cronobr+json' },
+          { scheme: 'content', mimeType: 'application/json' },
+          { scheme: 'content', mimeType: 'application/octet-stream' },
+          { scheme: 'file', mimeType: '*/*', pathPattern: '.*\\.cronobr' },
+        ],
+      },
+    ],
   },
   web: { output: 'single', favicon: './assets/images/favicon.png', bundler: 'metro' },
   plugins: [

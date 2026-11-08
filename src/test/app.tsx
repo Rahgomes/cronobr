@@ -9,6 +9,7 @@ import { sqliteRepos } from '@/data/sqlite-repos';
 import type { Instant } from '@/domain/engine';
 import { CueProvider } from '@/features/cues/cue-context';
 import type { CuePort } from '@/features/cues/port';
+import { FilePortProvider, type FilePort } from '@/features/transfer/file-port';
 import { DialogHost } from '@/ui/dialog';
 import { ThemeProvider } from '@/ui/theme-context';
 
@@ -24,13 +25,14 @@ export async function appRepos() {
   return { db, raw, repos: sqliteRepos(db) };
 }
 
-export async function renderApp(ui: ReactElement, repos: Repos, port?: CuePort) {
-  const content = (
+export async function renderApp(ui: ReactElement, repos: Repos, port?: CuePort, files?: FilePort) {
+  const inner = (
     <>
       {ui}
       <DialogHost />
     </>
   );
+  const content = files ? <FilePortProvider port={files}>{inner}</FilePortProvider> : inner;
   await render(
     <SafeAreaProvider initialMetrics={METRICS}>
       <ThemeProvider mode="dark">
@@ -72,4 +74,28 @@ export function fakePort() {
     keepAwake: jest.fn<undefined, Parameters<CuePort['keepAwake']>>(),
   };
   return port satisfies CuePort;
+}
+
+/** Porta de arquivos falsa: guarda o que foi compartilhado e serve arquivos por endereço. */
+export function fakeFiles(files: Record<string, string> = {}) {
+  const shared: { name: string; text: string }[] = [];
+  /** Próximo arquivo que o seletor devolve (null: a pessoa desistiu). */
+  const picker: { next: string | null } = { next: null };
+  const port = {
+    shared,
+    files,
+    picker,
+    share: jest.fn((name: string, text: string) => {
+      shared.push({ name, text });
+      return Promise.resolve();
+    }),
+    pick: jest.fn(() => Promise.resolve(picker.next ? { uri: picker.next } : null)),
+    read: jest.fn((uri: string, maxBytes: number) => {
+      const text = files[uri];
+      if (text === undefined) return Promise.reject(new Error(`sem arquivo ${uri}`));
+      const size = new TextEncoder().encode(text).length;
+      return Promise.resolve({ text: size > maxBytes ? '' : text, size });
+    }),
+  } satisfies FilePort & Record<string, unknown>;
+  return port;
 }

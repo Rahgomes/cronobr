@@ -1,6 +1,8 @@
 import { StyleSheet, View } from 'react-native';
 
 import type { Routine } from '@/domain/routine';
+import { useOptionalFilePort } from '@/features/transfer/file-port';
+import { shareRoutine } from '@/features/transfer/transfer-actions';
 import { Button } from '@/ui/button';
 import { dialog } from '@/ui/dialog';
 import { Sheet } from '@/ui/sheet';
@@ -27,6 +29,7 @@ export function RoutineOptions({
   onClose: () => void;
 }) {
   const visible = routine !== null && actions !== null;
+  const files = useOptionalFilePort();
   const preset = routine?.origin === 'preset';
   const run = (fn: () => void) => () => {
     onClose();
@@ -46,6 +49,16 @@ export function RoutineOptions({
             kind="secondary"
             onPress={run(actions.edit)}
           />
+          {files ? (
+            <Button
+              label="Compartilhar"
+              kind="secondary"
+              onPress={() => {
+                onClose();
+                void shareRoutine(files, routine);
+              }}
+            />
+          ) : null}
           {actions.duplicate ? (
             <Button label="Duplicar" kind="secondary" onPress={run(actions.duplicate)} />
           ) : null}

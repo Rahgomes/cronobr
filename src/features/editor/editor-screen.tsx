@@ -141,7 +141,14 @@ export function EditorScreen({
       {
         text: 'Sair e guardar rascunho',
         onPress: () => {
-          setLeaving('back');
+          // O banco atende em fila: esta leitura só volta depois da última gravação do
+          // rascunho. Sair antes deixava reabrir e ler o rascunho antigo (CI carregado).
+          void repos.prefs
+            .get(key)
+            .catch(() => undefined)
+            .then(() => {
+              setLeaving('back');
+            });
         },
       },
     ]);

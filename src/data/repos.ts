@@ -2,6 +2,7 @@
 import type { Session } from '@/domain/engine';
 import type { HistoryEntry } from '@/domain/history';
 import type { Routine } from '@/domain/routine';
+import type { TransferOps } from '@/domain/transfer-plan';
 
 export interface RoutinesRepo {
   list(): Promise<Routine[]>;
@@ -55,9 +56,40 @@ export interface PrefsRepo {
   set(key: string, value: unknown): Promise<void>;
 }
 
+export interface LibrarySnapshot {
+  /** Na ordem da lista do app. */
+  routines: Routine[];
+  /** Valores gravados, por chave (só as chaves pedidas que existem). */
+  prefs: Record<string, unknown>;
+  /** Do mais antigo ao mais novo; null quando não foi pedido. */
+  history: HistoryEntry[] | null;
+}
+
+/** Recusa de restaurar com treino em andamento (a sessão ativa depende da biblioteca). */
+export class ActiveSessionError extends Error {
+  constructor() {
+    super('Há um treino em andamento.');
+    this.name = 'ActiveSessionError';
+  }
+}
+
+export interface TransferRepo {
+  snapshot(prefKeys: readonly string[], withHistory: boolean): Promise<LibrarySnapshot>;
+  historyIds(): Promise<Set<string>>;
+  /**
+   * Aplica tudo numa transação. `prefKeys` são as chaves portáveis (apagadas ao substituir).
+   * Com `restorePoint`, guarda antes a cópia do estado atual. Substituir com treino em
+   * andamento falha com ActiveSessionError, sem mudar nada.
+   */
+  apply(ops: TransferOps, prefKeys: readonly string[], restorePoint: string | null): Promise<void>;
+  restorePoint(): Promise<{ createdAt: number; text: string } | null>;
+  dropRestorePoint(): Promise<void>;
+}
+
 export interface Repos {
   routines: RoutinesRepo;
   history: HistoryRepo;
   session: SessionRepo;
   prefs: PrefsRepo;
+  transfer: TransferRepo;
 }

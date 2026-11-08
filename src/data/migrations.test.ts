@@ -20,6 +20,7 @@ describe('migrações', () => {
       'history',
       'legacy_problems',
       'prefs',
+      'restore_point',
       'routines',
     ]);
     await migrate(db);
@@ -64,6 +65,13 @@ describe('migrações', () => {
     );
     await migrate(db);
     expect(await db.all('SELECT id, note FROM history')).toEqual([{ id: 'h', note: null }]);
+  });
+
+  it('V6: ponto de restauração com um lugar só', async () => {
+    const db = serialDb(nodeSqlite());
+    await migrate(db);
+    await db.run("INSERT INTO restore_point VALUES (1, 0, 'x')");
+    await expect(db.run("INSERT INTO restore_point VALUES (2, 0, 'y')")).rejects.toThrow();
   });
 
   it('banco de versão mais nova (app voltou de versão): recusa com mensagem clara', async () => {

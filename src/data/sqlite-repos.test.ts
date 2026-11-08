@@ -2,9 +2,11 @@ import { createSession, settle, start, stop } from '@/domain/engine';
 import { historyFromSession, type HistoryEntry } from '@/domain/history';
 import { PRESETS } from '@/domain/presets';
 import { buildTimeline } from '@/domain/timeline';
+import type { TransferOps } from '@/domain/transfer-plan';
 import { testDb } from '@/test/data';
 import { clockAt, must, routine } from '@/test/domain';
 
+import { ActiveSessionError } from './repos';
 import { sqliteRepos } from './sqlite-repos';
 
 const preset = must(PRESETS[0]);
@@ -276,5 +278,110 @@ describe('preferências', () => {
     const { db, repos } = await setup();
     await db.run("INSERT INTO prefs VALUES ('x', '{quebrado')");
     expect(await repos.prefs.get('x')).toBeUndefined();
+  });
+});
+
+describe('transferência (E05)', () => {
+  const ops = (over: Partial<TransferOps> = {}): TransferOps => ({
+    replace: false,
+    routines: [],
+    history: [],
+    replaceHistory: false,
+    prefs: null,
+    ...over,
+  });
+  const KEYS = ['avisos', 'favoritos'];
+
+  async function seeded() {
+    const env = await setup();
+    await env.repos.routines.save(routine({ id: 'a', name: 'A' }));
+    await env.repos.routines.save(routine({ id: 'b', name: 'B' }));
+    await env.repos.prefs.set('avisos', { voice: false });
+    await env.repos.prefs.set('cronometro', { laps: [1] });
+    await env.repos.session.finish(finished('h1', 300));
+    return env;
+  }
+
+  it('retrato: rotinas na ordem da lista, só as preferências pedidas, histórico se pedido', async () => {
+    const { repos } = await seeded();
+    const snap = await repos.transfer.snapshot(KEYS, true);
+    expect(snap.routines.map((r) => r.id)).toEqual(['b', 'a']);
+    expect(snap.prefs).toEqual({ avisos: { voice: false } });
+    expect(snap.history?.map((e) => e.id)).toEqual(['h1']);
+    expect((await repos.transfer.snapshot(KEYS, false)).history).toBeNull();
+    expect(await repos.transfer.historyIds()).toEqual(new Set(['h1']));
+  });
+
+  it('juntar: grava na ordem do arquivo no topo, histórico por id sem duplicar', async () => {
+    const { repos } = await seeded();
+    const plan = ops({
+      routines: [routine({ id: 'x', name: 'X' }), routine({ id: 'y', name: 'Y' })],
+      history: [finished('h1', 300), finished('h2', 300)],
+    });
+    await repos.transfer.apply(plan, KEYS, null);
+    await repos.transfer.apply(plan, KEYS, null); // de novo: mesmo resultado
+    expect((await repos.routines.list()).map((r) => r.id)).toEqual(['x', 'y', 'b', 'a']);
+    expect(await repos.history.count()).toBe(2);
+    expect(await repos.prefs.get('avisos')).toEqual({ voice: false });
+  });
+
+  it('substituir: troca rotinas e preferências portáveis; o resto do aparelho fica', async () => {
+    const { repos } = await seeded();
+    await repos.transfer.apply(
+      ops({
+        replace: true,
+        routines: [routine({ id: 'z', name: 'Z' })],
+        prefs: { favoritos: ['z'] },
+      }),
+      KEYS,
+      'estado anterior',
+    );
+    expect((await repos.routines.list()).map((r) => r.id)).toEqual(['z']);
+    expect(await repos.prefs.get('avisos')).toBeUndefined();
+    expect(await repos.prefs.get('favoritos')).toEqual(['z']);
+    expect(await repos.prefs.get('cronometro')).toEqual({ laps: [1] });
+    // Sem histórico no arquivo, o daqui fica.
+    expect(await repos.history.count()).toBe(1);
+    expect(await repos.transfer.restorePoint()).toEqual({ createdAt: 42, text: 'estado anterior' });
+    await repos.transfer.dropRestorePoint();
+    expect(await repos.transfer.restorePoint()).toBeNull();
+  });
+
+  it('substituir com histórico troca o histórico também', async () => {
+    const { repos } = await seeded();
+    await repos.transfer.apply(
+      ops({ replace: true, replaceHistory: true, history: [finished('h9', 300)] }),
+      KEYS,
+      null,
+    );
+    expect((await repos.history.page()).entries.map((e) => e.id)).toEqual(['h9']);
+  });
+
+  it('falha no meio: nada fica aplicado pela metade, nem o ponto de restauração', async () => {
+    const { raw, repos } = await seeded();
+    raw.failOn('INSERT OR IGNORE INTO history');
+    await expect(
+      repos.transfer.apply(
+        ops({ replace: true, routines: [routine({ id: 'z' })], history: [finished('h2', 300)] }),
+        KEYS,
+        'anterior',
+      ),
+    ).rejects.toThrow();
+    expect((await repos.routines.list()).map((r) => r.id)).toEqual(['b', 'a']);
+    expect(await repos.prefs.get('avisos')).toEqual({ voice: false });
+    expect(await repos.transfer.restorePoint()).toBeNull();
+  });
+
+  it('treino em andamento: substituir é recusado sem mudar nada; juntar pode', async () => {
+    const { repos } = await seeded();
+    const s = start(createSession('ativa', preset), tl, clockAt(0));
+    await repos.session.save(s);
+    await expect(
+      repos.transfer.apply(ops({ replace: true }), KEYS, 'anterior'),
+    ).rejects.toBeInstanceOf(ActiveSessionError);
+    expect(await repos.routines.list()).toHaveLength(2);
+    expect(await repos.transfer.restorePoint()).toBeNull();
+    await repos.transfer.apply(ops({ routines: [routine({ id: 'x' })] }), KEYS, null);
+    expect(await repos.routines.list()).toHaveLength(3);
   });
 });

@@ -2,7 +2,15 @@ import type { HistoryEntry } from '@/domain/history';
 import type { Routine } from '@/domain/routine';
 
 import { decode, historyFromRow, routineShape, sessionShape, type HistoryRow } from './codecs';
-import type { HistoryRepo, PrefsRepo, Repos, RoutinesRepo, SessionRepo } from './repos';
+import {
+  ActiveSessionError,
+  type HistoryRepo,
+  type PrefsRepo,
+  type Repos,
+  type RoutinesRepo,
+  type SessionRepo,
+  type TransferRepo,
+} from './repos';
 import type { SqlDb, SqlTx, SqlValue } from './sql';
 
 const HISTORY_PAGE = 50;
@@ -200,11 +208,67 @@ function prefsRepo(db: SqlDb): PrefsRepo {
   };
 }
 
+function transferRepo(db: SqlDb, now: () => number): TransferRepo {
+  return {
+    async snapshot(prefKeys, withHistory) {
+      const routines = await routinesRepo(db).list();
+      const prefs: Record<string, unknown> = {};
+      const reader = prefsRepo(db);
+      for (const key of prefKeys) {
+        const value = await reader.get(key);
+        if (value !== undefined) prefs[key] = value;
+      }
+      const history = withHistory
+        ? (await db.all<HistoryRow>('SELECT * FROM history ORDER BY ended_at, id')).flatMap(
+            (row) => historyFromRow(row) ?? [],
+          )
+        : null;
+      return { routines, prefs, history };
+    },
+    async historyIds() {
+      const rows = await db.all<{ id: string }>('SELECT id FROM history');
+      return new Set(rows.map((row) => row.id));
+    },
+    apply: (ops, prefKeys, restorePoint) =>
+      db.transaction(async (tx) => {
+        if (ops.replace && (await tx.first('SELECT 1 AS x FROM active_session WHERE slot = 1'))) {
+          throw new ActiveSessionError();
+        }
+        if (restorePoint !== null) {
+          await tx.run(
+            `INSERT INTO restore_point (slot, created_at, data) VALUES (1, ?, ?)
+             ON CONFLICT (slot) DO UPDATE SET created_at = excluded.created_at, data = excluded.data`,
+            [now(), restorePoint],
+          );
+        }
+        if (ops.replace) {
+          await tx.run('DELETE FROM routines');
+          for (const key of prefKeys) await tx.run('DELETE FROM prefs WHERE key = ?', [key]);
+        }
+        if (ops.replaceHistory) await tx.run('DELETE FROM history');
+        // Cada nova entra no topo: gravar de trás para frente mantém a ordem do arquivo.
+        for (const routine of [...ops.routines].reverse()) await upsertRoutine(tx, routine);
+        for (const entry of ops.history) await insertHistory(tx, entry);
+        for (const [key, value] of Object.entries(ops.prefs ?? {})) await setPref(tx, key, value);
+      }),
+    async restorePoint() {
+      const row = await db.first<{ created_at: number; data: string }>(
+        'SELECT created_at, data FROM restore_point WHERE slot = 1',
+      );
+      return row ? { createdAt: row.created_at, text: row.data } : null;
+    },
+    async dropRestorePoint() {
+      await db.run('DELETE FROM restore_point WHERE slot = 1');
+    },
+  };
+}
+
 export function sqliteRepos(db: SqlDb, now: () => number = Date.now): Repos {
   return {
     routines: routinesRepo(db),
     history: historyRepo(db),
     session: sessionRepo(db, now),
     prefs: prefsRepo(db),
+    transfer: transferRepo(db, now),
   };
 }
