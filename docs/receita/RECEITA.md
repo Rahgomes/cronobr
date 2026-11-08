@@ -92,3 +92,22 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   #C2410C, que aguenta texto branco e serve de texto laranja sobre branco. Medido em `theme.test.ts`.
 - **08/11 — Projeto EAS de app novo:** `eas init` não escreve em `app.config.ts`; ele cria o projeto
   e imprime o `projectId`, que vai fixo no config. Token da conta Expo agora em `/root/.secrets/expo.env`.
+- **07/11 — E02 (contador e dados):** motor puro com o relógio injetado (`now` como parâmetro)
+  deixou os 10 cenários do PRD baratos de provar em três níveis com o MESMO relógio controlado:
+  domínio (número), tela (relógio falso + timers falsos do Jest) e E2E (`page.clock` do
+  Playwright). Regra: nada no domínio lê `Date.now`.
+- **07/11 — Banco de teste de verdade:** `node:sqlite` em memória no lugar de fake, com falha
+  injetável por trecho de SQL. Pegou o que fake não pega (transação, `INSERT OR IGNORE`,
+  paginação por cursor). O adaptador de teste precisa falhar como o real: promessa rejeitada,
+  não exceção síncrona, senão o `ROLLBACK` protegido some.
+- **07/11 — Armadilhas da E02:** `x.d.ts` com o mesmo nome de `x.ts` é ignorado pelo TypeScript
+  (renomear); no zod 4 `z.unknown()` em objeto é obrigatório (`.optional()`) e o refine do objeto
+  roda mesmo com erro de min/max dentro; lista virtualizada não renderiza o fim no RNTL, então a
+  paginação se prova no repositório e a tela só prova o botão.
+- **07/11 — SQLite no web:** `expo-sqlite` roda no navegador (wasm + OPFS) e dá ao E2E o mesmo
+  caminho de dados do celular, mas exige COOP/COEP em três lugares: Metro (dev), plugin
+  `expo-router` (EAS Hosting) e o servidor do E2E (`serve.json`). Conferir `crossOriginIsolated`
+  no E2E.
+- **07/11 — `page.clock`:** `install()` sozinho deixa o tempo correr de verdade e o texto do
+  timer muda durante a checagem. Congelar (`pauseAt`) só com a tela pronta: o banco do web e o
+  `axe` usam timers e travam com o relógio parado. Recarregar e rodar o `axe` com `resume()`.

@@ -19,8 +19,8 @@ Offline, sem login. Leia isto antes de abrir arquivos; com briefing, não varra 
 src/app/            rota fina: lê params e renderiza a tela de src/features
 src/features/<x>/   telas e componentes da funcionalidade + teste ao lado (*.test.tsx)
 src/ui/             design system: reutilizável, sem dado
-src/data/           repositórios (SQLite) e fakes para teste
-src/domain/         regra pura, sem react-native (motor de tempo, formato .cronobr). Cobertura 100%
+src/data/           repositórios (SQLite); testes usam node:sqlite real (src/test/node-sqlite.ts)
+src/domain/         regra pura, sem react-native nem relógio (o `now` vem de fora). Cobertura 100%
 ```
 
 ## Regras

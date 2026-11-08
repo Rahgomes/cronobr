@@ -16,3 +16,10 @@ jest.mock('expo-font', () => ({
   isLoaded: () => true,
   loadAsync: () => Promise.resolve(),
 }));
+
+// Módulos nativos de armazenamento: o AsyncStorage tem mock oficial; o SQLite dos testes é o
+// node:sqlite (src/test/node-sqlite.ts), então o expo-sqlite real nunca abre aqui.
+jest.mock('@react-native-async-storage/async-storage', () =>
+  jest.requireActual<object>('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);
+jest.mock('expo-sqlite', () => ({ openDatabaseAsync: jest.fn() }));

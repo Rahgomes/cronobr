@@ -1,0 +1,99 @@
+// Modelo de rotina: o que o usuário monta e o que vai para o histórico como cópia.
+// Tempo em segundos inteiros aqui (é o que a pessoa digita); a linha do tempo converte para ms.
+
+export const MODALITIES = [
+  'tabata',
+  'hiit',
+  'emom',
+  'amrap',
+  'boxe',
+  'circuito',
+  'corrida',
+  'mobilidade',
+  'personalizada',
+  'temporizador',
+] as const;
+export type Modality = (typeof MODALITIES)[number];
+
+export type StepKind = 'work' | 'rest';
+
+export interface Step {
+  id: string;
+  name: string;
+  kind: StepKind;
+  /** null = etapa por repetições: só avança quando a pessoa toca em "Concluí". */
+  seconds: number | null;
+  /** Meta de repetições, mostrada na tela. Obrigatória quando `seconds` é null. */
+  reps: number | null;
+}
+
+export interface Block {
+  id: string;
+  name: string;
+  /** Quantas vezes as etapas do bloco se repetem (rodadas). */
+  repeat: number;
+  steps: Step[];
+  /** Descanso depois do bloco, antes do próximo. Ignorado no último bloco. */
+  restAfterSeconds: number;
+}
+
+export type RoutineOrigin = 'preset' | 'custom' | 'legacy';
+
+export interface Routine {
+  id: string;
+  name: string;
+  modality: Modality;
+  /** Sobe a cada edição salva; o histórico guarda a versão que rodou. */
+  version: number;
+  origin: RoutineOrigin;
+  prepSeconds: number;
+  blocks: Block[];
+  cooldownSeconds: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface IntervalConfig {
+  prepSeconds: number;
+  workSeconds: number;
+  restSeconds: number;
+  rounds: number;
+}
+
+/**
+ * Rotina de intervalo simples (o formato do app antigo): um bloco com trabalho e descanso.
+ * Duração zero some: descanso 0 vira bloco só de trabalho; preparação 0 não entra.
+ */
+export function intervalRoutine(
+  base: Pick<Routine, 'id' | 'name' | 'modality' | 'origin' | 'createdAt'>,
+  config: IntervalConfig,
+): Routine {
+  const steps: Step[] = [
+    {
+      id: `${base.id}-work`,
+      name: 'Exercício',
+      kind: 'work',
+      seconds: config.workSeconds,
+      reps: null,
+    },
+  ];
+  if (config.restSeconds > 0) {
+    steps.push({
+      id: `${base.id}-rest`,
+      name: 'Descanso',
+      kind: 'rest',
+      seconds: config.restSeconds,
+      reps: null,
+    });
+  }
+  return {
+    ...base,
+    version: 1,
+    prepSeconds: config.prepSeconds,
+    cooldownSeconds: 0,
+    updatedAt: base.createdAt,
+    blocks: [
+      { id: `${base.id}-b1`, name: 'Rodadas', repeat: config.rounds, steps, restAfterSeconds: 0 },
+    ],
+  };
+}

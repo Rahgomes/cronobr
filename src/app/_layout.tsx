@@ -1,10 +1,10 @@
 import { SplashScreen, Stack, type ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { DataProvider } from '@/data/data-context';
 import { Button } from '@/ui/button';
 import { DialogHost } from '@/ui/dialog';
 import { HintProvider } from '@/ui/hint';
@@ -46,9 +46,6 @@ function AppStack() {
   const colors = useColors();
   const scheme = useColorSchemeInUse();
   const options = useStackOptions();
-  useEffect(() => {
-    void SplashScreen.hideAsync();
-  }, []);
   return (
     <>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
@@ -65,7 +62,9 @@ export default function RootLayout() {
         {/* Preferência de tema entra com a tela de Ajustes (E04); até lá, segue o sistema. */}
         <ThemeProvider mode="auto">
           <HintProvider>
-            <AppStack />
+            <DataProvider>
+              <AppStack />
+            </DataProvider>
           </HintProvider>
         </ThemeProvider>
       </SafeAreaProvider>
