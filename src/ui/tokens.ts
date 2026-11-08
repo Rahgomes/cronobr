@@ -34,8 +34,9 @@ export const colors = {
   goldSoft: '#FBF0D9',
   goldInk: '#6B4600',
   /** Cards com foto: sempre escuros, nos dois temas (a foto é escura). */
-  photoShade: 'rgba(0, 0, 0, 0.25)',
+  photoClear: 'rgba(10, 10, 10, 0)',
   photoScrim: 'rgba(10, 10, 10, 0.78)',
+  photoDeep: 'rgba(10, 10, 10, 0.94)',
   onPhoto: '#FFFFFF',
   onPhotoMuted: '#D9D9D9',
 } as const;
@@ -72,8 +73,9 @@ export const darkColors: Record<ColorRole, string> = {
   gold: '#FFC107',
   goldSoft: '#33290A',
   goldInk: '#FFD54F',
-  photoShade: 'rgba(0, 0, 0, 0.25)',
+  photoClear: 'rgba(10, 10, 10, 0)',
   photoScrim: 'rgba(10, 10, 10, 0.78)',
+  photoDeep: 'rgba(10, 10, 10, 0.94)',
   onPhoto: '#FFFFFF',
   onPhotoMuted: '#D9D9D9',
 };

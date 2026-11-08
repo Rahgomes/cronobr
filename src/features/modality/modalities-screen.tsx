@@ -23,7 +23,7 @@ export function ModalitiesScreen() {
             <PhotoCard
               key={modality}
               width="48%"
-              height={200}
+              height={240}
               photo={info.photo}
               title={info.label}
               subtitle={info.tagline}

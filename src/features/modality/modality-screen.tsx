@@ -5,7 +5,7 @@ import { presetsOf } from '@/domain/presets';
 import { MODALITIES, type Modality } from '@/domain/routine';
 import { RoutineRow } from '@/features/home/routine-row';
 import { Button } from '@/ui/button';
-import { PhotoFill } from '@/ui/photo-card';
+import { PhotoFade, PhotoFill } from '@/ui/photo-card';
 import { Screen } from '@/ui/screen';
 import { SectionTitle } from '@/ui/section-title';
 import { Text } from '@/ui/text';
@@ -46,7 +46,8 @@ export function ModalityScreen({ id }: { id: string | undefined }) {
   return (
     <Screen>
       <View style={styles.hero}>
-        {info.photo === null ? null : <PhotoFill photo={info.photo} />}
+        {info.photo === null ? null : <PhotoFill photo={info.photo} align="top" />}
+        <PhotoFade />
         <View style={styles.heroTop}>
           <RoundAction
             icon="arrow-left"
@@ -82,14 +83,14 @@ export function ModalityScreen({ id }: { id: string | undefined }) {
 const makeStyles = (colors: Colors) =>
   StyleSheet.create({
     hero: {
-      height: 240,
+      height: 320,
       justifyContent: 'space-between',
       borderRadius: radius.lg,
       overflow: 'hidden',
       backgroundColor: colors.hero,
     },
     heroTop: { padding: space.md, alignItems: 'flex-start' },
-    band: { backgroundColor: colors.photoScrim, padding: space.lg, gap: space.xs },
+    band: { padding: space.lg, gap: space.xs },
     onPhoto: { color: colors.onPhoto },
     onPhotoMuted: { color: colors.onPhotoMuted },
     list: { gap: space.sm },

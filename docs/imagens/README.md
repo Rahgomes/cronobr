@@ -21,3 +21,15 @@ Codex com `fotos-modalidades.sh <nome> "<assunto>"` e reduzidas para 720×1080 J
 Regras do prompt: foto realista, sem texto nem marca, atleta adulto, terço de baixo escuro para o
 título. Variar pessoa (homem e mulher, idades) entre os cards: o primeiro lote saiu com a mesma
 mulher nos 6.
+
+## C01b: o que já está na Início e o que falta
+
+| Item do conceito | Situação | Onde entra |
+| --- | --- | --- |
+| Carrossel de modelos com foto, degradê e pontos | Feito, por modalidade (cada card abre os modelos dela) | v2 |
+| "Última rotina" com Repetir | Feito como faixa Recentes (tocar repete o registro) | v2 |
+| Cronômetro, Temporizador, Intervalado (início rápido) | Falta | E04 (configuração rápida) |
+| Favoritas | Falta | E04 (acesso a favoritos) |
+| Nova rotina | Falta | E04 (editor, C02) |
+| Engrenagem (configurações) | Falta | E03 (som, voz e vibração) e E06 |
+| "Bom treino, Lucas" | Sem nome nesta fase (sem login); só se houver perfil | E06 ou depois do Firebase |

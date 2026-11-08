@@ -30,8 +30,9 @@ interface HomeData {
 }
 
 const RECENT_MAX = 8;
-const MODALITY_CARD = { width: 168, height: 208 };
-const RECENT_CARD = { width: 152, height: 152 };
+// Largura pensada para 390 pt: um card e meio à vista, o meio cortado mostra que rola.
+const MODALITY_CARD = { width: 216, height: 280 };
+const RECENT_CARD = { width: 184, height: 184 };
 
 function models(count: number) {
   return count === 1 ? '1 modelo' : `${String(count)} modelos`;
