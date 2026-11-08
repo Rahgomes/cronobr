@@ -9,7 +9,7 @@ cada um com testes de unidade, tela e E2E antes de seguir.
 | B | Editor de rotinas (C02): nomear, salvar, duplicar, editar, excluir, reordenar, inserir etapa, desabilitar, blocos e descanso entre blocos, rascunho, prévia com total estimado. Modelos editáveis por modalidade. Favoritos | Entregue 08/11 |
 | C | Sessão: visualizações Foco, Anel e Lista (P1), trava contra toque (P2), salto pela lista (P3), progresso com etapas manuais | Entregue 08/11 |
 | D | Modalidades com comportamento próprio: EMOM em fronteira de minuto e conclusão antecipada, AMRAP com registro de rodadas, corrida/caminhada, mobilidade com lados | Entregue 08/11 |
-| E | Histórico: calendário simples, nota opcional, repetir a configuração registrada | |
+| E | Histórico: calendário simples, nota opcional, repetir a configuração registrada | Entregue 08/11 |
 
 ## Lote A
 
@@ -109,3 +109,36 @@ Testes: domínio 100% (terminar antes, contador, avisos, lados, modelos); tela c
 (EMOM solto e travado, AMRAP com +1/-1 e registro no histórico, lados da mobilidade, corrida com
 nome); E2E com axe no EMOM e no AMRAP (10 minutos simulados pelo relógio do Playwright).
 Total: 397 testes Jest, 30 E2E.
+
+## Lote E
+
+| Arquivo | O que faz |
+| --- | --- |
+| `src/domain/calendar.ts` | Mês em grade (domingo a sábado), dia pela hora local, contagem por dia, limpeza da nota (280) |
+| `src/data/migrations.ts` (V5) | `history.note`: nota opcional, nula por padrão |
+| `src/data/sqlite-repos.ts` | `endedBetween` (só os fins, para o calendário), `between` (treinos de um dia), `setNote` |
+| `src/features/history/history-calendar.tsx` | Calendário: dia com treino marcado e tocável, hoje com contorno, mês anterior e seguinte |
+| `src/features/history/history-screen.tsx` | Calendário no topo, filtro por dia, linha abre o detalhe e mostra a nota |
+| `src/features/history/history-detail-screen.tsx` (`/historico/[id]`) | Resumo, nota, "Repetir este treino" e apagar com confirmação |
+| `src/features/session/session-view.tsx` | "Escrever uma nota" na tela final, só depois do registro gravado |
+
+| # | Decisão | Por quê |
+| --- | --- | --- |
+| D49 | **Dia do calendário pela hora local do aparelho** | O treino das 23h é do dia em que a pessoa treinou, não do dia em UTC |
+| D50 | **O calendário lê só os horários de fim do mês**; a lista do dia é outra consulta | O mês não carrega a cópia da rotina de cada treino |
+| D51 | **Dia sem treino não é botão**; o mês diz em quantos dias houve treino | Nada para tocar onde não há o que ver; o leitor de tela não percorre 30 casas vazias |
+| D52 | **Sem mês depois do atual** | Não existe treino no futuro |
+| D53 | **Nota no detalhe, com botão de salvar** (grava e só depois confirma "Nota salva"); vazia apaga; 280 caracteres | Mesmo padrão de gravação das preferências; nota é lembrete curto, não diário |
+| D54 | **"Escrever uma nota" no fim do treino só aparece com o registro gravado** | Abrir o detalhe antes da gravação mostraria "não está mais no histórico" |
+| D55 | **Repetir usa a cópia gravada no registro**, com o aviso na tela | Editar a rotina depois não muda o que foi feito naquele dia |
+| D56 | **Apagar um treino do histórico, com confirmação** | Treino iniciado por engano não fica para sempre no calendário |
+
+Testes: domínio 100% (dia local nas viradas de 23h59 e 00h00, grade de meses que começam em dias
+diferentes, virada de ano, contagem, nota); repositório (nota grava, troca e apaga; período
+[from, to)); migração V5 sobre banco antigo; tela com banco real (calendário, filtro, troca de mês,
+nota com falha de gravação, repetir, apagar, registro inexistente); E2E com axe (nota depois do
+treino sobrevive ao recarregar, calendário, filtro, repetir) em fuso fixo de São Paulo.
+Total: 418 testes Jest, 34 E2E.
+
+Visto na captura: as letras da semana sem `flex: 1` ficavam juntas ("DSTQQSS").
+

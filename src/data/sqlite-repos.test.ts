@@ -165,6 +165,40 @@ describe('histórico', () => {
     await repos.session.finish(finished('sem', 500));
     expect(await repos.history.get('sem')).not.toHaveProperty('rounds');
   });
+
+  it('nota: grava, troca, apaga com null; registro sem nota volta sem o campo', async () => {
+    const { repos } = await setup();
+    await repos.session.finish(finished('n', 300));
+    expect(await repos.history.get('n')).not.toHaveProperty('note');
+    await repos.history.setNote('n', 'pesado');
+    expect((await repos.history.get('n'))?.note).toBe('pesado');
+    expect((await repos.history.page()).entries[0]?.note).toBe('pesado');
+    await repos.history.setNote('n', 'leve');
+    expect((await repos.history.get('n'))?.note).toBe('leve');
+    await repos.history.setNote('n', null);
+    expect(await repos.history.get('n')).not.toHaveProperty('note');
+  });
+
+  it('nota que já vem no registro (importação) entra junto', async () => {
+    const { repos } = await setup();
+    await repos.session.finish({ ...finished('imp', 300), note: 'do backup' });
+    expect((await repos.history.get('imp'))?.note).toBe('do backup');
+  });
+
+  it('período [from, to): fins para o calendário e treinos do dia, mais novo primeiro', async () => {
+    const { repos } = await setup();
+    const [a, b, c] = [1000, 2000, 3000];
+    for (const [id, endedAt] of [
+      ['a', a],
+      ['b', b],
+      ['c', c],
+    ] as const)
+      await repos.session.finish({ ...finished(id, 300), endedAt });
+    expect(await repos.history.endedBetween(a, c)).toEqual([a, b]);
+    expect(await repos.history.endedBetween(c + 1, c + 2)).toEqual([]);
+    expect((await repos.history.between(a, c + 1)).map((e) => e.id)).toEqual(['c', 'b', 'a']);
+    expect((await repos.history.between(b, c)).map((e) => e.id)).toEqual(['b']);
+  });
 });
 
 describe('sessão em andamento', () => {

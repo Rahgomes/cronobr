@@ -12,12 +12,15 @@ export function TextField({
   onChangeText,
   placeholder,
   maxLength,
+  multiline = false,
 }: {
   label: string;
   value: string;
   onChangeText: (text: string) => void;
   placeholder?: string;
   maxLength?: number;
+  /** Texto de várias linhas (nota): caixa mais alta, escrita a partir do topo. */
+  multiline?: boolean;
 }) {
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
@@ -31,7 +34,8 @@ export function TextField({
         placeholder={placeholder}
         placeholderTextColor={colors.textMuted}
         maxLength={maxLength}
-        style={styles.input}
+        multiline={multiline}
+        style={[styles.input, multiline && styles.multiline]}
       />
     </View>
   );
@@ -50,4 +54,5 @@ const makeStyles = (colors: Colors) =>
       backgroundColor: colors.surface,
       fontSize: 16,
     },
+    multiline: { minHeight: 96, paddingVertical: space.sm, textAlignVertical: 'top' },
   });

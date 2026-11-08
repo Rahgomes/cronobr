@@ -154,3 +154,9 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
 - **08/11 — Schema de limites descarta campo novo:** campo opcional novo no modelo precisa entrar
   também no schema zod de validação, senão o editor salva e o campo some em silêncio. Teste de tela
   que salva e relê pega; teste só de domínio não.
+- **08/11 — Data no E2E:** sem `timezoneId` o navegador do Playwright usa o fuso da máquina (CI
+  em UTC, servidor em BRT). Tela que mostra dia do calendário precisa de
+  `test.use({ timezoneId })`; no Jest, montar as datas com `new Date(a, m, d, h)` (hora local).
+- **08/11 — `getByLabel` pega rótulo parcial:** "Nota" casava com "Salvar nota" e com o botão da
+  tela anterior ainda na pilha. Usar `{ exact: true }`.
+

@@ -55,7 +55,10 @@ const V3: Migration = (tx) =>
 /** E04: AMRAP guarda as rodadas registradas (NULL nas demais modalidades). */
 const V4: Migration = (tx) => tx.exec('ALTER TABLE history ADD COLUMN rounds_logged INTEGER');
 
-export const MIGRATIONS: readonly Migration[] = [V1, V2, V3, V4];
+/** E04: nota opcional do treino, escrita depois no histórico. */
+const V5: Migration = (tx) => tx.exec('ALTER TABLE history ADD COLUMN note TEXT');
+
+export const MIGRATIONS: readonly Migration[] = [V1, V2, V3, V4, V5];
 
 export async function schemaVersion(db: SqlDb): Promise<number> {
   const row = await db.first<{ user_version: number }>('PRAGMA user_version');

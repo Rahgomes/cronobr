@@ -40,6 +40,8 @@ export interface Runner {
   timeline: ReturnType<typeof buildTimeline>;
   /** Falhou gravar o histórico: a tela avisa e oferece tentar de novo. */
   saveFailed: boolean;
+  /** O registro já está no histórico (dá para abrir e escrever a nota). */
+  saved: boolean;
   /** Falhou gravar o marco da sessão: o treino segue, mas a retomada pode voltar a um ponto anterior. */
   progressFailed: boolean;
   start: () => void;
@@ -81,6 +83,7 @@ export function useSessionRunner({
     snap: snapshot(initial, timeline, clock.now()),
   }));
   const [saveFailed, setSaveFailed] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [progressFailed, setProgressFailed] = useState(false);
   // O intervalo e o AppState vivem além de um render: leem sempre a versão atual por ref.
   const latest = useRef({ repo, clock, onEvents, onMilestone });
@@ -97,6 +100,7 @@ export function useSessionRunner({
     write.then(
       () => {
         setSaveFailed(false);
+        setSaved(entry !== null);
       },
       () => {
         finished.current = null;
@@ -185,6 +189,7 @@ export function useSessionRunner({
     ...view,
     timeline,
     saveFailed,
+    saved,
     progressFailed,
     start: () => {
       act((s, now) => start(s, timeline, now));

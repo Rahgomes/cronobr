@@ -213,11 +213,20 @@ describe('sessão', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Encerrar' }));
     expect(await screen.findByText('Não deu para salvar no histórico.')).toBeOnTheScreen();
     expect(await repos.history.count()).toBe(0);
+    // Sem registro gravado, não há onde escrever a nota.
+    expect(screen.queryByRole('button', { name: 'Escrever uma nota' })).toBeNull();
     await fireEvent.press(screen.getByRole('button', { name: 'Tentar salvar de novo' }));
     await waitFor(() => {
       expect(screen.queryByText('Não deu para salvar no histórico.')).toBeNull();
     });
     expect(await repos.history.count()).toBe(1);
+    // Gravado: a nota abre o registro desta sessão.
+    await fireEvent.press(screen.getByRole('button', { name: 'Escrever uma nota' }));
+    const [entry] = (await repos.history.page()).entries;
+    expect(router.push).toHaveBeenLastCalledWith({
+      pathname: '/historico/[id]',
+      params: { id: must(entry).id },
+    });
   });
 
   it('repetir do histórico usa a rotina gravada naquele registro', async () => {

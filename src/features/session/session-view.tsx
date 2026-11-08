@@ -192,6 +192,15 @@ export function SessionView({
               Não deu para salvar no histórico.
             </Notice>
           ) : null}
+          {runner.saved && !restarting ? (
+            <Button
+              label="Escrever uma nota"
+              kind="secondary"
+              onPress={() => {
+                router.push({ pathname: '/historico/[id]', params: { id: session.id } });
+              }}
+            />
+          ) : null}
         </View>
       </Screen>
     );

@@ -28,6 +28,12 @@ export interface HistoryRepo {
   }): Promise<HistoryPage>;
   count(): Promise<number>;
   get(id: string): Promise<HistoryEntry | null>;
+  /** Fim (`endedAt`) de cada treino no período [from, to): só os números, para o calendário. */
+  endedBetween(from: number, to: number): Promise<number[]>;
+  /** Treinos do período [from, to), do mais recente ao mais antigo (um dia do calendário). */
+  between(from: number, to: number): Promise<HistoryEntry[]>;
+  /** Grava a nota; null apaga. */
+  setNote(id: string, note: string | null): Promise<void>;
   remove(id: string): Promise<void>;
 }
 

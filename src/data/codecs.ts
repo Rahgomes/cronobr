@@ -2,6 +2,7 @@
 // FORMA na leitura. Se um limite apertar no futuro, o que já foi gravado continua abrindo.
 import { z } from 'zod';
 
+import { NOTE_MAX } from '@/domain/calendar';
 import type { Session } from '@/domain/engine';
 import type { HistoryEntry } from '@/domain/history';
 import { MODALITIES, type Routine } from '@/domain/routine';
@@ -71,6 +72,8 @@ export interface HistoryRow {
   adjusted?: number;
   /** AMRAP: rodadas registradas; null fora do AMRAP ou antes da V4. */
   rounds_logged?: number | null;
+  /** Nota da pessoa; null sem nota ou antes da V5. */
+  note?: string | null;
 }
 
 const historyShape = z.object({
@@ -85,6 +88,7 @@ const historyShape = z.object({
   routine: routineShape,
   adjusted: z.literal(true).optional(),
   rounds: z.number().int().nonnegative().optional(),
+  note: z.string().min(1).max(NOTE_MAX).optional(),
 });
 
 /** JSON ou forma inválida viram null: quem lê decide pular, sem derrubar a tela. */
@@ -113,6 +117,7 @@ export function historyFromRow(row: HistoryRow): HistoryEntry | null {
     // Ausente = não ajustado: o registro de sempre continua igual.
     ...(row.adjusted === 1 ? { adjusted: true } : {}),
     ...(typeof row.rounds_logged === 'number' ? { rounds: row.rounds_logged } : {}),
+    ...(typeof row.note === 'string' && row.note !== '' ? { note: row.note } : {}),
   });
   return parsed.success ? parsed.data : null;
 }

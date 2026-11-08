@@ -20,6 +20,8 @@ export interface HistoryEntry {
   adjusted?: true | undefined;
   /** AMRAP: rodadas registradas na sessão. */
   rounds?: number | undefined;
+  /** Nota opcional, escrita depois no histórico. */
+  note?: string | undefined;
 }
 
 /** null enquanto a sessão não terminou (ou terminou sem nunca ter começado). */

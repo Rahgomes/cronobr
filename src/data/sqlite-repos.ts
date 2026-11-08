@@ -21,12 +21,13 @@ export async function insertHistory(tx: SqlTx, entry: HistoryEntry): Promise<boo
     JSON.stringify(entry.routine),
     entry.adjusted ? 1 : 0,
     entry.rounds ?? null,
+    entry.note ?? null,
   ];
   const result = await tx.run(
     `INSERT OR IGNORE INTO history
        (id, status, started_at, ended_at, active_ms, work_done, work_total, source, routine,
-        adjusted, rounds_logged)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        adjusted, rounds_logged, note)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     params,
   );
   return result.changes > 0;
@@ -125,6 +126,24 @@ function historyRepo(db: SqlDb): HistoryRepo {
     async get(id) {
       const row = await db.first<HistoryRow>('SELECT * FROM history WHERE id = ?', [id]);
       return row ? historyFromRow(row) : null;
+    },
+    async endedBetween(from, to) {
+      const rows = await db.all<{ ended_at: number }>(
+        'SELECT ended_at FROM history WHERE ended_at >= ? AND ended_at < ? ORDER BY ended_at',
+        [from, to],
+      );
+      return rows.map((row) => row.ended_at);
+    },
+    async between(from, to) {
+      const rows = await db.all<HistoryRow>(
+        `SELECT * FROM history WHERE ended_at >= ? AND ended_at < ?
+         ORDER BY ended_at DESC, id DESC`,
+        [from, to],
+      );
+      return rows.flatMap((row) => historyFromRow(row) ?? []);
+    },
+    async setNote(id, note) {
+      await db.run('UPDATE history SET note = ? WHERE id = ?', [note, id]);
     },
     async remove(id) {
       await db.run('DELETE FROM history WHERE id = ?', [id]);

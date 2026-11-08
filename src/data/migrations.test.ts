@@ -56,6 +56,16 @@ describe('migrações', () => {
     expect(await db.all('SELECT id, position FROM routines')).toEqual([{ id: 'r', position: 0 }]);
   });
 
+  it('V5: histórico antigo ganha a coluna de nota vazia, sem perder o registro', async () => {
+    const db = serialDb(nodeSqlite());
+    await migrate(db, MIGRATIONS.slice(0, 4));
+    await db.run(
+      "INSERT INTO history (id, status, started_at, ended_at, active_ms, work_done, work_total, source, routine) VALUES ('h', 'completed', 0, 1, 0, 0, 0, 'app', '{}')",
+    );
+    await migrate(db);
+    expect(await db.all('SELECT id, note FROM history')).toEqual([{ id: 'h', note: null }]);
+  });
+
   it('banco de versão mais nova (app voltou de versão): recusa com mensagem clara', async () => {
     const db = serialDb(nodeSqlite());
     await db.exec('PRAGMA user_version = 99');
