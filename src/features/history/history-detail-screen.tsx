@@ -6,6 +6,7 @@ import { StyleSheet, View } from 'react-native';
 import { useRepos } from '@/data/data-context';
 import { cleanNote, NOTE_MAX } from '@/domain/calendar';
 import type { HistoryEntry } from '@/domain/history';
+import { useLanguage, useT } from '@/i18n/i18n-context';
 import { Button } from '@/ui/button';
 import { Card } from '@/ui/card';
 import { dialog } from '@/ui/dialog';
@@ -22,6 +23,8 @@ type Load =
   { status: 'loading' } | { status: 'missing' } | { status: 'ready'; entry: HistoryEntry };
 
 export function HistoryDetailScreen({ id }: { id: string }) {
+  const t = useT();
+  const language = useLanguage();
   const repos = useRepos();
   const [load, setLoad] = useState<Load>({ status: 'loading' });
   const [draft, setDraft] = useState('');
@@ -46,8 +49,8 @@ export function HistoryDetailScreen({ id }: { id: string }) {
   if (load.status === 'missing') {
     return (
       <Screen>
-        <TopBar title="Treino" />
-        <Text color="textMuted">Este treino não está mais no histórico.</Text>
+        <TopBar title={t.history.workout} />
+        <Text color="textMuted">{t.history.missing}</Text>
       </Screen>
     );
   }
@@ -70,10 +73,10 @@ export function HistoryDetailScreen({ id }: { id: string }) {
   }
 
   function confirmRemove() {
-    dialog.alert('Apagar este treino?', 'Ele sai do histórico e do calendário.', [
-      { text: 'Cancelar', style: 'cancel' },
+    dialog.alert(t.history.deleteTitle, t.history.deleteMessage, [
+      { text: t.history.cancel, style: 'cancel' },
       {
-        text: 'Apagar',
+        text: t.history.delete,
         style: 'destructive',
         onPress: async () => {
           await repos.history.remove(entry.id);
@@ -87,57 +90,53 @@ export function HistoryDetailScreen({ id }: { id: string }) {
     <Screen
       footer={
         <Button
-          label="Repetir este treino"
+          label={t.history.repeat}
           onPress={() => {
             router.push({ pathname: '/sessao', params: { repetir: entry.id } });
           }}
         />
       }
     >
-      <TopBar title="Treino" />
+      <TopBar title={t.history.workout} />
       <View style={styles.content}>
         <Card>
           <Text variant="label" accessibilityRole="header">
             {entry.routine.name}
           </Text>
-          <Text color="textMuted">{DATE.format(entry.endedAt)}</Text>
-          <Text color={done ? 'success' : 'warning'}>{statusLine(entry)}</Text>
+          <Text color="textMuted">{DATE(language).format(entry.endedAt)}</Text>
+          <Text color={done ? 'success' : 'warning'}>{statusLine(entry, t)}</Text>
           {entry.rounds === undefined ? null : (
-            <Text color="textMuted">Rodadas registradas: {String(entry.rounds)}</Text>
+            <Text color="textMuted">{t.history.roundsRecorded(entry.rounds)}</Text>
           )}
-          {entry.adjusted ? (
-            <Text color="textMuted">Ajustado: teve salto de etapa ou tempo recalculado.</Text>
-          ) : null}
+          {entry.adjusted ? <Text color="textMuted">{t.history.adjusted}</Text> : null}
         </Card>
-        <Text color="textMuted">
-          Repetir usa a mesma configuração deste dia, mesmo que a rotina tenha mudado depois.
-        </Text>
+        <Text color="textMuted">{t.history.repeatHint}</Text>
         <View style={styles.note}>
           <TextField
-            label="Nota"
+            label={t.history.note}
             value={draft}
             multiline
             maxLength={NOTE_MAX}
-            placeholder="Como foi? Carga, sensação, o que mudar."
+            placeholder={t.history.notePlaceholder}
             onChangeText={(text) => {
               setDraft(text);
               setStored(false);
             }}
           />
           <Text variant="caption" color="textMuted" tabular>
-            {`${String(draft.length)} de ${String(NOTE_MAX)}`}
+            {t.history.noteLength(draft.length, NOTE_MAX)}
           </Text>
           <Button
-            label="Salvar nota"
+            label={t.history.saveNote}
             kind="secondary"
-            done={stored ? 'Nota salva' : undefined}
+            done={stored ? t.history.noteSaved : undefined}
             onPress={() => {
               void saveNote();
             }}
           />
-          {failed ? <Notice tone="danger">Não deu para salvar a nota.</Notice> : null}
+          {failed ? <Notice tone="danger">{t.history.saveFailed}</Notice> : null}
         </View>
-        <Button label="Apagar do histórico" kind="text" onPress={confirmRemove} />
+        <Button label={t.history.deleteFromHistory} kind="text" onPress={confirmRemove} />
       </View>
     </Screen>
   );

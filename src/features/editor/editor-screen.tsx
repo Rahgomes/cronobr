@@ -10,7 +10,6 @@ import { clock } from '@/domain/format';
 import { checkRoutine, LIMITS } from '@/domain/limits';
 import { MODALITIES, type Modality, type Routine, type Step } from '@/domain/routine';
 import { buildTimeline, summarize } from '@/domain/timeline';
-import { MODALITY } from '@/features/modality/catalog';
 import { usePresets } from '@/features/routines/presets';
 import { useT } from '@/i18n/i18n-context';
 import { Button } from '@/ui/button';
@@ -346,7 +345,7 @@ export function EditorScreen({
         {EDITABLE.map((m) => (
           <Chip
             key={m}
-            label={MODALITY[m].label}
+            label={t.modality[m].label}
             selected={draft.modality === m}
             onPress={() => {
               update(edit.routine(draft, { modality: m }));

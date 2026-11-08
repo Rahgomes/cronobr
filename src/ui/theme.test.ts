@@ -19,6 +19,8 @@ const TEXT_PAIRS: [ColorRole, ColorRole][] = [
   ['goldInk', 'goldSoft'],
   ['onHero', 'hero'],
   ['text', 'iconButton'],
+  // Botão indisponível (ainda explica o motivo ao tocar): cinza neutro, rótulo legível.
+  ['textMuted', 'iconButton'],
   ...(['phasePrep', 'phaseWork', 'phaseRest', 'phaseBlockRest', 'phaseCooldown'] as const).flatMap(
     (bg): [ColorRole, ColorRole][] => [
       ['onPhase', bg],

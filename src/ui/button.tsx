@@ -49,6 +49,9 @@ export function Button({
   const settled = !!done && !loading;
   const inactive = disabled === true || loading;
   const blocked = useBlockedPress(disabled === true && !loading, disabledHint);
+  // Indisponível: cinza neutro com rótulo legível (opacidade derrubava o contraste do laranja).
+  const unavailable = disabled === true && !loading;
+  const ink = unavailable ? 'textMuted' : LABEL_COLOR[kind];
   return (
     <Pressable
       accessibilityRole="button"
@@ -60,7 +63,7 @@ export function Button({
         styles.base,
         styles[kind],
         pressed && kind === 'primary' && styles.primaryPressed,
-        inactive && styles.inactive,
+        unavailable && kind !== 'text' && styles.inactive,
       ]}
       {...rest}
       onPress={blocked.explains ? blocked.explain : rest.onPress}
@@ -68,20 +71,16 @@ export function Button({
       {() => (
         <>
           {loading ? (
-            <ActivityIndicator color={colors[LABEL_COLOR[kind]]} />
+            <ActivityIndicator color={colors[ink]} />
           ) : settled ? (
             <View style={styles.done}>
-              <MaterialCommunityIcons
-                name="check-circle"
-                size={space.xl}
-                color={colors[LABEL_COLOR[kind]]}
-              />
-              <Text variant="label" color={LABEL_COLOR[kind]}>
+              <MaterialCommunityIcons name="check-circle" size={space.xl} color={colors[ink]} />
+              <Text variant="label" color={ink}>
                 {done}
               </Text>
             </View>
           ) : (
-            <Text variant="label" color={LABEL_COLOR[kind]}>
+            <Text variant="label" color={ink}>
               {label}
             </Text>
           )}
@@ -106,7 +105,6 @@ const makeStyles = (colors: Colors) =>
     text: { minHeight: touch.minTarget },
     inverse: { backgroundColor: colors.onHero },
     inverseOutline: { borderWidth: 1.5, borderColor: colors.onHero },
-    // Opacidade baixa derrubaria o contraste do rótulo; 0,6 ainda passa AA no primário.
-    inactive: { opacity: 0.6 },
+    inactive: { backgroundColor: colors.iconButton, borderColor: colors.iconButton },
     done: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   });

@@ -17,8 +17,7 @@ import {
   type TransferOps,
 } from '@/domain/transfer-plan';
 import { idGenerator } from '@/features/editor/ids';
-import { MODALITY } from '@/features/modality/catalog';
-import { useT } from '@/i18n/i18n-context';
+import { useLanguage, useT } from '@/i18n/i18n-context';
 import { Button } from '@/ui/button';
 import { Card } from '@/ui/card';
 import { dialog } from '@/ui/dialog';
@@ -39,21 +38,8 @@ type State =
   | { status: 'ready'; prepared: Prepared }
   | { status: 'done'; lines: string[] };
 
-const EXPORTED = new Intl.DateTimeFormat('pt-BR', {
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-});
-
-const plural = (n: number, one: string, many: string) => `${String(n)} ${n === 1 ? one : many}`;
-
-function origin(meta: { appVersion: string; exportedAt: string }) {
-  return `Exportado em ${EXPORTED.format(Date.parse(meta.exportedAt))}, CronôBR ${meta.appVersion}.`;
-}
-
 function RoutinePreview({ routine }: { routine: Routine }) {
+  const t = useT();
   const summary = summarize(buildTimeline(routine));
   return (
     <>
@@ -61,7 +47,7 @@ function RoutinePreview({ routine }: { routine: Routine }) {
         {routine.name}
       </Text>
       <Text color="textMuted">
-        {`${MODALITY[routine.modality].label} · ${clock(summary.knownMs)} · ${plural(summary.workCount, 'exercício', 'exercícios')} · ${plural(routine.blocks.length, 'bloco', 'blocos')}`}
+        {`${t.modality[routine.modality].label} · ${clock(summary.knownMs)} · ${t.transfer.exercises(summary.workCount)} · ${t.transfer.blocks(routine.blocks.length)}`}
       </Text>
     </>
   );
@@ -80,6 +66,14 @@ function Lines({ lines }: { lines: string[] }) {
 }
 
 export function ImportScreen({ uri }: { uri?: string | undefined }) {
+  const language = useLanguage();
+  const exported = new Intl.DateTimeFormat(language, {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
   const repos = useRepos();
   const t = useT();
   const changed = useDataChanged();
@@ -92,14 +86,17 @@ export function ImportScreen({ uri }: { uri?: string | undefined }) {
   async function open(target: string) {
     setFailure(null);
     setState({ status: 'loading' });
-    setState({ status: 'ready', prepared: await prepareFromUri(repos, port, target, t.words) });
+    setState({
+      status: 'ready',
+      prepared: await prepareFromUri(repos, port, target, t.words, t.transfer),
+    });
   }
 
   // Aberto com um arquivo (do seletor ou de outro app): lê assim que a tela monta.
   useEffect(() => {
     if (!uri) return;
     let active = true;
-    void prepareFromUri(repos, port, uri, t.words).then((prepared) => {
+    void prepareFromUri(repos, port, uri, t.words, t.transfer).then((prepared) => {
       if (active) setState({ status: 'ready', prepared });
     });
     return () => {
@@ -122,9 +119,7 @@ export function ImportScreen({ uri }: { uri?: string | undefined }) {
       setState({ status: 'done', lines });
     } catch (error) {
       setFailure(
-        error instanceof ActiveSessionError
-          ? 'Há um treino em andamento. Termine ou encerre o treino antes de restaurar.'
-          : 'Não deu para importar. Nada foi alterado.',
+        error instanceof ActiveSessionError ? t.transfer.activeRestore : t.transfer.importFailed,
       );
     } finally {
       setBusy(false);
@@ -133,7 +128,7 @@ export function ImportScreen({ uri }: { uri?: string | undefined }) {
 
   const chooseButton = (
     <Button
-      label={state.status === 'idle' ? 'Escolher arquivo' : 'Escolher outro arquivo'}
+      label={state.status === 'idle' ? t.transfer.choose : t.transfer.chooseAnother}
       kind={state.status === 'idle' ? 'primary' : 'secondary'}
       onPress={() => {
         void choose();
@@ -145,20 +140,15 @@ export function ImportScreen({ uri }: { uri?: string | undefined }) {
   let footer: ReactNode = null;
 
   if (state.status === 'idle') {
-    body = (
-      <Text color="textMuted">
-        Escolha um arquivo .cronobr: uma rotina que alguém mandou ou um backup seu. Nada muda antes
-        de você confirmar.
-      </Text>
-    );
+    body = <Text color="textMuted">{t.transfer.importIntro}</Text>;
     footer = chooseButton;
   } else if (state.status === 'loading') {
-    body = <Text color="textMuted">Lendo o arquivo…</Text>;
+    body = <Text color="textMuted">{t.transfer.reading}</Text>;
   } else if (state.status === 'done') {
-    body = <Notice tone="positive">{['Pronto.', ...state.lines].join(' ')}</Notice>;
+    body = <Notice tone="positive">{[t.transfer.done, ...state.lines].join(' ')}</Notice>;
     footer = (
       <Button
-        label="Ir para o início"
+        label={t.transfer.goHome}
         onPress={() => {
           router.replace('/');
         }}
@@ -179,18 +169,15 @@ export function ImportScreen({ uri }: { uri?: string | undefined }) {
           <Card>
             <RoutinePreview routine={item.routine} />
             <Text variant="caption" color="textMuted">
-              {origin(prepared.meta)}
+              {t.transfer.origin(
+                exported.format(Date.parse(prepared.meta.exportedAt)),
+                prepared.meta.appVersion,
+              )}
             </Text>
           </Card>
-          {item.status === 'same' ? (
-            <Text>
-              Esta rotina já está na sua biblioteca. Dá para adicionar uma cópia mesmo assim.
-            </Text>
-          ) : null}
+          {item.status === 'same' ? <Text>{t.transfer.alreadyHave}</Text> : null}
           {item.status === 'conflict' ? (
-            <Text>
-              {`Você já tem "${item.existing?.name ?? item.routine.name}" com outra configuração. Adicione como cópia ou substitua a sua.`}
-            </Text>
+            <Text>{t.transfer.conflict(item.existing?.name ?? item.routine.name)}</Text>
           ) : null}
         </>
       );
@@ -198,40 +185,36 @@ export function ImportScreen({ uri }: { uri?: string | undefined }) {
         <View style={styles.actions}>
           {item.status === 'new' ? (
             <Button
-              label="Adicionar à biblioteca"
+              label={t.transfer.add}
               loading={busy}
               onPress={() => {
-                run('add', `"${item.routine.name}" está na sua biblioteca.`);
+                run('add', t.transfer.added(item.routine.name));
               }}
             />
           ) : (
             <Button
-              label="Adicionar como cópia"
+              label={t.transfer.addCopy}
               loading={busy}
               onPress={() => {
-                run('copy', `A cópia de "${item.routine.name}" está na sua biblioteca.`);
+                run('copy', t.transfer.copied(item.routine.name));
               }}
             />
           )}
           {item.status === 'conflict' ? (
             <Button
-              label="Substituir a minha"
+              label={t.transfer.replaceMine}
               kind="secondary"
               onPress={() => {
-                dialog.alert(
-                  'Substituir a sua rotina?',
-                  'Ela fica igual à do arquivo. O histórico de treinos não muda.',
-                  [
-                    { text: 'Cancelar', style: 'cancel' },
-                    {
-                      text: 'Substituir',
-                      style: 'destructive',
-                      onPress: () => {
-                        run('update', `"${item.routine.name}" foi atualizada.`);
-                      },
+                dialog.alert(t.transfer.replaceRoutineTitle, t.transfer.replaceRoutineBody, [
+                  { text: t.transfer.cancel, style: 'cancel' },
+                  {
+                    text: t.transfer.replace,
+                    style: 'destructive',
+                    onPress: () => {
+                      run('update', t.transfer.updated(item.routine.name));
                     },
-                  ],
-                );
+                  },
+                ]);
               }}
             />
           ) : null}
@@ -240,26 +223,27 @@ export function ImportScreen({ uri }: { uri?: string | undefined }) {
     } else {
       const { summary, history } = prepared;
       const lines = [
-        plural(summary.routines.new, 'rotina nova', 'rotinas novas'),
-        ...(summary.routines.same > 0
-          ? [plural(summary.routines.same, 'rotina que você já tem', 'rotinas que você já tem')]
-          : []),
+        t.transfer.newRoutines(summary.routines.new),
+        ...(summary.routines.same > 0 ? [t.transfer.sameRoutines(summary.routines.same)] : []),
         ...(summary.routines.conflict > 0
-          ? [plural(summary.routines.conflict, 'rotina com diferença', 'rotinas com diferença')]
+          ? [t.transfer.conflictRoutines(summary.routines.conflict)]
           : []),
         summary.history
-          ? `${plural(summary.history.total, 'treino', 'treinos')} no histórico (${plural(summary.history.fresh, 'novo', 'novos')})`
-          : 'Sem histórico',
-        plural(prepared.prefCount, 'preferência', 'preferências'),
+          ? t.transfer.history(summary.history.total, summary.history.fresh)
+          : t.transfer.noHistory,
+        t.transfer.preferences(prepared.prefCount),
       ];
       body = (
         <>
           <Card>
             <Text variant="label" accessibilityRole="header">
-              Backup
+              {t.transfer.backup}
             </Text>
             <Text variant="caption" color="textMuted">
-              {origin(prepared.meta)}
+              {t.transfer.origin(
+                exported.format(Date.parse(prepared.meta.exportedAt)),
+                prepared.meta.appVersion,
+              )}
             </Text>
             <Lines lines={lines} />
           </Card>
@@ -269,35 +253,28 @@ export function ImportScreen({ uri }: { uri?: string | undefined }) {
           {summary.routines.conflict > 0 ? (
             <View style={styles.option}>
               <View style={styles.grow}>
-                <Text variant="label">Usar a versão do arquivo</Text>
+                <Text variant="label">{t.transfer.useFile}</Text>
                 <Text variant="caption" color="textMuted">
-                  Nas rotinas com diferença. Desligado, as duas ficam (a do arquivo vira cópia).
+                  {t.transfer.useFileHint}
                 </Text>
               </View>
               <Switch
                 value={conflicts === 'update'}
-                accessibilityLabel="Usar a versão do arquivo nas rotinas com diferença"
+                accessibilityLabel={t.transfer.useFileLabel}
                 onValueChange={(value) => {
                   setConflicts(value ? 'update' : 'copy');
                 }}
               />
             </View>
           ) : null}
-          <Text color="textMuted">
-            Juntar só acrescenta: suas rotinas, preferências e treinos continuam. Substituir deixa
-            tudo igual ao arquivo e guarda uma cópia do estado atual para desfazer.
-          </Text>
-          {prepared.sessionActive ? (
-            <Notice tone="alert">
-              Há um treino em andamento. Para substituir tudo, termine ou encerre o treino antes.
-            </Notice>
-          ) : null}
+          <Text color="textMuted">{t.transfer.mergeHint}</Text>
+          {prepared.sessionActive ? <Notice tone="alert">{t.transfer.activeReplace}</Notice> : null}
         </>
       );
       footer = (
         <View style={styles.actions}>
           <Button
-            label="Juntar com o que tenho"
+            label={t.transfer.merge}
             loading={busy}
             onPress={() => {
               const merged = mergeOps(
@@ -308,23 +285,21 @@ export function ImportScreen({ uri }: { uri?: string | undefined }) {
                 Date.now(),
                 t.words,
               );
-              void apply(merged, [
-                `${plural(merged.routines.length, 'rotina entrou', 'rotinas entraram')} na biblioteca.`,
-              ]);
+              void apply(merged, [t.transfer.merged(merged.routines.length)]);
             }}
           />
           {prepared.sessionActive ? null : (
             <Button
-              label="Substituir tudo"
+              label={t.transfer.replaceAll}
               kind="secondary"
               onPress={() => {
                 dialog.alert(
-                  'Substituir tudo?',
-                  `Suas rotinas e preferências ficam iguais às do backup${history ? ', e o histórico também' : ''}. Uma cópia do estado atual fica guardada em Backup para desfazer.`,
+                  t.transfer.replaceAllTitle,
+                  t.transfer.replaceAllBody(history !== null),
                   [
-                    { text: 'Cancelar', style: 'cancel' },
+                    { text: t.transfer.cancel, style: 'cancel' },
                     {
-                      text: 'Substituir',
+                      text: t.transfer.replace,
                       style: 'destructive',
                       onPress: () => {
                         void apply(
@@ -335,7 +310,7 @@ export function ImportScreen({ uri }: { uri?: string | undefined }) {
                             prefs: prepared.prefs,
                             history,
                           }),
-                          ['O backup foi restaurado. Dá para desfazer em Backup.'],
+                          [t.transfer.restored],
                           true,
                         );
                       },
@@ -352,7 +327,7 @@ export function ImportScreen({ uri }: { uri?: string | undefined }) {
 
   return (
     <Screen footer={footer}>
-      <TopBar title="Importar" />
+      <TopBar title={t.transfer.importTitle} />
       <View style={styles.content}>
         {body}
         {failure ? <Notice tone="danger">{failure}</Notice> : null}

@@ -216,10 +216,14 @@ export function HomeScreen() {
               key={modality}
               {...MODALITY_CARD}
               photo={info.photo}
-              title={info.label}
-              subtitle={info.tagline}
+              title={t.modality[modality].label}
+              subtitle={t.modality[modality].tagline}
               badge={<PhotoBadge label={count} />}
-              accessibilityLabel={t.home.modalityLabel(info.label, info.tagline, count)}
+              accessibilityLabel={t.home.modalityLabel(
+                t.modality[modality].label,
+                t.modality[modality].tagline,
+                count,
+              )}
               onPress={() => {
                 router.push({ pathname: '/modalidade/[id]', params: { id: modality } });
               }}

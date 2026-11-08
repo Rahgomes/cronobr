@@ -23,7 +23,6 @@ const seconds = (s: number) => clock(s * 1000);
 
 const FIELDS: {
   key: 'prepSeconds' | 'workSeconds' | 'restSeconds' | 'rounds';
-  label: string;
   min: number;
   max: number;
   step: number;
@@ -31,15 +30,14 @@ const FIELDS: {
 }[] = [
   {
     key: 'prepSeconds',
-    label: 'Preparação',
     min: 0,
     max: LIMITS.prepMaxSeconds,
     step: 5,
     format: seconds,
   },
-  { key: 'workSeconds', label: 'Exercício', min: 5, max: 60 * 60, step: 5, format: seconds },
-  { key: 'restSeconds', label: 'Descanso', min: 0, max: 60 * 60, step: 5, format: seconds },
-  { key: 'rounds', label: 'Rodadas', min: 1, max: LIMITS.repeatMax, step: 1, format: String },
+  { key: 'workSeconds', min: 5, max: 60 * 60, step: 5, format: seconds },
+  { key: 'restSeconds', min: 0, max: 60 * 60, step: 5, format: seconds },
+  { key: 'rounds', min: 1, max: LIMITS.repeatMax, step: 1, format: String },
 ];
 
 /** Intervalado: preparação, exercício, descanso e rodadas. Lembra a última configuração. */
@@ -56,7 +54,7 @@ export function IntervalSetupScreen() {
     <Screen
       footer={
         <Button
-          label={`Começar ${clock(total)}`}
+          label={t.quick.startTime(clock(total))}
           disabled={!ready || !result.ok}
           disabledHint={result.ok ? undefined : result.message}
           onPress={() => {
@@ -65,12 +63,12 @@ export function IntervalSetupScreen() {
         />
       }
     >
-      <TopBar title="Intervalado" />
+      <TopBar title={t.quick.interval} />
       <Card style={styles.card}>
         {FIELDS.map((f) => (
           <Stepper
             key={f.key}
-            label={f.label}
+            label={t.quick[f.key]}
             value={config[f.key]}
             min={f.min}
             max={f.max}
@@ -82,7 +80,7 @@ export function IntervalSetupScreen() {
           />
         ))}
       </Card>
-      <Text color="textMuted">Sem descanso depois da última rodada. Total: {clock(total)}.</Text>
+      <Text color="textMuted">{t.quick.intervalHint(clock(total))}</Text>
     </Screen>
   );
 }

@@ -175,3 +175,12 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   restaurar, entra nas dependências de quem lê.
 - **08/11 — Textos tipados sem biblioteca:** `type Messages` derivado do objeto em português
   (string vira `string`, função mantém a assinatura) faz o `tsc` cobrar cada chave em cada língua.
+- **08/11 — E06, domínio sem língua:** texto que o domínio monta (voz, notificação, validação)
+  entra por um parâmetro `Words`, e os testes do domínio passam `pt.words`. Nome escrito pela
+  pessoa e rótulo do app em campos separados: guardar "Preparação" como nome do segmento impedia
+  traduzir.
+- **08/11 — Extração de i18n com o Codex:** recon com plano na primeira fatia, depois o plano
+  aprovado vira exemplo ("siga a fatia 1") e as outras fatias vão direto. Regra que segurou a
+  qualidade: o português fica idêntico, então os testes de tela não mudam e provam a extração.
+- **08/11 — Rodar o E2E em outra língua acha bug de acessibilidade:** o botão desligado com
+  opacidade 0,6 reprovou o axe numa tela que o E2E em português só visitava depois de preencher.

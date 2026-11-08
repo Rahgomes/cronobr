@@ -11,6 +11,8 @@ import {
 import { PanResponder, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
+import { useT } from '@/i18n/i18n-context';
+
 import { Text } from './text';
 import type { Colors } from './theme';
 import { useColors, useThemedStyles } from './theme-context';
@@ -68,6 +70,7 @@ export function useHint(): (hint: Hint) => void {
 }
 
 function HintToast({ hint, onClose }: { hint: Hint; onClose: () => void }) {
+  const t = useT();
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   // Sem provider (testes, telas isoladas) cai no zero em vez de quebrar.
@@ -106,7 +109,7 @@ function HintToast({ hint, onClose }: { hint: Hint; onClose: () => void }) {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={hint.message}
-          accessibilityHint="Toque para fechar"
+          accessibilityHint={t.ui.tapClose}
           style={styles.body}
           onPress={onClose}
         >
@@ -137,7 +140,7 @@ function HintToast({ hint, onClose }: { hint: Hint; onClose: () => void }) {
         ) : null}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Fechar aviso"
+          accessibilityLabel={t.ui.closeHint}
           hitSlop={space.sm}
           style={styles.action}
           onPress={onClose}

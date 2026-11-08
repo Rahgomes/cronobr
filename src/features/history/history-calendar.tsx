@@ -1,29 +1,26 @@
 // Calendário simples do histórico (E04 lote E): o mês em grade, dia com treino marcado e tocável.
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import type { Language } from '@/domain/appearance';
 import { monthGrid, type CalendarDay, type Month } from '@/domain/calendar';
+import { useLanguage, useT } from '@/i18n/i18n-context';
 import { Text } from '@/ui/text';
 import type { Colors } from '@/ui/theme';
 import { useThemedStyles } from '@/ui/theme-context';
 import { radius, space, touch } from '@/ui/tokens';
 import { RoundAction } from '@/ui/top-bar';
 
-const WEEKDAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
-
-const MONTH = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' });
-const DAY = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'long' });
-
-function monthTitle({ year, month }: Month): string {
+function monthTitle({ year, month }: Month, language: Language): string {
+  const MONTH = new Intl.DateTimeFormat(language, { month: 'long', year: 'numeric' });
   const text = MONTH.format(new Date(year, month, 1));
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 /** "7 de novembro". */
-export function dayTitle(day: CalendarDay): string {
+export function dayTitle(day: CalendarDay, language: Language): string {
+  const DAY = new Intl.DateTimeFormat(language, { day: 'numeric', month: 'long' });
   return DAY.format(day.from);
 }
-
-const trainings = (n: number) => (n === 1 ? '1 treino' : `${String(n)} treinos`);
 
 export function HistoryCalendar({
   month,
@@ -44,24 +41,28 @@ export function HistoryCalendar({
   onSelect: (day: CalendarDay) => void;
 }) {
   const styles = useThemedStyles(makeStyles);
+  const t = useT();
+  const language = useLanguage();
+  const weekday = new Intl.DateTimeFormat(language, { weekday: 'narrow' });
+  const weekdays = Array.from({ length: 7 }, (_, i) => weekday.format(new Date(2023, 0, 1 + i)));
   const daysTrained = counts.size;
   return (
     <View style={styles.wrap}>
       <View style={styles.head}>
         <RoundAction
           icon="chevron-left"
-          label="Mês anterior"
+          label={t.history.previousMonth}
           onPress={() => {
             onMonth(-1);
           }}
         />
         <Text variant="label" style={styles.title} accessibilityRole="header">
-          {monthTitle(month)}
+          {monthTitle(month, language)}
         </Text>
         {canGoNext ? (
           <RoundAction
             icon="chevron-right"
-            label="Próximo mês"
+            label={t.history.nextMonth}
             onPress={() => {
               onMonth(1);
             }}
@@ -75,7 +76,7 @@ export function HistoryCalendar({
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       >
-        {WEEKDAYS.map((letter, i) => (
+        {weekdays.map((letter, i) => (
           <Text key={i} variant="caption" color="textMuted" style={styles.weekday}>
             {letter}
           </Text>
@@ -106,7 +107,7 @@ export function HistoryCalendar({
               <Pressable
                 key={i}
                 accessibilityRole="button"
-                accessibilityLabel={`${dayTitle(day)}${today ? ', hoje' : ''}, ${trainings(count)}`}
+                accessibilityLabel={t.history.dayLabel(dayTitle(day, language), today, count)}
                 accessibilityState={{ selected: isSelected }}
                 onPress={() => {
                   onSelect(day);
@@ -132,11 +133,7 @@ export function HistoryCalendar({
           })}
         </View>
       ))}
-      <Text color="textMuted">
-        {daysTrained === 0
-          ? 'Nenhum treino neste mês.'
-          : `Treinou em ${daysTrained === 1 ? '1 dia' : `${String(daysTrained)} dias`} neste mês. Toque num dia marcado para ver os treinos.`}
-      </Text>
+      <Text color="textMuted">{t.history.monthSummary(daysTrained)}</Text>
     </View>
   );
 }

@@ -10,10 +10,12 @@ import { Platform } from 'react-native';
 
 import type { PlannedAlert } from '@/domain/alerts';
 import type { Language } from '@/domain/appearance';
+import { resolveLanguage } from '@/domain/appearance';
 import { SOUND_IDS, type Haptic, type SoundId } from '@/domain/cues';
+import { deviceLanguageTags } from '@/i18n/device';
+import { MESSAGES } from '@/i18n/i18n-context';
 
 import { isAway } from './away';
-import { SOUND_LABEL } from './labels';
 import type { CuePort } from './port';
 
 const SOURCES: Record<SoundId, number> = {
@@ -78,17 +80,19 @@ async function setupNotifications() {
     vibrationPattern: [0, 250, 120, 250],
     lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
   };
+  // Canais aparecem nos ajustes do sistema: na língua do aparelho.
+  const t = MESSAGES[resolveLanguage('auto', deviceLanguageTags())].cues;
   await Promise.all([
     ...SOUND_IDS.map((sound) =>
       Notifications.setNotificationChannelAsync(channelFor(sound), {
         ...base,
-        name: `Treino: ${SOUND_LABEL[sound]}`,
+        name: t.channel(t.sounds[sound]),
         sound: `${sound}.wav`,
       }),
     ),
     Notifications.setNotificationChannelAsync(SILENT_CHANNEL, {
       ...base,
-      name: 'Treino: sem som',
+      name: t.silentChannel,
       sound: null,
     }),
   ]);

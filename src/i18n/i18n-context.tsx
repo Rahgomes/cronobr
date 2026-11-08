@@ -8,7 +8,7 @@ import { es } from './messages/es';
 import { fr } from './messages/fr';
 import { pt, type Messages } from './messages/pt';
 
-const MESSAGES: Record<Language, Messages> = { 'pt-BR': pt, en, es, fr };
+export const MESSAGES: Record<Language, Messages> = { 'pt-BR': pt, en, es, fr };
 
 /** Nome de cada língua nela mesma: quem não lê a atual ainda acha a sua. */
 export const LANGUAGE_NAME: Record<Language, string> = {

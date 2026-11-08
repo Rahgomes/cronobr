@@ -1,6 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { useT } from '@/i18n/i18n-context';
+
 import { Text } from './text';
 import type { Colors } from './theme';
 import { useColors, useThemedStyles } from './theme-context';
@@ -28,6 +30,7 @@ export function Stepper({
   format?: (value: number) => string;
   onChange: (value: number) => void;
 }) {
+  const t = useT();
   const styles = useThemedStyles(makeStyles);
   const colors = useColors();
   const button = (dir: -1 | 1) => {
@@ -36,7 +39,7 @@ export function Stepper({
     return (
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${dir < 0 ? 'Diminuir' : 'Aumentar'} ${label}`}
+        accessibilityLabel={dir < 0 ? t.ui.decrease(label) : t.ui.increase(label)}
         accessibilityState={{ disabled }}
         disabled={disabled}
         hitSlop={4}

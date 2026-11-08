@@ -8,6 +8,7 @@ import { RoutineRow } from '@/features/home/routine-row';
 import { useFavorites } from '@/features/routines/favorites';
 import { usePresets } from '@/features/routines/presets';
 import { RoutineOptions } from '@/features/routines/routine-options';
+import { useT } from '@/i18n/i18n-context';
 import { Button } from '@/ui/button';
 import { PhotoFade, PhotoFill } from '@/ui/photo-card';
 import { Screen } from '@/ui/screen';
@@ -26,6 +27,7 @@ function isModality(value: string | undefined): value is Modality {
 
 /** Uma modalidade: foto no topo e os modelos prontos dela. Criar e editar modelos entra na E04. */
 export function ModalityScreen({ id }: { id: string | undefined }) {
+  const t = useT();
   const library = usePresets();
   const styles = useThemedStyles(makeStyles);
   const repos = useRepos();
@@ -51,7 +53,7 @@ export function ModalityScreen({ id }: { id: string | undefined }) {
       <Screen
         footer={
           <Button
-            label="Voltar ao início"
+            label={t.modality.backHome}
             onPress={() => {
               router.replace('/');
             }}
@@ -59,12 +61,13 @@ export function ModalityScreen({ id }: { id: string | undefined }) {
         }
       >
         <Text variant="title" accessibilityRole="header">
-          Modalidade não encontrada
+          {t.modality.missing}
         </Text>
       </Screen>
     );
   }
   const info = MODALITY[id];
+  const text = t.modality[id];
   const presets = library.of(id);
   const row = (routine: Routine) => (
     <RoutineRow
@@ -87,7 +90,7 @@ export function ModalityScreen({ id }: { id: string | undefined }) {
         <View style={styles.heroTop}>
           <RoundAction
             icon="arrow-left"
-            label="Voltar"
+            label={t.modality.back}
             onPress={() => {
               router.back();
             }}
@@ -95,26 +98,26 @@ export function ModalityScreen({ id }: { id: string | undefined }) {
         </View>
         <View style={styles.band}>
           <Text variant="display" style={styles.onPhoto} accessibilityRole="header">
-            {info.label}
+            {text.label}
           </Text>
-          <Text style={styles.onPhotoMuted}>{info.tagline}</Text>
+          <Text style={styles.onPhotoMuted}>{text.tagline}</Text>
         </View>
       </View>
       <View style={styles.list}>
-        <SectionTitle>{presets.length === 1 ? 'Modelo pronto' : 'Modelos prontos'}</SectionTitle>
+        <SectionTitle>{t.modality.readyModels(presets.length)}</SectionTitle>
         {presets.map((routine) => row(routine))}
         <Text variant="caption" color="textMuted">
-          {'Em "⋯", edite uma cópia do modelo do seu jeito.'}
+          {t.modality.editHint}
         </Text>
       </View>
       {mine.length > 0 ? (
         <View style={styles.list}>
-          <SectionTitle>{`Suas rotinas de ${info.label}`}</SectionTitle>
+          <SectionTitle>{t.modality.yourRoutines(text.label)}</SectionTitle>
           {mine.map((routine) => row(routine))}
         </View>
       ) : null}
       <Button
-        label={`Criar rotina de ${info.label}`}
+        label={t.modality.createRoutine(text.label)}
         kind="secondary"
         onPress={() => {
           router.push({ pathname: '/rotina/[id]', params: { id: 'nova', modalidade: id } });

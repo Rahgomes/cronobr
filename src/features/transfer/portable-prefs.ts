@@ -10,6 +10,7 @@ import { TIMER_KEY } from '@/features/quick/timer-setup-screen';
 import { FAVORITES_KEY, parseFavorites } from '@/features/routines/favorites';
 import { SESSION_PREFS_KEY } from '@/features/session/session-view';
 import { APPEARANCE_KEY } from '@/features/settings/appearance-context';
+import type { Messages } from '@/i18n/messages/pt';
 
 const PARSERS: Record<string, (raw: unknown) => unknown> = {
   [CUE_PREFS_KEY]: parseCuePrefs,
@@ -45,6 +46,7 @@ export interface PortablePrefs {
 export function portablePrefs(
   raw: Record<string, unknown>,
   knownIds: ReadonlySet<string>,
+  t: Messages['transfer'],
 ): PortablePrefs {
   const prefs: Record<string, unknown> = {};
   const notes: string[] = [];
@@ -54,16 +56,16 @@ export function portablePrefs(
   }
   if (CUE_PREFS_KEY in raw) {
     const missing = unknownSounds(raw[CUE_PREFS_KEY]);
-    if (missing > 0) notes.push('Som que não existe nesta versão: ficou o som padrão.');
+    if (missing > 0) notes.push(t.unknownSound);
     if (parseCuePrefs(raw[CUE_PREFS_KEY]).voice) {
-      notes.push('Voz: usa a voz deste aparelho, na língua do app.');
+      notes.push(t.deviceVoice);
     }
   }
   const favorites = prefs[FAVORITES_KEY];
   if (Array.isArray(favorites)) {
     const kept = favorites.filter((id): id is string => typeof id === 'string' && knownIds.has(id));
     if (kept.length < favorites.length) {
-      notes.push('Favoritas de rotinas que não vieram no arquivo ficaram de fora.');
+      notes.push(t.missingFavorites);
     }
     prefs[FAVORITES_KEY] = kept;
   }

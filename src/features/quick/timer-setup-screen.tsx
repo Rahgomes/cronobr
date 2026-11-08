@@ -37,17 +37,17 @@ export function TimerSetupScreen() {
     <Screen
       footer={
         <Button
-          label={`Começar ${clock(timer.seconds * 1000)}`}
+          label={t.quick.startTime(clock(timer.seconds * 1000))}
           disabled={!ready || !result.ok}
           disabledHint={result.ok ? undefined : result.message}
           onPress={start}
         />
       }
     >
-      <TopBar title="Temporizador" />
+      <TopBar title={t.quick.timer} />
       <Card style={styles.card}>
         <Stepper
-          label="Minutos"
+          label={t.quick.minutes}
           value={minutes}
           min={0}
           max={LIMITS.stepMaxSeconds / 60 - 1}
@@ -56,7 +56,7 @@ export function TimerSetupScreen() {
           }}
         />
         <Stepper
-          label="Segundos"
+          label={t.quick.seconds}
           value={seconds}
           min={0}
           max={55}
@@ -68,9 +68,9 @@ export function TimerSetupScreen() {
         />
       </Card>
       <TextField
-        label="Nome (opcional)"
+        label={t.quick.name}
         value={timer.name}
-        placeholder="Ex.: Prancha"
+        placeholder={t.quick.namePlaceholder}
         maxLength={LIMITS.nameMax}
         onChangeText={(name) => {
           setTimer({ ...timer, name });
@@ -78,14 +78,14 @@ export function TimerSetupScreen() {
       />
       <View style={styles.row}>
         <View style={styles.rowText}>
-          <Text variant="label">Repetir ao concluir</Text>
+          <Text variant="label">{t.quick.repeat}</Text>
           <Text variant="caption" color="textMuted">
-            Recomeça sozinho até você encerrar.
+            {t.quick.repeatHint}
           </Text>
         </View>
         <Switch
           value={timer.loop}
-          accessibilityLabel="Repetir ao concluir"
+          accessibilityLabel={t.quick.repeat}
           onValueChange={(loop) => {
             setTimer({ ...timer, loop });
           }}

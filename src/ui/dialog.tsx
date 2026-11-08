@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { Alert, Modal, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useT } from '@/i18n/i18n-context';
+import { pt } from '@/i18n/messages/pt';
+
 import { Button } from './button';
 import { Text } from './text';
 import type { Colors } from './theme';
@@ -28,15 +31,16 @@ const hosts: Show[] = [];
 
 export const dialog = {
   alert(title: string, message?: string, buttons?: DialogButton[]) {
-    const list = buttons?.length ? buttons : [{ text: 'Entendi' }];
+    const list = buttons?.length ? buttons : [];
     const show = hosts.at(-1);
     // Sem host (antes da raiz montar): o do sistema ainda avisa.
     if (show) show({ title, message, buttons: list });
-    else Alert.alert(title, message, list);
+    else Alert.alert(title, message, list.length ? list : [{ text: pt.ui.understood }]);
   },
 };
 
 export function DialogHost() {
+  const t = useT();
   const styles = useThemedStyles(makeStyles);
   const [request, setRequest] = useState<Request | null>(null);
   useEffect(() => {
@@ -46,8 +50,9 @@ export function DialogHost() {
     };
   }, []);
   if (!request) return null;
-  const cancel = request.buttons.find((b) => b.style === 'cancel');
-  const actions = request.buttons.filter((b) => b !== cancel);
+  const buttons = request.buttons.length ? request.buttons : [{ text: t.ui.understood }];
+  const cancel = buttons.find((b) => b.style === 'cancel');
+  const actions = buttons.filter((b) => b !== cancel);
   function press(button: DialogButton | undefined) {
     setRequest(null);
     void button?.onPress?.();

@@ -15,6 +15,7 @@ import {
 } from '@/domain/transfer';
 import { classify, summarize, type BackupSummary, type RoutineItem } from '@/domain/transfer-plan';
 import type { Words } from '@/domain/words';
+import type { Messages } from '@/i18n/messages/pt';
 
 import { APP_VERSION, type FilePort } from './file-port';
 import { PORTABLE_PREF_KEYS, portablePrefs } from './portable-prefs';
@@ -64,6 +65,7 @@ async function prepareFromText(
   text: string,
   size: number,
   w: Words,
+  t: Messages['transfer'],
   now: number,
 ): Promise<Prepared> {
   const read: ReadResult = readTransferFile(text, size, now, w);
@@ -80,7 +82,7 @@ async function prepareFromText(
   }
   const items = classify(file.routines, library);
   const known = new Set([...presetIds, ...file.routines.map((routine) => routine.id)]);
-  const { prefs, notes } = portablePrefs(file.prefs, known);
+  const { prefs, notes } = portablePrefs(file.prefs, known, t);
   const [historyIds, session] = await Promise.all([
     repos.transfer.historyIds(),
     repos.session.load(),
@@ -104,15 +106,16 @@ export async function prepareFromUri(
   port: FilePort,
   uri: string,
   w: Words,
+  t: Messages['transfer'],
   now = Date.now(),
 ): Promise<Prepared> {
   try {
     const { text, size } = await port.read(uri, MAX_FILE_BYTES);
-    return await prepareFromText(repos, text, size, w, now);
+    return await prepareFromText(repos, text, size, w, t, now);
   } catch {
     return {
       kind: 'error',
-      message: 'Não deu para abrir o arquivo. Tente escolher de novo pelo CronôBR.',
+      message: t.openFailed,
       details: [],
     };
   }

@@ -26,7 +26,7 @@ const RevisionContext = createContext<{ revision: number; bump: () => void }>({
 type State =
   | { status: 'loading' }
   | { status: 'ready'; repos: Repos }
-  | { status: 'error'; message: string | null };
+  | { status: 'error'; reason: StorageError['reason'] | null };
 
 /**
  * Abre o banco antes de qualquer tela. Armazenamento indisponível não vira tela branca:
@@ -63,7 +63,7 @@ export function DataProvider({
         if (active) {
           setState({
             status: 'error',
-            message: error instanceof StorageError ? error.message : null,
+            reason: error instanceof StorageError ? error.reason : null,
           });
         }
       },
@@ -94,7 +94,15 @@ export function DataProvider({
           <Text variant="title" accessibilityRole="header">
             {t.boot.unavailable}
           </Text>
-          <Text color="textMuted">{state.message ?? t.boot.fallback}</Text>
+          <Text color="textMuted">
+            {state.reason === 'unavailable'
+              ? t.boot.storageUnavailable
+              : state.reason === 'newer-version'
+                ? t.boot.newerVersion
+                : state.reason === 'corrupt'
+                  ? t.boot.corrupt
+                  : t.boot.fallback}
+          </Text>
           <Text color="textMuted">{t.boot.notErased}</Text>
           <Button
             label={t.common.retry}

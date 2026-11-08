@@ -8,7 +8,7 @@ import { useDataChanged, useRepos } from '@/data/data-context';
 import { ActiveSessionError } from '@/data/repos';
 import { readTransferFile } from '@/domain/transfer';
 import { replaceOps } from '@/domain/transfer-plan';
-import { useT } from '@/i18n/i18n-context';
+import { useLanguage, useT } from '@/i18n/i18n-context';
 import { Button } from '@/ui/button';
 import { Card } from '@/ui/card';
 import { dialog } from '@/ui/dialog';
@@ -23,16 +23,17 @@ import { useFilePort } from './file-port';
 import { PORTABLE_PREF_KEYS } from './portable-prefs';
 import { exportBackup } from './transfer-actions';
 
-const WHEN = new Intl.DateTimeFormat('pt-BR', {
-  day: '2-digit',
-  month: 'short',
-  hour: '2-digit',
-  minute: '2-digit',
-});
-
 export function BackupScreen() {
   const repos = useRepos();
   const t = useT();
+  const language = useLanguage();
+  const when = new Intl.DateTimeFormat(language, {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
   const changed = useDataChanged();
   const port = useFilePort();
   const [withHistory, setWithHistory] = useState(true);
@@ -67,7 +68,7 @@ export function BackupScreen() {
       await exportBackup(repos, port, withHistory);
       setExported(true);
     } catch {
-      setMessage({ tone: 'danger', text: 'Não deu para gerar o backup. Tente de novo.' });
+      setMessage({ tone: 'danger', text: t.transfer.exportFailed });
     }
   }
 
@@ -79,42 +80,34 @@ export function BackupScreen() {
       await repos.transfer.dropRestorePoint();
       changed();
       setRestorePoint(null);
-      setMessage({ tone: 'positive', text: 'Pronto: tudo voltou a como estava antes.' });
+      setMessage({ tone: 'positive', text: t.transfer.undone });
     } catch (error) {
       setMessage({
         tone: 'danger',
-        text:
-          error instanceof ActiveSessionError
-            ? 'Há um treino em andamento. Termine ou encerre o treino antes de desfazer.'
-            : 'Não deu para desfazer. Nada foi alterado.',
+        text: error instanceof ActiveSessionError ? t.transfer.activeUndo : t.transfer.undoFailed,
       });
     }
   }
 
   return (
     <Screen>
-      <TopBar title="Backup" />
+      <TopBar title={t.transfer.backup} />
       <View style={styles.content}>
         <Card style={styles.card}>
           <Text variant="label" accessibilityRole="header">
-            Exportar backup
+            {t.transfer.export}
           </Text>
-          <Text color="textMuted">
-            Rotinas, favoritas, avisos e jeito de ver o treino, num arquivo .cronobr. Abre no
-            Android e no iPhone. Ficam de fora permissões do aparelho e treino em andamento.
-          </Text>
+          <Text color="textMuted">{t.transfer.exportIntro}</Text>
           <View style={styles.option}>
             <View style={styles.grow}>
-              <Text variant="label">Incluir histórico</Text>
+              <Text variant="label">{t.transfer.includeHistory}</Text>
               <Text variant="caption" color="textMuted">
-                {historyCount === 1
-                  ? '1 treino registrado'
-                  : `${String(historyCount)} treinos registrados`}
+                {t.transfer.recorded(historyCount)}
               </Text>
             </View>
             <Switch
               value={withHistory}
-              accessibilityLabel="Incluir histórico"
+              accessibilityLabel={t.transfer.includeHistory}
               onValueChange={(value) => {
                 setWithHistory(value);
                 setExported(false);
@@ -122,8 +115,8 @@ export function BackupScreen() {
             />
           </View>
           <Button
-            label="Exportar backup"
-            done={exported ? 'Backup pronto' : undefined}
+            label={t.transfer.export}
+            done={exported ? t.transfer.backupReady : undefined}
             onPress={() => {
               void runExport();
             }}
@@ -132,14 +125,11 @@ export function BackupScreen() {
 
         <Card style={styles.card}>
           <Text variant="label" accessibilityRole="header">
-            Importar
+            {t.transfer.importTitle}
           </Text>
-          <Text color="textMuted">
-            Uma rotina que alguém mandou ou um backup seu. Você vê o que tem no arquivo antes de
-            confirmar.
-          </Text>
+          <Text color="textMuted">{t.transfer.openIntro}</Text>
           <Button
-            label="Abrir arquivo"
+            label={t.transfer.openFile}
             kind="secondary"
             onPress={() => {
               void port.pick().then((picked) => {
@@ -152,29 +142,25 @@ export function BackupScreen() {
         {restorePoint ? (
           <Card style={styles.card}>
             <Text variant="label" accessibilityRole="header">
-              Desfazer a última restauração
+              {t.transfer.undoRestore}
             </Text>
             <Text color="textMuted">
-              {`Cópia de como estava em ${WHEN.format(restorePoint.createdAt)}, antes de substituir tudo.`}
+              {t.transfer.restorePoint(when.format(restorePoint.createdAt))}
             </Text>
             <Button
-              label="Voltar ao estado anterior"
+              label={t.transfer.previousState}
               kind="secondary"
               onPress={() => {
-                dialog.alert(
-                  'Voltar ao estado anterior?',
-                  'Rotinas, preferências e histórico voltam a como estavam antes da restauração.',
-                  [
-                    { text: 'Cancelar', style: 'cancel' },
-                    {
-                      text: 'Desfazer',
-                      style: 'destructive',
-                      onPress: () => {
-                        void undo(restorePoint);
-                      },
+                dialog.alert(t.transfer.previousStateTitle, t.transfer.previousStateBody, [
+                  { text: t.transfer.cancel, style: 'cancel' },
+                  {
+                    text: t.transfer.undo,
+                    style: 'destructive',
+                    onPress: () => {
+                      void undo(restorePoint);
                     },
-                  ],
-                );
+                  },
+                ]);
               }}
             />
           </Card>
@@ -183,8 +169,7 @@ export function BackupScreen() {
         {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
 
         <Text variant="caption" color="textMuted">
-          Sons vão pelo nome e tocam iguais em qualquer aparelho. A voz é a do aparelho em
-          português. Áudio próprio ainda não existe no app.
+          {t.transfer.soundsHint}
         </Text>
       </View>
     </Screen>

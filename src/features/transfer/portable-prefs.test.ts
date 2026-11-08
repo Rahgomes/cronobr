@@ -1,4 +1,5 @@
 import { DEFAULT_CUE_PREFS } from '@/domain/cues';
+import { pt } from '@/i18n/messages/pt';
 
 import { PORTABLE_PREF_KEYS, portablePrefs } from './portable-prefs';
 
@@ -17,6 +18,7 @@ describe('preferências portáveis', () => {
     const { prefs } = portablePrefs(
       { cronometro: { laps: [] }, 'rascunho:x': {}, 'legacy.import': 1, sessao: { view: 'foco' } },
       new Set(),
+      pt.transfer,
     );
     expect(prefs).toEqual({ sessao: { view: 'foco', lockOnStart: true } });
   });
@@ -25,6 +27,7 @@ describe('preferências portáveis', () => {
     const { prefs, notes } = portablePrefs(
       { avisos: { voice: true, sounds: { work: 'trombeta', rest: 'gong' } } },
       new Set(),
+      pt.transfer,
     );
     expect(prefs.avisos).toMatchObject({
       sounds: { work: DEFAULT_CUE_PREFS.sounds.work, rest: 'gong' },
@@ -33,7 +36,9 @@ describe('preferências portáveis', () => {
       'Som que não existe nesta versão: ficou o som padrão.',
       'Voz: usa a voz deste aparelho, na língua do app.',
     ]);
-    expect(portablePrefs({ avisos: { voice: false, sounds: 'x' } }, new Set()).notes).toEqual([]);
+    expect(
+      portablePrefs({ avisos: { voice: false, sounds: 'x' } }, new Set(), pt.transfer).notes,
+    ).toEqual([]);
   });
 
   it('favorita sem rotina correspondente sai, com aviso; nome do temporizador limitado', () => {
@@ -43,10 +48,11 @@ describe('preferências portáveis', () => {
         'rapido.temporizador': { seconds: 60, name: 'x'.repeat(99) },
       },
       new Set(['a']),
+      pt.transfer,
     );
     expect(prefs.favoritos).toEqual(['a']);
     expect(notes).toEqual(['Favoritas de rotinas que não vieram no arquivo ficaram de fora.']);
     expect((prefs['rapido.temporizador'] as { name: string }).name).toHaveLength(60);
-    expect(portablePrefs({ favoritos: ['a'] }, new Set(['a'])).notes).toEqual([]);
+    expect(portablePrefs({ favoritos: ['a'] }, new Set(['a']), pt.transfer).notes).toEqual([]);
   });
 });

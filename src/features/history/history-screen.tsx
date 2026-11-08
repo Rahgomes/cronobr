@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useRepos } from '@/data/data-context';
 import type { HistoryPage } from '@/data/repos';
+import type { Language } from '@/domain/appearance';
 import {
   countByDay,
   dayKey,
@@ -16,6 +17,8 @@ import {
 } from '@/domain/calendar';
 import { duration } from '@/domain/format';
 import type { HistoryEntry } from '@/domain/history';
+import { useLanguage, useT } from '@/i18n/i18n-context';
+import type { Messages } from '@/i18n/messages/pt';
 import { Button } from '@/ui/button';
 import { Card } from '@/ui/card';
 import { ListScreen } from '@/ui/screen';
@@ -25,26 +28,34 @@ import { TopBar } from '@/ui/top-bar';
 
 import { dayTitle, HistoryCalendar } from './history-calendar';
 
-export const DATE = new Intl.DateTimeFormat('pt-BR', {
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-});
+export const DATE = (language: Language) =>
+  new Intl.DateTimeFormat(language, {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
-export function statusLine(entry: HistoryEntry): string {
+export function statusLine(entry: HistoryEntry, t: Messages): string {
   const done = entry.status === 'completed';
-  return `${done ? 'Concluído' : 'Encerrado antes do fim'} · ${duration(entry.activeMs)} · ${String(entry.workDone)}/${String(entry.workTotal)} exercícios`;
+  return t.history.statusLine(done, duration(entry.activeMs), entry.workDone, entry.workTotal);
 }
 
 function HistoryRow({ entry }: { entry: HistoryEntry }) {
+  const t = useT();
+  const language = useLanguage();
   const done = entry.status === 'completed';
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${entry.routine.name}, ${DATE.format(entry.endedAt)}, ${statusLine(entry)}${entry.note ? ', com nota' : ''}`}
-      accessibilityHint="Abre o treino: nota e repetir"
+      accessibilityLabel={t.history.rowLabel(
+        entry.routine.name,
+        DATE(language).format(entry.endedAt),
+        statusLine(entry, t),
+        Boolean(entry.note),
+      )}
+      accessibilityHint={t.history.openHint}
       onPress={() => {
         router.push({ pathname: '/historico/[id]', params: { id: entry.id } });
       }}
@@ -52,11 +63,11 @@ function HistoryRow({ entry }: { entry: HistoryEntry }) {
     >
       <Card>
         <Text variant="label">{entry.routine.name}</Text>
-        <Text color="textMuted">{DATE.format(entry.endedAt)}</Text>
-        <Text color={done ? 'success' : 'warning'}>{statusLine(entry)}</Text>
+        <Text color="textMuted">{DATE(language).format(entry.endedAt)}</Text>
+        <Text color={done ? 'success' : 'warning'}>{statusLine(entry, t)}</Text>
         {entry.note ? (
           <Text color="textMuted" numberOfLines={2}>
-            Nota: {entry.note}
+            {t.history.noteText(entry.note)}
           </Text>
         ) : null}
       </Card>
@@ -74,6 +85,8 @@ interface DayFilter {
  * dias com treino; tocar num dia mostra só os treinos dele.
  */
 export function HistoryScreen() {
+  const t = useT();
+  const language = useLanguage();
   const repos = useRepos();
   const [now] = useState(() => Date.now());
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
@@ -129,17 +142,11 @@ export function HistoryScreen() {
     <ListScreen
       header={
         <View style={styles.header}>
-          <TopBar title="Histórico" />
-          {total === 0 ? (
-            <Text color="textMuted">
-              Nenhum treino ainda. O primeiro que você terminar aparece aqui.
-            </Text>
-          ) : null}
+          <TopBar title={t.history.title} />
+          {total === 0 ? <Text color="textMuted">{t.history.empty}</Text> : null}
           {total !== null && total > 0 ? (
             <>
-              <Text color="textMuted">
-                {total === 1 ? '1 treino registrado' : `${String(total)} treinos registrados`}
-              </Text>
+              <Text color="textMuted">{t.history.registered(total)}</Text>
               <Card>
                 <HistoryCalendar
                   month={month}
@@ -161,10 +168,10 @@ export function HistoryScreen() {
           {filter ? (
             <View style={styles.filter}>
               <Text variant="label" accessibilityRole="header" style={styles.grow}>
-                Treinos de {dayTitle(filter.day)}
+                {t.history.dayWorkouts(dayTitle(filter.day, language))}
               </Text>
               <Button
-                label="Ver todos"
+                label={t.history.seeAll}
                 kind="text"
                 onPress={() => {
                   setFilter(null);
@@ -180,7 +187,7 @@ export function HistoryScreen() {
       after={
         next && !filter ? (
           <Button
-            label="Carregar mais"
+            label={t.history.loadMore}
             kind="secondary"
             onPress={() => {
               void loadMore(next);

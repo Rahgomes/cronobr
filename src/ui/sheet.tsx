@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 import { KeyboardAvoidingView, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useT } from '@/i18n/i18n-context';
+
 import { DialogHost } from './dialog';
 import { HintProvider } from './hint';
 import { Text } from './text';
@@ -23,6 +25,7 @@ export function Sheet({
   children: ReactNode;
   footer?: ReactNode;
 }) {
+  const t = useT();
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   return (
@@ -40,7 +43,7 @@ export function Sheet({
               </Text>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Fechar"
+                accessibilityLabel={t.ui.close}
                 onPress={onClose}
                 hitSlop={2}
                 style={({ pressed }) => [styles.close, pressed && styles.closePressed]}

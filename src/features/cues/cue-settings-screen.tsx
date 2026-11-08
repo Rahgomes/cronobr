@@ -1,6 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { SOUND_IDS, type CuePrefs, type SoundSlot } from '@/domain/cues';
+import { useT } from '@/i18n/i18n-context';
 import { Card } from '@/ui/card';
 import { Chip } from '@/ui/chip';
 import { Screen } from '@/ui/screen';
@@ -11,30 +12,30 @@ import { space } from '@/ui/tokens';
 import { TopBar } from '@/ui/top-bar';
 
 import { useCues } from './cue-context';
-import { SLOT_LABEL, SOUND_LABEL } from './labels';
 
 type Toggle = 'sound' | 'voice' | 'vibration' | 'countdown';
-
-const TOGGLES: { key: Toggle; label: string; hint: string }[] = [
-  { key: 'sound', label: 'Som', hint: 'Um som próprio em cada troca de fase.' },
-  { key: 'countdown', label: 'Contagem 3, 2, 1', hint: 'Beep curto nos 3 últimos segundos.' },
-  { key: 'voice', label: 'Voz', hint: 'Diz o exercício, o tempo e o próximo.' },
-  { key: 'vibration', label: 'Vibração', hint: 'Para o celular no bolso, sem fone.' },
-];
 
 const SLOTS: SoundSlot[] = ['prep', 'work', 'rest', 'finish'];
 
 /** Som, voz e vibração: canais independentes (P4), com prévia ao escolher o som. */
 export function CueSettingsScreen() {
+  const t = useT();
+  const toggles: { key: Toggle; label: string; hint: string }[] = [
+    { key: 'sound', label: t.cues.sound, hint: t.cues.soundHint },
+    { key: 'countdown', label: t.cues.countdown, hint: t.cues.countdownHint },
+    { key: 'voice', label: t.cues.voice, hint: t.cues.voiceHint },
+    { key: 'vibration', label: t.cues.vibration, hint: t.cues.vibrationHint },
+  ];
+
   const { prefs, setPrefs, port } = useCues();
   const update = (patch: Partial<CuePrefs>) => {
     setPrefs({ ...prefs, ...patch });
   };
   return (
     <Screen>
-      <TopBar title="Som e avisos" />
+      <TopBar title={t.cues.title} />
       <Card>
-        {TOGGLES.map(({ key, label, hint }) => (
+        {toggles.map(({ key, label, hint }) => (
           <View key={key} style={styles.row}>
             <View style={styles.rowText}>
               <Text variant="label">{label}</Text>
@@ -46,7 +47,7 @@ export function CueSettingsScreen() {
               value={prefs[key]}
               accessibilityLabel={label}
               disabled={key === 'countdown' && !prefs.sound}
-              disabledHint="Ligue o som para usar a contagem."
+              disabledHint={t.cues.enableSound}
               onValueChange={(value) => {
                 update({ [key]: value });
               }}
@@ -58,12 +59,12 @@ export function CueSettingsScreen() {
       {prefs.sound
         ? SLOTS.map((slot) => (
             <View key={slot} style={styles.group}>
-              <SectionTitle>{SLOT_LABEL[slot]}</SectionTitle>
-              <View style={styles.chips} accessibilityLabel={`Som de ${SLOT_LABEL[slot]}`}>
+              <SectionTitle>{t.cues.slots[slot]}</SectionTitle>
+              <View style={styles.chips} accessibilityLabel={t.cues.slotSound(t.cues.slots[slot])}>
                 {SOUND_IDS.map((sound) => (
                   <Chip
                     key={sound}
-                    label={SOUND_LABEL[sound]}
+                    label={t.cues.sounds[sound]}
                     selected={prefs.sounds[slot] === sound}
                     onPress={() => {
                       port.preview(sound);
@@ -77,8 +78,7 @@ export function CueSettingsScreen() {
         : null}
 
       <Text variant="caption" color="textMuted">
-        Com a tela bloqueada, as trocas de fase chegam como notificação com o mesmo som. O volume
-        segue o do aparelho, e o modo silencioso é respeitado.
+        {t.cues.lockedHint}
       </Text>
     </Screen>
   );
