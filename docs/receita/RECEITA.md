@@ -139,3 +139,6 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   `aria-disabled` com a prop `disabled`; botão que fica clicável para explicar o motivo é lido
   como ativo e o axe reprova o contraste. Onde a ação não existe, escrever o motivo no lugar.
 
+- **08/11 — Mostrar só o que já gravou:** favorita aparecia marcada antes do banco terminar e o
+  reload do E2E no CI (máquina lenta) perdia. Local passava sempre. Preferência pequena: grava e
+  depois atualiza a tela. O axe também precisou esperar o `Modal` do RN-web ganhar `role="dialog"`.
