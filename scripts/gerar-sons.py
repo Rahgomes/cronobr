@@ -44,7 +44,7 @@ def concat(*parts, gap=0.0):
     return out
 
 
-def write(name, samples, peak=0.85):
+def write(name, samples, peak=0.7):
     top = max(abs(s) for s in samples) or 1.0
     frames = b''.join(struct.pack('<h', int(s / top * peak * 32767)) for s in samples)
     with wave.open(str(OUT / f'{name}.wav'), 'wb') as w:
@@ -56,9 +56,11 @@ def write(name, samples, peak=0.85):
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    beep = [(880, 1.0), (1760, 0.15)]
-    write('beepShort', tone(0.12, beep, None))
-    write('beepLong', tone(0.6, beep, None))
+    # Beeps: seno quase puro em dó agudo, com ataque e queda suaves (o quadrado de antes
+    # incomodava). Mais baixos que os outros: tocam muitas vezes.
+    beep = [(1046.5, 1.0), (2093, 0.05)]
+    write('beepShort', tone(0.11, beep, 0.09, attack=0.008), peak=0.45)
+    write('beepLong', tone(0.5, beep, 0.35, attack=0.01), peak=0.5)
     # Sino de ringue: parciais inarmônicas de metal, dois toques.
     ring = [(620, 1.0), (1485, 0.6), (2340, 0.4), (3210, 0.25), (4050, 0.12)]
     ding = tone(0.55, ring, 0.35, attack=0.002)

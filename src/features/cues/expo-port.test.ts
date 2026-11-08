@@ -8,10 +8,14 @@ import { Platform } from 'react-native';
 import type { PlannedAlert } from '@/domain/alerts';
 import { must } from '@/test/domain';
 
-import { createExpoPort } from './expo-port';
+import { createExpoPort, SPEECH_AFTER_MS } from './expo-port';
 
 jest.mock('expo-audio', () => ({
-  createAudioPlayer: jest.fn(() => ({ seekTo: jest.fn(() => Promise.resolve()), play: jest.fn() })),
+  createAudioPlayer: jest.fn(() => ({
+    seekTo: jest.fn(() => Promise.resolve()),
+    play: jest.fn(),
+    volume: 1,
+  })),
   setAudioModeAsync: jest.fn(() => Promise.resolve()),
 }));
 jest.mock('expo-haptics', () => ({
@@ -94,6 +98,41 @@ describe('porta real dos avisos', () => {
     port.play({ sound: 'gong', speech: 'Descanso', haptic: null });
     await flush();
     expect(Speech.speak).toHaveBeenCalledWith('Descanso', { language: 'pt-BR' });
+  });
+
+  it('som e voz juntos: a voz espera o ataque do som e o som baixa por baixo dela', () => {
+    jest.useFakeTimers();
+    const port = createExpoPort();
+    port.play({ sound: 'bell', speech: 'Vai, 20 segundos', haptic: null });
+    const player = jest.mocked(createAudioPlayer).mock.results[0]?.value as { volume: number };
+    jest.advanceTimersByTime(SPEECH_AFTER_MS - 1);
+    expect(Speech.stop).not.toHaveBeenCalled();
+    expect(player.volume).toBe(1);
+    jest.advanceTimersByTime(1);
+    expect(player.volume).toBe(0.25);
+    expect(Speech.stop).toHaveBeenCalled();
+    jest.useRealTimers();
+  });
+
+  it('beep curto: a voz espera só o próprio beep', () => {
+    jest.useFakeTimers();
+    const port = createExpoPort();
+    port.play({ sound: 'beepShort', speech: 'Metade', haptic: null });
+    jest.advanceTimersByTime(109);
+    expect(Speech.stop).not.toHaveBeenCalled();
+    jest.advanceTimersByTime(1);
+    expect(Speech.stop).toHaveBeenCalled();
+    jest.useRealTimers();
+  });
+
+  it('aviso novo antes da voz entrar descarta a frase velha', () => {
+    jest.useFakeTimers();
+    const port = createExpoPort();
+    port.play({ sound: 'gong', speech: 'Descanso', haptic: null });
+    port.play({ sound: null, speech: null, haptic: 'tick' });
+    jest.advanceTimersByTime(5_000);
+    expect(Speech.stop).not.toHaveBeenCalled();
+    jest.useRealTimers();
   });
 
   it('voz: a frase nova interrompe a anterior', async () => {

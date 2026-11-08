@@ -24,6 +24,21 @@ const SOURCES: Record<SoundId, number> = {
   finish: require('@assets/sounds/finish.wav') as number,
 };
 
+/**
+ * Som e voz juntos viram ruído: a voz entra depois do ataque do som (no máximo SPEECH_AFTER_MS)
+ * e, a partir daí, o som segue baixinho por baixo dela.
+ */
+export const SPEECH_AFTER_MS = 650;
+const SOUND_MS: Record<SoundId, number> = {
+  beepShort: 110,
+  beepLong: 500,
+  bell: 2560,
+  gong: 3000,
+  whistle: 900,
+  finish: 1520,
+};
+const UNDER_SPEECH_VOLUME = 0.25;
+
 const KEEP_AWAKE_TAG = 'sessao';
 const SILENT_CHANNEL = 'avisos-sem-som';
 const channelFor = (sound: SoundId | null) => (sound ? `avisos-${sound}` : SILENT_CHANNEL);
@@ -122,34 +137,55 @@ export function createExpoPort(): CuePort {
   // Agendamentos em fila: um cancelar-e-agendar não pode se misturar com o seguinte.
   let queue: Promise<void> = Promise.resolve();
 
-  function playSound(sound: SoundId) {
+  let pendingSpeech: ReturnType<typeof setTimeout> | null = null;
+
+  function playSound(sound: SoundId): AudioPlayer | null {
     try {
       let player = players.get(sound);
       if (!player) {
         player = createAudioPlayer(SOURCES[sound]);
         players.set(sound, player);
       }
+      player.volume = 1;
       player.seekTo(0).catch(ignore);
       player.play();
+      return player;
     } catch {
       // Som que não toca não derruba o treino.
+      return null;
     }
+  }
+
+  function speak(text: string, under: AudioPlayer | null) {
+    if (under) under.volume = UNDER_SPEECH_VOLUME;
+    // A frase nova substitui a anterior: nunca uma fila de avisos atrasados.
+    Speech.stop()
+      .catch(ignore)
+      .finally(() => {
+        Speech.speak(text, { language: 'pt-BR' });
+      });
   }
 
   return {
     play: ({ sound, speech, haptic }) => {
-      if (sound) playSound(sound);
+      if (pendingSpeech) clearTimeout(pendingSpeech);
+      pendingSpeech = null;
+      const player = sound ? playSound(sound) : null;
       if (haptic) vibrate(haptic);
-      if (speech) {
-        // A frase nova substitui a anterior: nunca uma fila de avisos atrasados.
-        Speech.stop()
-          .catch(ignore)
-          .finally(() => {
-            Speech.speak(speech, { language: 'pt-BR' });
-          });
+      if (!speech) return;
+      const wait = sound && player ? Math.min(SOUND_MS[sound], SPEECH_AFTER_MS) : 0;
+      if (wait === 0) {
+        speak(speech, null);
+        return;
       }
+      pendingSpeech = setTimeout(() => {
+        pendingSpeech = null;
+        speak(speech, player);
+      }, wait);
     },
-    preview: playSound,
+    preview: (sound) => {
+      playSound(sound);
+    },
     schedule: (alerts) => {
       if (!native) return;
       queue = queue.then(() => replaceAlerts(alerts)).catch(ignore);

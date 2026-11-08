@@ -27,6 +27,7 @@ etapa exige build nativo e registro por cenário (seção 5).
 | D21 | **Contagem 3-2-1 só por beep e vibração**, sem voz | Voz de um segundo atrasa e encavala; o beep curto não |
 | D22 | **Abaixar a música (`duckOthers`) e respeitar o modo silencioso** | A música do usuário continua, mais baixa, durante o aviso |
 | D23 | **Android: `USE_EXACT_ALARM` e entrega `alarmClock`** quando o sistema permite | Timer é a função principal do app, caso previsto pela política da Play. Sem alarme exato, o Android adia o aviso em minutos com a tela apagada. A declaração na Play Console fica para a E08 |
+| D25 | **Voz depois do ataque do som** (até 650 ms) e o som segue a 25% enquanto ela fala. Beeps em seno suave, mais baixos que os demais sons | Retorno do Ramon no APK: som e voz ao mesmo tempo viravam ruído, e o beep do 3-2-1 era áspero. Mais opções de som e a validação final ficam para depois da E04 |
 | D24 | **Voz do aparelho (`expo-speech`, pt-BR) agora; vozes ElevenLabs depois** | O nome do exercício é dinâmico e só uma voz sintetizada no aparelho fala qualquer nome, offline. As vozes gravadas (masculinas e femininas, P8) entram para as frases fixas quando houver a chave da API |
 
 ## 3. Comportamento por situação (o que o código faz; a medição é da seção 5)
