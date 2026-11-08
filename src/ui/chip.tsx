@@ -17,6 +17,8 @@ export function Chip({ label, selected, onPress, disabled = false }: Props) {
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ selected, disabled }}
+      // No web: botão de alternar se anuncia por aria-pressed (aria-selected não vale em botão).
+      aria-pressed={selected}
       disabled={disabled}
       onPress={onPress}
       style={[styles.base, selected && styles.selected]}

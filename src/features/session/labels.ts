@@ -1,12 +1,5 @@
-import type { Phase, Segment } from '@/domain/timeline';
-
-export const PHASE_LABEL: Record<Phase, string> = {
-  prep: 'Preparação',
-  work: 'Exercício',
-  rest: 'Descanso',
-  blockRest: 'Descanso entre blocos',
-  cooldown: 'Desaquecimento',
-};
+import { PHASE_LABEL } from '@/domain/cues';
+import type { Segment } from '@/domain/timeline';
 
 /** "Exercício" ou "Exercício · Agachamento" quando a etapa tem nome próprio. */
 export function segmentTitle(segment: Segment): string {

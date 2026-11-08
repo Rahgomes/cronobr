@@ -4,7 +4,8 @@ import { AppState, type AppStateStatus } from 'react-native';
 import { createSession, start } from '@/domain/engine';
 import { presetById } from '@/domain/presets';
 import { buildTimeline } from '@/domain/timeline';
-import { appRepos, fakeClock, renderApp } from '@/test/app';
+import * as away from '@/features/cues/away';
+import { appRepos, fakeClock, fakePort, renderApp } from '@/test/app';
 import { must } from '@/test/domain';
 import { router, usePreventRemove } from '@/test/expo-router-mock';
 
@@ -28,7 +29,8 @@ afterEach(() => {
 async function open(routineId: string | undefined = 'tabata-classic') {
   const env = await appRepos();
   const clock = fakeClock();
-  await renderApp(<SessionScreen routineId={routineId} clockSource={clock} />, env.repos);
+  const port = fakePort();
+  await renderApp(<SessionScreen routineId={routineId} clockSource={clock} />, env.repos, port);
   /** O relógio anda e o intervalo da tela dispara uma vez (ou várias, se `ticks`). */
   const advance = async (ms: number, ticks = 1) => {
     clock.advance(ms);
@@ -36,7 +38,7 @@ async function open(routineId: string | undefined = 'tabata-classic') {
       jest.advanceTimersByTime(TICK_MS * ticks);
     });
   };
-  return { ...env, clock, advance };
+  return { ...env, clock, port, advance };
 }
 
 async function startTabata() {
@@ -218,6 +220,75 @@ describe('sessão', () => {
       env.repos,
     );
     expect(await screen.findByRole('header', { name: 'Rotina não encontrada' })).toBeOnTheScreen();
+  });
+
+  describe('avisos', () => {
+    it('começar agenda as trocas futuras e acende a tela; pausar cancela e apaga', async () => {
+      const { port, clock } = await startTabata();
+      const plan = must(port.schedule.mock.calls.at(-1))[0];
+      expect(plan).toHaveLength(16);
+      expect(plan[0]).toMatchObject({ at: clock.now().wall + 10_000, title: 'Vai, 20 segundos' });
+      expect(port.keepAwake).toHaveBeenLastCalledWith(true);
+
+      await fireEvent.press(screen.getByRole('button', { name: 'Pausar' }));
+      expect(port.schedule).toHaveBeenLastCalledWith([]);
+      expect(port.keepAwake).toHaveBeenLastCalledWith(false);
+
+      await fireEvent.press(screen.getByRole('button', { name: 'Retomar' }));
+      expect(must(port.schedule.mock.calls.at(-1))[0]).toHaveLength(16);
+    });
+
+    it('troca de fase com o app na tela toca o som, fala e vibra uma vez', async () => {
+      const { port, advance } = await startTabata();
+      port.play.mockClear();
+      await advance(7_000);
+      expect(port.play).toHaveBeenLastCalledWith({
+        sound: 'beepShort',
+        speech: null,
+        haptic: 'tick',
+      });
+      await advance(3_000);
+      expect(port.play).toHaveBeenLastCalledWith({
+        sound: 'bell',
+        speech: 'Vai, 20 segundos',
+        haptic: 'phase',
+      });
+    });
+
+    it('preferências gravadas valem: sem voz, a troca não fala', async () => {
+      const env = await appRepos();
+      await env.repos.prefs.set('avisos', { voice: false });
+      const port = fakePort();
+      const clock = fakeClock();
+      await renderApp(
+        <SessionScreen routineId="tabata-classic" clockSource={clock} />,
+        env.repos,
+        port,
+      );
+      await fireEvent.press(await screen.findByRole('button', { name: 'Começar' }));
+      clock.advance(10_000);
+      await act(() => {
+        jest.advanceTimersByTime(TICK_MS);
+      });
+      expect(port.play).toHaveBeenLastCalledWith({ sound: 'bell', speech: null, haptic: 'phase' });
+    });
+
+    it('com o app fora da tela não toca nada: quem avisa é a notificação', async () => {
+      const { port, advance } = await startTabata();
+      port.play.mockClear();
+      const spy = jest.spyOn(away, 'isAway').mockReturnValue(true);
+      await advance(10_000);
+      expect(port.play).not.toHaveBeenCalled();
+      spy.mockRestore();
+    });
+
+    it('encerrar cancela os avisos agendados', async () => {
+      const { port } = await startTabata();
+      await fireEvent.press(screen.getByRole('button', { name: 'Encerrar treino' }));
+      await fireEvent.press(screen.getByRole('button', { name: 'Encerrar' }));
+      expect(port.schedule).toHaveBeenLastCalledWith([]);
+      expect(port.keepAwake).toHaveBeenLastCalledWith(false);
+    });
   });
 
   it('rotina inexistente ou sem rotina: explica e volta', async () => {

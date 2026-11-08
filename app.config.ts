@@ -12,7 +12,12 @@ const config: ExpoConfig = {
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
   icon: './assets/images/icon.png',
-  ios: { bundleIdentifier: 'com.cronobr.app', supportsTablet: true },
+  ios: {
+    bundleIdentifier: 'com.cronobr.app',
+    supportsTablet: true,
+    // Aviso de troca de fase fura o modo Foco (finalidade legítima de timer, E03).
+    entitlements: { 'com.apple.developer.usernotifications.time-sensitive': true },
+  },
   android: {
     package: 'com.cronobr.app',
     adaptiveIcon: {
@@ -21,10 +26,23 @@ const config: ExpoConfig = {
       monochromeImage: './assets/images/android-icon-monochrome.png',
       backgroundColor: '#FF6B35',
     },
+    // Timer é função principal do app: a política da Play permite USE_EXACT_ALARM (concedida
+    // na instalação). Sem ela, o Android pode atrasar o aviso de troca de fase em minutos.
+    permissions: ['android.permission.USE_EXACT_ALARM'],
   },
   web: { output: 'single', favicon: './assets/images/favicon.png', bundler: 'metro' },
   plugins: [
     'expo-router',
+    ['expo-audio', { microphonePermission: false }],
+    [
+      'expo-notifications',
+      {
+        // Os mesmos .wav do app tocam nas notificações (iOS até 30 s; Android por canal).
+        sounds: ['beepShort', 'beepLong', 'bell', 'gong', 'whistle', 'finish'].map(
+          (name) => `./assets/sounds/${name}.wav`,
+        ),
+      },
+    ],
     [
       'expo-splash-screen',
       {

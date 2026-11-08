@@ -54,11 +54,14 @@ export function useSessionRunner({
   repo,
   clock,
   onEvents,
+  onMilestone,
 }: {
   initial: Session;
   repo: SessionRepo;
   clock: Clock;
   onEvents?: (events: SessionEvent[], snap: Snapshot) => void;
+  /** Marco por ação (começar, pausar, pular, sair ou voltar à tela): hora de refazer avisos. */
+  onMilestone?: (session: Session, now: Instant) => void;
 }): Runner {
   const timeline = useMemo(() => buildTimeline(initial.routine), [initial.routine]);
   const sessionRef = useRef(initial);
@@ -71,9 +74,9 @@ export function useSessionRunner({
   const [saveFailed, setSaveFailed] = useState(false);
   const [progressFailed, setProgressFailed] = useState(false);
   // O intervalo e o AppState vivem além de um render: leem sempre a versão atual por ref.
-  const latest = useRef({ repo, clock, onEvents });
+  const latest = useRef({ repo, clock, onEvents, onMilestone });
   useEffect(() => {
-    latest.current = { repo, clock, onEvents };
+    latest.current = { repo, clock, onEvents, onMilestone };
   });
 
   function finalize(session: Session) {
@@ -118,6 +121,7 @@ export function useSessionRunner({
     const current = sessionRef.current;
     const next = step(current, now);
     if (next !== current) apply(next, now, true);
+    latest.current.onMilestone?.(next, now);
   }
 
   function tick() {

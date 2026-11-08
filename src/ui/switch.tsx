@@ -49,6 +49,8 @@ export function Switch({
       accessibilityRole="switch"
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ checked: value, disabled }}
+      // No web o accessibilityState não vira aria-checked, e role=switch sem ele é inválido.
+      aria-checked={value}
       accessibilityHint={blocked.explains ? disabledHint : undefined}
       disabled={blocked.pressDisabled}
       hitSlop={(touch.minTarget - TRACK_H) / 2}

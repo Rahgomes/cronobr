@@ -1,10 +1,13 @@
 import { SplashScreen, Stack, type ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { DataProvider } from '@/data/data-context';
+import { CueProvider } from '@/features/cues/cue-context';
+import { createExpoPort } from '@/features/cues/expo-port';
 import { Button } from '@/ui/button';
 import { DialogHost } from '@/ui/dialog';
 import { HintProvider } from '@/ui/hint';
@@ -56,6 +59,7 @@ function AppStack() {
 }
 
 export default function RootLayout() {
+  const [port] = useState(createExpoPort);
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
@@ -63,7 +67,9 @@ export default function RootLayout() {
         <ThemeProvider mode="auto">
           <HintProvider>
             <DataProvider>
-              <AppStack />
+              <CueProvider port={port}>
+                <AppStack />
+              </CueProvider>
             </DataProvider>
           </HintProvider>
         </ThemeProvider>

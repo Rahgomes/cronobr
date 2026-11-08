@@ -64,6 +64,8 @@ describe('Início', () => {
     expect(router.push).toHaveBeenCalledWith('/modalidades');
     await fireEvent.press(screen.getByRole('button', { name: 'Histórico' }));
     expect(router.push).toHaveBeenCalledWith('/historico');
+    await fireEvent.press(screen.getByRole('button', { name: 'Som e avisos' }));
+    expect(router.push).toHaveBeenCalledWith('/avisos');
   });
 
   it('recentes: um card por rotina, o mais novo primeiro, e tocar repete aquele registro', async () => {

@@ -7,6 +7,8 @@ import { DataProvider } from '@/data/data-context';
 import type { Repos } from '@/data/repos';
 import { sqliteRepos } from '@/data/sqlite-repos';
 import type { Instant } from '@/domain/engine';
+import { CueProvider } from '@/features/cues/cue-context';
+import type { CuePort } from '@/features/cues/port';
 import { DialogHost } from '@/ui/dialog';
 import { ThemeProvider } from '@/ui/theme-context';
 
@@ -22,13 +24,18 @@ export async function appRepos() {
   return { db, raw, repos: sqliteRepos(db) };
 }
 
-export async function renderApp(ui: ReactElement, repos: Repos) {
+export async function renderApp(ui: ReactElement, repos: Repos, port?: CuePort) {
+  const content = (
+    <>
+      {ui}
+      <DialogHost />
+    </>
+  );
   await render(
     <SafeAreaProvider initialMetrics={METRICS}>
       <ThemeProvider mode="dark">
         <DataProvider open={() => Promise.resolve(repos)}>
-          {ui}
-          <DialogHost />
+          {port ? <CueProvider port={port}>{content}</CueProvider> : content}
         </DataProvider>
       </ThemeProvider>
     </SafeAreaProvider>,
@@ -54,4 +61,15 @@ export function fakeClock(start = 0, wallOffset = 1_700_000_000_000) {
       state.mono = 0;
     },
   };
+}
+
+/** Porta de avisos falsa: registra o que a tela pediu para tocar, agendar e manter acesa. */
+export function fakePort() {
+  const port = {
+    play: jest.fn<undefined, Parameters<CuePort['play']>>(),
+    preview: jest.fn<undefined, Parameters<CuePort['preview']>>(),
+    schedule: jest.fn<undefined, Parameters<CuePort['schedule']>>(),
+    keepAwake: jest.fn<undefined, Parameters<CuePort['keepAwake']>>(),
+  };
+  return port satisfies CuePort;
 }

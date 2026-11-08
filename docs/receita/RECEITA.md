@@ -122,3 +122,14 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   apareceu na captura de tela, não em teste: conferir o visual exportado antes de fechar.
 - **07/11 — Texto sobre foto:** faixa escura fixa (scrim) embaixo do card e contraste medido no
   pior caso em `theme.test.ts`, em vez de confiar na foto ser escura.
+- **08/11 — Avisos atrás de uma porta:** a sessão fala com `CuePort` (tocar, agendar, manter a
+  tela acesa); o adaptador nativo é um arquivo só e os testes de tela usam um falso que registra
+  as chamadas. Deu para provar com banco real que pausar cancela os avisos e retomar reagenda,
+  sem módulo nativo no Jest.
+- **08/11 — "Fora da tela" com uma regra só:** notificação e app decidem quem toca pela mesma
+  função. Duas regras parecidas em lugares diferentes é aviso dobrado ou mudo no aparelho.
+- **08/11 — axe no web pega o kit:** `accessibilityState` do RN não vira `aria-checked` nem
+  `aria-pressed` no react-native-web. Interruptor e chip precisam do atributo `aria-*` explícito.
+- **08/11 — Sons por síntese:** um script em Python gera o pacote (beep, sino, gongo, apito,
+  conclusão) e o mesmo .wav serve ao app e à notificação. Sem licença de terceiros para cuidar.
+

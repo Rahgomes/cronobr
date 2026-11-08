@@ -1,12 +1,17 @@
 import { router, usePreventRemove } from 'expo-router';
+import { useEffect } from 'react';
 import { AccessibilityInfo, StyleSheet, View } from 'react-native';
 
 import { useRepos } from '@/data/data-context';
+import { planAlerts } from '@/domain/alerts';
+import { cuesFor, PHASE_LABEL } from '@/domain/cues';
 import type { Session } from '@/domain/engine';
 import type { SessionEvent } from '@/domain/events';
 import { clock, duration } from '@/domain/format';
 import { historyFromSession } from '@/domain/history';
 import { summarize } from '@/domain/timeline';
+import { isAway } from '@/features/cues/away';
+import { useCues } from '@/features/cues/cue-context';
 import { Button } from '@/ui/button';
 import { Card } from '@/ui/card';
 import { dialog } from '@/ui/dialog';
@@ -17,7 +22,7 @@ import { space } from '@/ui/tokens';
 import { RoundAction } from '@/ui/top-bar';
 
 import { systemClock, type Clock } from './clock';
-import { PHASE_LABEL, roundLabel, segmentTitle } from './labels';
+import { roundLabel, segmentTitle } from './labels';
 import { useSessionRunner } from './use-session-runner';
 
 /** Leitor de tela ouve a troca de fase; contagem e meio do tempo viram som na E03. */
@@ -35,11 +40,17 @@ export function SessionView({
   clockSource?: Clock;
 }) {
   const repos = useRepos();
+  const { port, prefs } = useCues();
   const runner = useSessionRunner({
     initial,
     repo: repos.session,
     clock: clockSource,
+    onMilestone: (next, now) => {
+      port.schedule(planAlerts(next, runner.timeline, now, prefs));
+    },
     onEvents: (events) => {
+      // Fora da tela quem avisa são as notificações agendadas; tocar aqui também dobraria.
+      if (!isAway()) port.play(cuesFor(events, runner.timeline, prefs));
       announce(events);
       const phase = events.find((event) => event.type === 'phase');
       const segment = phase ? runner.timeline[phase.segment] : undefined;
@@ -48,6 +59,19 @@ export function SessionView({
   });
   const { session, snap, timeline } = runner;
   const active = session.status === 'running' || session.status === 'paused';
+  const running = session.status === 'running';
+
+  // Tela acesa só rodando; ao sair da tela de sessão, nada fica agendado nem aceso.
+  useEffect(() => {
+    port.keepAwake(running);
+  }, [port, running]);
+  useEffect(
+    () => () => {
+      port.keepAwake(false);
+      port.schedule([]);
+    },
+    [port],
+  );
 
   function confirmStop() {
     dialog.alert('Encerrar o treino?', 'O que você já fez fica salvo no histórico.', [

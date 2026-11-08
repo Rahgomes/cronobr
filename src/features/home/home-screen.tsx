@@ -70,13 +70,22 @@ export function HomeScreen() {
     <Screen>
       <View style={styles.top}>
         <BrandMark height={36} />
-        <RoundAction
-          icon="history"
-          label="Histórico"
-          onPress={() => {
-            router.push('/historico');
-          }}
-        />
+        <View style={styles.actions}>
+          <RoundAction
+            icon="history"
+            label="Histórico"
+            onPress={() => {
+              router.push('/historico');
+            }}
+          />
+          <RoundAction
+            icon="cog-outline"
+            label="Som e avisos"
+            onPress={() => {
+              router.push('/avisos');
+            }}
+          />
+        </View>
       </View>
 
       {data?.active ? (
@@ -179,5 +188,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: space.sm,
   },
+  actions: { flexDirection: 'row', gap: space.sm },
   list: { gap: space.sm },
 });
