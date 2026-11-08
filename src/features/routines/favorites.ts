@@ -9,7 +9,6 @@ const parseFavorites = (raw: unknown): string[] =>
 
 /**
  * Favoritas: ids de modelos prontos ou rotinas próprias, na ordem em que foram marcados.
- * `version` sobe a cada mudança para quem precisa recarregar (a Início relê ao focar).
  */
 export function useFavorites() {
   const repos = useRepos();
@@ -26,15 +25,16 @@ export function useFavorites() {
       active = false;
     };
   }, [repos]);
+  // Grava primeiro e só então mostra: o que aparece marcado já está no banco.
   const toggle = useCallback(
     (id: string) => {
-      setIds((current) => {
-        const next = current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
-        repos.prefs.set(FAVORITES_KEY, next).catch(() => undefined);
-        return next;
-      });
+      const next = ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id];
+      const show = () => {
+        setIds(next);
+      };
+      repos.prefs.set(FAVORITES_KEY, next).then(show, show);
     },
-    [repos],
+    [repos, ids],
   );
   return { ids, toggle };
 }
