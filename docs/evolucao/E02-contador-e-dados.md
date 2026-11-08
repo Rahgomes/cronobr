@@ -29,7 +29,7 @@ visualizações da sessão (C03) chegam na E04.
 | D13 | **SQLite** (`expo-sqlite`) com uma conexão e fila única; transação em cada gravação composta; `INSERT OR IGNORE` com o id da sessão no histórico | Consistência: concluir grava histórico e apaga a sessão na mesma transação. Volume: histórico sem teto, lido por página (50). Migração: `user_version` versionado, cada passo atômico. O AsyncStorage regravava o JSON inteiro a cada treino e cortava em 100 |
 | D14 | **Validar limites na entrada, só a forma na leitura** | Se um limite apertar no futuro, o que já foi gravado continua abrindo. Linha ilegível é pulada na lista e fica no banco |
 | D15 | **Importação do app antigo uma vez, numa transação**, sem apagar as chaves antigas. Item ilegível vai para `legacy_problems` com o texto original | Nada se perde, e uma versão futura ainda pode reler. Leitura falhou: nada é marcado e tenta de novo na próxima abertura; o app abre assim mesmo |
-| D16 | **Web com o mesmo SQLite** (wasm + OPFS), com os cabeçalhos COOP/COEP no Metro, no EAS Hosting (plugin `expo-router`) e no E2E (`e2e/serve.json`) | A prévia web testa o mesmo caminho de dados do celular. Limite conhecido: uma aba por vez |
+| D16 | **Web com o mesmo SQLite** (wasm + OPFS), só pela API assíncrona e **sem** cabeçalhos COOP/COEP | A prévia web testa o mesmo caminho de dados do celular. A documentação do pacote pede isolamento da página, mas isso vale para a API síncrona: medido na prévia publicada, sessão gravada e retomada após recarregar sem isolamento. Sem COEP, nada de terceiros (anúncio, fonte) quebra depois. Limite conhecido: uma aba por vez |
 
 ## 3. Limites
 

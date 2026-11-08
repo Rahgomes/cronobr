@@ -10,8 +10,6 @@ test('a Início abre com a marca, o banco local e as rotinas prontas', async ({ 
   await expect(
     page.getByRole('button', { name: 'Tabata clássico, 4:00 · 8 exercícios' }),
   ).toBeVisible();
-  // SQLite no web depende da página isolada (COOP/COEP).
-  expect(await page.evaluate(() => crossOriginIsolated)).toBe(true);
   await expectNoAxeViolations(page);
 });
 

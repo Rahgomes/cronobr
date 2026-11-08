@@ -105,9 +105,11 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   roda mesmo com erro de min/max dentro; lista virtualizada não renderiza o fim no RNTL, então a
   paginação se prova no repositório e a tela só prova o botão.
 - **07/11 — SQLite no web:** `expo-sqlite` roda no navegador (wasm + OPFS) e dá ao E2E o mesmo
-  caminho de dados do celular, mas exige COOP/COEP em três lugares: Metro (dev), plugin
-  `expo-router` (EAS Hosting) e o servidor do E2E (`serve.json`). Conferir `crossOriginIsolated`
-  no E2E.
+  caminho de dados do celular. A doc do pacote manda ligar COOP/COEP, mas isso é para a API
+  síncrona; com só a assíncrona funciona sem. Pegou porque conferi a prévia publicada: o plugin
+  não aplicava os cabeçalhos no EAS Hosting e o E2E local testava uma config que a produção não
+  tinha. Lição: o E2E roda com a mesma config de servidor da produção, e cada exigência da doc
+  se confirma medindo.
 - **07/11 — `page.clock`:** `install()` sozinho deixa o tempo correr de verdade e o texto do
   timer muda durante a checagem. Congelar (`pauseAt`) só com a tela pronta: o banco do web e o
   `axe` usam timers e travam com o relógio parado. Recarregar e rodar o `axe` com `resume()`.

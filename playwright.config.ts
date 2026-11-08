@@ -22,7 +22,7 @@ export default defineConfig({
     { name: 'celular-claro', use: { ...devices['Pixel 7'], colorScheme: 'light' } },
   ],
   webServer: {
-    // Cabeçalhos de isolamento (SQLite no web) e rota única: e2e/serve.json.
+    // Rota única (SPA): e2e/serve.json.
     command: `npx -y serve@14 dist -c ../e2e/serve.json -l ${PORT}`,
     url: `http://127.0.0.1:${PORT}`,
     reuseExistingServer: !env.CI,

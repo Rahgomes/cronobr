@@ -24,16 +24,7 @@ const config: ExpoConfig = {
   },
   web: { output: 'single', favicon: './assets/images/favicon.png', bundler: 'metro' },
   plugins: [
-    // Página isolada no web: o expo-sqlite (wasm) precisa de SharedArrayBuffer.
-    [
-      'expo-router',
-      {
-        headers: {
-          'Cross-Origin-Embedder-Policy': 'credentialless',
-          'Cross-Origin-Opener-Policy': 'same-origin',
-        },
-      },
-    ],
+    'expo-router',
     [
       'expo-splash-screen',
       {
