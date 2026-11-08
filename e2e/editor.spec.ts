@@ -31,8 +31,11 @@ test('editor: copiar um modelo, ajustar, salvar e achar na Início depois de rec
   await page.getByRole('button', { name: 'Opções de Tabata da manhã' }).click();
   await page.getByRole('button', { name: 'Favoritar' }).click();
   await expect(page.getByText('Favoritas')).toBeVisible();
-  await page.reload();
-  await expect(page.getByText('Favoritas')).toBeVisible();
+  // A favorita é gravada em segundo plano: recarrega até o banco ter terminado.
+  await expect(async () => {
+    await page.reload();
+    await expect(page.getByText('Favoritas')).toBeVisible({ timeout: 2000 });
+  }).toPass();
   await expect(
     page.getByRole('button', { name: /^Tabata da manhã, .*, favorita$/ }).first(),
   ).toBeVisible();

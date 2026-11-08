@@ -31,12 +31,7 @@ export function Sheet({
       <HintProvider>
         <KeyboardAvoidingView behavior="padding" style={styles.frame}>
           <View style={styles.scrim} />
-          <SafeAreaView
-            edges={['top', 'bottom']}
-            style={styles.surface}
-            role="dialog"
-            accessibilityViewIsModal
-          >
+          <SafeAreaView edges={['top', 'bottom']} style={styles.surface} accessibilityViewIsModal>
             {/* Visual v2: pegador no topo, título na serifada e o X num botão redondo suave. */}
             <View style={styles.handle} />
             <View style={styles.header}>

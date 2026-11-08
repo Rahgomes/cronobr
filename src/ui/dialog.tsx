@@ -65,12 +65,7 @@ export function DialogHost() {
     >
       <View style={styles.frame}>
         <View style={styles.scrim} />
-        <SafeAreaView
-          edges={['bottom']}
-          style={styles.surface}
-          role="dialog"
-          accessibilityViewIsModal
-        >
+        <SafeAreaView edges={['bottom']} style={styles.surface} accessibilityViewIsModal>
           <View style={styles.handle} />
           <View style={styles.body}>
             <Text variant="title" accessibilityRole="header">
