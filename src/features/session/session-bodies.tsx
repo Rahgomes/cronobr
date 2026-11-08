@@ -7,8 +7,8 @@ import type { Snapshot } from '@/domain/engine';
 import { clock, duration } from '@/domain/format';
 import { overallProgress, phaseProgress, rowState, type RowState } from '@/domain/progress';
 import type { Phase, Segment } from '@/domain/timeline';
-import type { Words } from '@/domain/words';
 import { useT } from '@/i18n/i18n-context';
+import type { Messages } from '@/i18n/messages/pt';
 import { ProgressRing } from '@/ui/progress-ring';
 import { Text } from '@/ui/text';
 import type { Colors } from '@/ui/theme';
@@ -33,6 +33,7 @@ export interface BodyProps {
 
 /** Número grande: o que falta, ou as repetições numa etapa manual. */
 function BigTime({ segment, snap, size, color }: BodyProps & { size: number; color?: string }) {
+  const t = useT();
   const manual = segment.durationMs === null;
   return (
     <Text
@@ -46,23 +47,25 @@ function BigTime({ segment, snap, size, color }: BodyProps & { size: number; col
       accessibilityRole="timer"
       accessibilityLabel={
         manual
-          ? `${String(segment.reps)} repetições`
-          : `Faltam ${duration(Math.ceil((snap.remainingMs ?? 0) / 1000) * 1000)}`
+          ? t.session.repetitions(segment.reps)
+          : t.session.remaining(duration(Math.ceil((snap.remainingMs ?? 0) / 1000) * 1000))
       }
     >
-      {manual ? `${String(segment.reps)} rep.` : clock(snap.remainingMs ?? 0)}
+      {manual ? t.session.repetitionsShort(segment.reps) : clock(snap.remainingMs ?? 0)}
     </Text>
   );
 }
 
-function nextLine(next: Segment | undefined, w: Words): string {
-  if (!next) return 'Última etapa';
-  const time = next.durationMs === null ? `${String(next.reps)} rep.` : clock(next.durationMs);
-  return `Depois: ${segmentTitle(next, w)} ${time}`;
+function nextLine(next: Segment | undefined, t: Messages): string {
+  if (!next) return t.session.lastStep;
+  const time =
+    next.durationMs === null ? t.session.repetitionsShort(next.reps) : clock(next.durationMs);
+  return t.session.nextStep(segmentTitle(next, t.words), time);
 }
 
 /** Barra fina do treino inteiro. */
 function TrainingBar({ timeline, snap }: Omit<BodyProps, 'segment'>) {
+  const t = useT();
   const styles = useThemedStyles(makeStyles);
   const progress = overallProgress(timeline, snap);
   return (
@@ -70,7 +73,7 @@ function TrainingBar({ timeline, snap }: Omit<BodyProps, 'segment'>) {
       style={styles.bar}
       accessible
       accessibilityRole="progressbar"
-      accessibilityLabel="Progresso do treino"
+      accessibilityLabel={t.session.workoutProgress}
       accessibilityValue={{ min: 0, max: 100, now: Math.round(progress * 100) }}
     >
       <View style={[styles.barFill, { width: `${String(progress * 100)}%` }]} />
@@ -80,7 +83,8 @@ function TrainingBar({ timeline, snap }: Omit<BodyProps, 'segment'>) {
 
 /** Anel (C03): o padrão. Etapa atual, próxima, rodada e total. */
 export function RingBody({ timeline, snap, segment }: BodyProps) {
-  const w = useT().words;
+  const t = useT();
+  const w = t.words;
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const round = roundLabel(segment, w);
@@ -106,11 +110,11 @@ export function RingBody({ timeline, snap, segment }: BodyProps) {
         </ProgressRing>
       </View>
       <Text color="textMuted" style={styles.center}>
-        {nextLine(timeline[segment.index + 1], w)}
+        {nextLine(timeline[segment.index + 1], t)}
       </Text>
       <TrainingBar timeline={timeline} snap={snap} />
       <Text color="textMuted" style={styles.center}>
-        Restante no treino: {clock(snap.totalRemainingMs)}
+        {t.session.workoutRemaining(clock(snap.totalRemainingMs))}
       </Text>
     </View>
   );
@@ -118,7 +122,8 @@ export function RingBody({ timeline, snap, segment }: BodyProps) {
 
 /** Foco (C03b): número gigante sobre a cor da fase, pouca informação. */
 export function FocusBody({ timeline, snap, segment }: BodyProps) {
-  const w = useT().words;
+  const t = useT();
+  const w = t.words;
   const name = ownName(segment, w);
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -144,15 +149,15 @@ export function FocusBody({ timeline, snap, segment }: BodyProps) {
         size={120}
         color={colors.onPhase}
       />
-      <Text style={[styles.center, soft]}>{nextLine(timeline[segment.index + 1], w)}</Text>
+      <Text style={[styles.center, soft]}>{nextLine(timeline[segment.index + 1], t)}</Text>
       <View style={styles.facts}>
         {segment.round !== null && segment.rounds !== null ? (
           <View style={styles.fact}>
             <Text variant="label" tabular style={ink}>
-              {`${String(segment.round)}/${String(segment.rounds)}`}
+              {t.session.roundFraction(segment.round, segment.rounds)}
             </Text>
             <Text variant="caption" style={soft}>
-              rodada
+              {t.session.round}
             </Text>
           </View>
         ) : null}
@@ -161,15 +166,13 @@ export function FocusBody({ timeline, snap, segment }: BodyProps) {
             {clock(snap.totalRemainingMs)}
           </Text>
           <Text variant="caption" style={soft}>
-            restante
+            {t.session.remainingLabel}
           </Text>
         </View>
       </View>
     </View>
   );
 }
-
-const STATE_SUFFIX: Record<RowState, string> = { done: ', feita', current: ', agora', next: '' };
 
 /**
  * Lista (C03c): a sequência à frente, a atual destacada e as feitas apagadas. Destravada, tocar
@@ -181,7 +184,9 @@ export function ListBody({
   segment,
   onJump,
 }: BodyProps & { onJump: ((target: Segment) => void) | null }) {
-  const w = useT().words;
+  const t = useT();
+  const suffix: Record<RowState, string> = { ...t.session.stateSuffix, next: '' };
+  const w = t.words;
   const name = ownName(segment, w);
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -214,14 +219,20 @@ export function ListBody({
       <View style={styles.rows}>
         {timeline.map((row) => {
           const state = rowState(row.index, snap);
-          const time = row.durationMs === null ? `${String(row.reps)} rep.` : clock(row.durationMs);
-          const label = `${String(row.index + 1)}. ${segmentTitle(row, w)}, ${time}${STATE_SUFFIX[state]}`;
+          const time =
+            row.durationMs === null ? t.session.repetitionsShort(row.reps) : clock(row.durationMs);
+          const label = t.session.rowLabel(
+            row.index + 1,
+            segmentTitle(row, w),
+            time,
+            suffix[state],
+          );
           return (
             <Pressable
               key={row.index}
               accessibilityRole="button"
               accessibilityLabel={label}
-              accessibilityHint={onJump && state !== 'current' ? 'Ir para esta etapa' : undefined}
+              accessibilityHint={onJump && state !== 'current' ? t.session.jumpHint : undefined}
               disabled={!onJump || state === 'current'}
               onPress={() => {
                 onJump?.(row);
@@ -240,7 +251,7 @@ export function ListBody({
                 {segmentTitle(row, w)}
               </Text>
               <Text tabular color={state === 'done' ? 'textMuted' : 'text'}>
-                {state === 'done' ? `✓ ${time}` : time}
+                {state === 'done' ? t.session.doneTime(time) : time}
               </Text>
             </Pressable>
           );

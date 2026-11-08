@@ -1,10 +1,10 @@
 // Trava de toques (P2), visualizações (P1) e salto pela lista (P3), com banco real.
 import { act, fireEvent, screen } from '@testing-library/react-native';
 
+import { pt } from '@/i18n/messages/pt';
 import { appRepos, fakeClock, fakePort, renderApp } from '@/test/app';
 import { block, routine, step } from '@/test/domain';
 
-import { LOCKED_HINT } from './session-controls';
 import { SessionScreen } from './session-screen';
 import { SESSION_PREFS_KEY } from './session-view';
 import { TICK_MS } from './use-session-runner';
@@ -58,7 +58,7 @@ async function begin({
 describe('trava de toques (P2)', () => {
   it('começa travada: toque simples não pausa; segurar pausa e retoma', async () => {
     await begin();
-    expect(screen.getByText(LOCKED_HINT)).toBeOnTheScreen();
+    expect(screen.getByText(pt.session.lockedHint)).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('button', { name: 'Pausar' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Pular etapa' }));
     expect(screen.queryByText('Pausado')).toBeNull();
@@ -81,9 +81,9 @@ describe('trava de toques (P2)', () => {
     await begin();
     // Toque simples no cadeado travado só lembra como destravar.
     await fireEvent.press(screen.getByRole('button', { name: 'Destravar a tela' }));
-    expect(screen.getByText(LOCKED_HINT)).toBeOnTheScreen();
+    expect(screen.getByText(pt.session.lockedHint)).toBeOnTheScreen();
     await fireEvent(screen.getByRole('button', { name: 'Destravar a tela' }), 'longPress');
-    expect(screen.queryByText(LOCKED_HINT)).toBeNull();
+    expect(screen.queryByText(pt.session.lockedHint)).toBeNull();
     expect(screen.getByRole('button', { name: 'Lista' })).toBeOnTheScreen();
 
     // Mexer adia a volta da trava.
@@ -94,23 +94,23 @@ describe('trava de toques (P2)', () => {
     await act(() => {
       jest.advanceTimersByTime(RELOCK_MS - 1000);
     });
-    expect(screen.queryByText(LOCKED_HINT)).toBeNull();
+    expect(screen.queryByText(pt.session.lockedHint)).toBeNull();
     await act(() => {
       jest.advanceTimersByTime(1000);
     });
-    expect(screen.getByText(LOCKED_HINT)).toBeOnTheScreen();
+    expect(screen.getByText(pt.session.lockedHint)).toBeOnTheScreen();
   });
 
   it('com a preferência desligada começa livre e só trava pelo cadeado, sem voltar sozinha', async () => {
     await begin({ prefs: { view: 'anel', lockOnStart: false } });
-    expect(screen.queryByText(LOCKED_HINT)).toBeNull();
+    expect(screen.queryByText(pt.session.lockedHint)).toBeNull();
     await fireEvent.press(screen.getByRole('button', { name: 'Travar a tela' }));
-    expect(screen.getByText(LOCKED_HINT)).toBeOnTheScreen();
+    expect(screen.getByText(pt.session.lockedHint)).toBeOnTheScreen();
     await fireEvent(screen.getByRole('button', { name: 'Destravar a tela' }), 'longPress');
     await act(() => {
       jest.advanceTimersByTime(RELOCK_MS * 2);
     });
-    expect(screen.queryByText(LOCKED_HINT)).toBeNull();
+    expect(screen.queryByText(pt.session.lockedHint)).toBeNull();
   });
 
   it('etapa por repetições: travada, "Concluí" pede toque longo', async () => {

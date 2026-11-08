@@ -117,7 +117,7 @@ export function SessionScreen({
       <Screen
         footer={
           <Button
-            label="Voltar ao início"
+            label={t.session.backHome}
             onPress={() => {
               router.replace('/');
             }}
@@ -126,12 +126,10 @@ export function SessionScreen({
       >
         <View style={styles.content}>
           <Text variant="title" accessibilityRole="header">
-            {missing ? 'Rotina não encontrada' : 'Não deu para abrir o treino'}
+            {missing ? t.session.routineMissing : t.session.openFailed}
           </Text>
           <Text color="textMuted">
-            {missing
-              ? 'Ela pode ter sido apagada. Escolha outra no início.'
-              : 'Seus dados continuam guardados. Volte ao início e tente de novo.'}
+            {missing ? t.session.routineMissingHint : t.session.openFailedHint}
           </Text>
         </View>
       </Screen>
@@ -139,7 +137,7 @@ export function SessionScreen({
   }
   return (
     <View style={[styles.center, { backgroundColor: colors.background }]}>
-      <ActivityIndicator color={colors.primary} accessibilityLabel="Abrindo o treino" />
+      <ActivityIndicator color={colors.primary} accessibilityLabel={t.session.opening} />
     </View>
   );
 }

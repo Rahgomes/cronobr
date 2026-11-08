@@ -1,7 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { SESSION_VIEWS, VIEW_LABEL, type SessionViewMode } from '@/domain/session-prefs';
+import { SESSION_VIEWS, type SessionViewMode } from '@/domain/session-prefs';
+import { useT } from '@/i18n/i18n-context';
 import { Chip } from '@/ui/chip';
 import { Text } from '@/ui/text';
 import type { Colors } from '@/ui/theme';
@@ -12,8 +13,6 @@ import { radius, space, touch } from '@/ui/tokens';
 const UNLOCK_HOLD_MS = 1000;
 /** Travada, pausar e "Concluí" pedem toque longo: esbarrar não age, parar nunca fica difícil. */
 const LOCKED_HOLD_MS = 600;
-
-export const LOCKED_HINT = 'Tela travada · segure o cadeado para usar os botões';
 
 type Icon = keyof typeof MaterialCommunityIcons.glyphMap;
 
@@ -42,6 +41,7 @@ export function RoundControl({
   onPhase?: boolean;
 }) {
   const colors = useColors();
+  const t = useT();
   const styles = useThemedStyles(makeStyles);
   const hold = locked && holdWhenLocked;
   const ink = onPhase ? colors.onPhase : big ? colors.onPrimary : colors.text;
@@ -50,11 +50,7 @@ export function RoundControl({
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint={
-        hold
-          ? 'Toque e segure'
-          : locked
-            ? 'Tela travada. Segure o cadeado para destravar'
-            : undefined
+        hold ? t.session.holdHint : locked ? t.session.lockedControlHint : undefined
       }
       onPress={locked ? onBlocked : onPress}
       {...(hold ? { onLongPress: onPress, delayLongPress: LOCKED_HOLD_MS } : {})}
@@ -87,12 +83,13 @@ export function LockButton({
   onPhase?: boolean;
 }) {
   const colors = useColors();
+  const t = useT();
   const styles = useThemedStyles(makeStyles);
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={locked ? 'Destravar a tela' : 'Travar a tela'}
-      accessibilityHint={locked ? 'Toque e segure por 1 segundo' : undefined}
+      accessibilityLabel={locked ? t.session.unlockScreen : t.session.lockScreen}
+      accessibilityHint={locked ? t.session.unlockHoldHint(UNLOCK_HOLD_MS / 1000) : undefined}
       onPress={locked ? onBlocked : lock}
       {...(locked ? { onLongPress: unlock, delayLongPress: UNLOCK_HOLD_MS } : {})}
       hitSlop={2}
@@ -109,11 +106,12 @@ export function LockButton({
 
 /** Aviso fixo enquanto a tela está travada. */
 export function LockedHint() {
+  const t = useT();
   const styles = useThemedStyles(makeStyles);
   return (
     <View style={styles.hint} accessibilityLiveRegion="polite">
       <Text variant="caption" style={styles.hintText}>
-        {LOCKED_HINT}
+        {t.session.lockedHint}
       </Text>
     </View>
   );
@@ -127,13 +125,18 @@ export function ViewSwitch({
   value: SessionViewMode;
   onChange: (view: SessionViewMode) => void;
 }) {
+  const t = useT();
   const styles = useThemedStyles(makeStyles);
   return (
-    <View style={styles.switch} accessibilityLabel="Visualização" accessibilityRole="toolbar">
+    <View
+      style={styles.switch}
+      accessibilityLabel={t.session.visualization}
+      accessibilityRole="toolbar"
+    >
       {SESSION_VIEWS.map((view) => (
         <Chip
           key={view}
-          label={VIEW_LABEL[view]}
+          label={t.session.viewLabels[view]}
           selected={view === value}
           onPress={() => {
             onChange(view);
@@ -191,12 +194,13 @@ export function WideControl({
   onBlocked: () => void;
 }) {
   const colors = useColors();
+  const t = useT();
   const styles = useThemedStyles(makeWideStyles);
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityHint={locked ? 'Toque e segure' : undefined}
+      accessibilityHint={locked ? t.session.holdHint : undefined}
       onPress={locked ? onBlocked : onPress}
       {...(locked ? { onLongPress: onPress, delayLongPress: LOCKED_HOLD_MS } : {})}
       style={({ pressed }) => [styles.wide, pressed && styles.pressed]}
@@ -236,12 +240,13 @@ export function RoundCounter({
   onUndo: () => void;
 }) {
   const colors = useColors();
+  const t = useT();
   const styles = useThemedStyles(makeCounterStyles);
   return (
     <View style={styles.box}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Tirar uma rodada"
+        accessibilityLabel={t.session.removeRound}
         disabled={locked || count === 0}
         // Escondido (travado ou zero): fora do leitor de tela também, mas guardando o lugar.
         accessibilityElementsHidden={locked || count === 0}
@@ -252,21 +257,21 @@ export function RoundCounter({
         <MaterialCommunityIcons name="minus" size={space.xl} color={colors.text} />
       </Pressable>
       <View style={styles.count} accessibilityLiveRegion="polite">
-        <Text variant="display" tabular accessibilityLabel={`${String(count)} rodadas`}>
+        <Text variant="display" tabular accessibilityLabel={t.session.roundCount(count)}>
           {String(count)}
         </Text>
         <Text variant="caption" color="textMuted">
-          rodadas
+          {t.session.rounds}
         </Text>
       </View>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Mais uma rodada"
+        accessibilityLabel={t.session.addRound}
         onPress={onAdd}
         style={({ pressed }) => [styles.plus, pressed && styles.pressed]}
       >
         <Text variant="label" style={{ color: colors.onPrimary }}>
-          +1 rodada
+          {t.session.addRoundLabel(1)}
         </Text>
       </Pressable>
     </View>

@@ -15,6 +15,7 @@ import { summarize, type Segment } from '@/domain/timeline';
 import { isAway } from '@/features/cues/away';
 import { useCues } from '@/features/cues/cue-context';
 import { useT } from '@/i18n/i18n-context';
+import type { Messages } from '@/i18n/messages/pt';
 import { Button } from '@/ui/button';
 import { Card } from '@/ui/card';
 import { dialog } from '@/ui/dialog';
@@ -31,7 +32,6 @@ import { FocusBody, ListBody, PHASE_TINT, RingBody } from './session-bodies';
 import {
   LockButton,
   LockedHint,
-  LOCKED_HINT,
   RoundControl,
   RoundCounter,
   ViewSwitch,
@@ -41,9 +41,9 @@ import { useSessionRunner } from './use-session-runner';
 import { useTouchLock } from './use-touch-lock';
 
 /** Leitor de tela ouve a troca de fase; contagem e meio do tempo viram som na E03. */
-function announce(events: SessionEvent[]) {
+function announce(events: SessionEvent[], t: Messages) {
   for (const event of events) {
-    if (event.type === 'completed') AccessibilityInfo.announceForAccessibility('Treino concluído');
+    if (event.type === 'completed') AccessibilityInfo.announceForAccessibility(t.session.completed);
   }
 }
 
@@ -66,7 +66,8 @@ export function SessionView({
   again?: (() => void) | undefined;
 }) {
   const repos = useRepos();
-  const w = useT().words;
+  const t = useT();
+  const w = t.words;
   const { port, prefs } = useCues();
   const runner = useSessionRunner({
     initial,
@@ -82,7 +83,7 @@ export function SessionView({
         : all;
       // Fora da tela quem avisa são as notificações agendadas; tocar aqui também dobraria.
       if (!isAway()) port.play(cuesFor(events, runner.timeline, prefs, w));
-      announce(events);
+      announce(events, t);
       const phase = events.find((event) => event.type === 'phase');
       const segment = phase ? runner.timeline[phase.segment] : undefined;
       if (segment) AccessibilityInfo.announceForAccessibility(segmentTitle(segment, w));
@@ -129,9 +130,9 @@ export function SessionView({
   );
 
   function confirmStop() {
-    dialog.alert('Encerrar o treino?', 'O que você já fez fica salvo no histórico.', [
-      { text: 'Continuar treino', style: 'cancel' },
-      { text: 'Encerrar', style: 'destructive', onPress: runner.stop },
+    dialog.alert(t.session.stopTitle, t.session.stopMessage, [
+      { text: t.session.continueWorkout, style: 'cancel' },
+      { text: t.session.stop, style: 'destructive', onPress: runner.stop },
     ]);
   }
   // Voltar do sistema (gesto ou botão) no meio do treino pede confirmação, como o X.
@@ -147,14 +148,14 @@ export function SessionView({
         footer={
           restarting ? (
             <Button
-              label="Parar de repetir"
+              label={t.session.stopRepeating}
               onPress={() => {
                 setLooping(false);
               }}
             />
           ) : (
             <Button
-              label="Voltar ao início"
+              label={t.session.backHome}
               onPress={() => {
                 router.replace('/');
               }}
@@ -164,38 +165,34 @@ export function SessionView({
       >
         <View style={styles.content}>
           <Text variant="display" accessibilityRole="header">
-            {done ? (timer ? 'Tempo esgotado' : 'Treino concluído') : 'Treino encerrado'}
+            {done ? (timer ? t.session.timeUp : t.session.completed) : t.session.interrupted}
           </Text>
           {restarting ? (
-            <Notice tone="alert">{`Recomeça em ${String(AGAIN_DELAY_MS / 1000)} segundos.`}</Notice>
+            <Notice tone="alert">{t.session.restarting(AGAIN_DELAY_MS / 1000)}</Notice>
           ) : null}
           <Card>
             <Text variant="label">{session.routine.name}</Text>
-            <Text color="textMuted">Tempo ativo: {duration(session.activeMs)}</Text>
+            <Text color="textMuted">{t.session.activeTime(duration(session.activeMs))}</Text>
             <Text color="textMuted">
-              Exercícios feitos: {String(result?.workDone ?? 0)} de {String(result?.workTotal ?? 0)}
+              {t.session.exercisesDone(result?.workDone ?? 0, result?.workTotal ?? 0)}
             </Text>
-            {session.adjusted ? (
-              <Text color="textMuted">Tempo recalculado pelo relógio do aparelho.</Text>
-            ) : null}
+            {session.adjusted ? <Text color="textMuted">{t.session.adjustedTime}</Text> : null}
             {session.tally === undefined ? null : (
-              <Text color="textMuted">Rodadas registradas: {String(session.tally)}</Text>
+              <Text color="textMuted">{t.session.roundsRecorded(session.tally)}</Text>
             )}
-            {session.jumped ? (
-              <Text color="textMuted">Teve salto de etapa: fica marcado como ajustado.</Text>
-            ) : null}
+            {session.jumped ? <Text color="textMuted">{t.session.jumped}</Text> : null}
           </Card>
           {runner.saveFailed ? (
             <Notice
               tone="danger"
-              action={{ label: 'Tentar salvar de novo', onPress: runner.retrySave }}
+              action={{ label: t.session.retrySave, onPress: runner.retrySave }}
             >
-              Não deu para salvar no histórico.
+              {t.session.saveFailed}
             </Notice>
           ) : null}
           {runner.saved && !restarting ? (
             <Button
-              label="Escrever uma nota"
+              label={t.session.writeNote}
               kind="secondary"
               onPress={() => {
                 router.push({ pathname: '/historico/[id]', params: { id: session.id } });
@@ -210,11 +207,11 @@ export function SessionView({
   if (session.status === 'ready') {
     const summary = summarize(timeline);
     return (
-      <Screen footer={<Button label="Começar" onPress={runner.start} />}>
+      <Screen footer={<Button label={t.session.start} onPress={runner.start} />}>
         <View style={styles.ready}>
           <RoundAction
             icon="close"
-            label="Fechar"
+            label={t.session.close}
             onPress={() => {
               router.back();
             }}
@@ -225,14 +222,13 @@ export function SessionView({
             {session.routine.name}
           </Text>
           <Card>
-            <Text variant="label">Duração total: {clock(summary.knownMs)}</Text>
+            <Text variant="label">{t.session.totalDuration(clock(summary.knownMs))}</Text>
             <Text color="textMuted">
-              {String(summary.workCount)} exercícios
-              {summary.manualCount > 0 ? ` · ${String(summary.manualCount)} por repetições` : ''}
+              {t.session.exerciseSummary(summary.workCount, summary.manualCount)}
             </Text>
           </Card>
           <Card>
-            <Text variant="label">Como ver o treino</Text>
+            <Text variant="label">{t.session.viewTitle}</Text>
             <ViewSwitch
               value={view}
               onChange={(next) => {
@@ -241,14 +237,14 @@ export function SessionView({
             />
             <View style={styles.option}>
               <View style={styles.grow}>
-                <Text variant="label">Travar a tela ao começar</Text>
+                <Text variant="label">{t.session.lockOnStart}</Text>
                 <Text variant="caption" color="textMuted">
-                  Evita pausar ou pular sem querer. Segure o cadeado para destravar.
+                  {t.session.lockOnStartHint}
                 </Text>
               </View>
               <Switch
                 value={prefsSession.lockOnStart}
-                accessibilityLabel="Travar a tela ao começar"
+                accessibilityLabel={t.session.lockOnStart}
                 onValueChange={(value) => {
                   setPrefs({ ...prefsSession, lockOnStart: value });
                 }}
@@ -275,7 +271,7 @@ export function SessionView({
   const focus = view === 'foco';
   const tint = focus && segment ? colors[PHASE_TINT[segment.phase]] : undefined;
   const blocked = () => {
-    AccessibilityInfo.announceForAccessibility(LOCKED_HINT);
+    AccessibilityInfo.announceForAccessibility(t.session.lockedHint);
   };
   // Toda ação destravada adia a volta da trava.
   const touch = (fn: () => void) => () => {
@@ -284,19 +280,15 @@ export function SessionView({
   };
   const jump = (row: Segment) => {
     lock.poke();
-    dialog.alert(
-      `Ir para ${segmentTitle(row, w)}?`,
-      'O treino segue dali. No histórico ele fica marcado como ajustado.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Ir para a etapa',
-          onPress: () => {
-            runner.jumpTo(row.index);
-          },
+    dialog.alert(t.session.jumpTitle(segmentTitle(row, w)), t.session.jumpMessage, [
+      { text: t.session.cancel, style: 'cancel' },
+      {
+        text: t.session.jumpConfirm,
+        onPress: () => {
+          runner.jumpTo(row.index);
         },
-      ],
-    );
+      },
+    ]);
   };
   return (
     <Screen
@@ -318,7 +310,7 @@ export function SessionView({
           ) : null}
           {canFinishEarly ? (
             <WideControl
-              label="Terminei"
+              label={t.session.finishEarly}
               locked={locked}
               onBlocked={blocked}
               onPress={touch(() => {
@@ -329,7 +321,7 @@ export function SessionView({
           ) : null}
           {manual ? (
             <WideControl
-              label="Concluí"
+              label={t.session.advanceManual}
               locked={locked}
               onBlocked={blocked}
               onPress={touch(runner.advanceManual)}
@@ -339,7 +331,7 @@ export function SessionView({
           <View style={styles.controls}>
             <RoundControl
               icon="skip-previous"
-              label="Etapa anterior"
+              label={t.session.previousStep}
               locked={locked}
               onBlocked={blocked}
               onPhase={focus}
@@ -348,7 +340,7 @@ export function SessionView({
             <RoundControl
               big
               icon={paused ? 'play' : 'pause'}
-              label={paused ? 'Retomar' : 'Pausar'}
+              label={paused ? t.session.resume : t.session.pause}
               locked={locked}
               holdWhenLocked
               onBlocked={blocked}
@@ -357,7 +349,7 @@ export function SessionView({
             />
             <RoundControl
               icon="skip-next"
-              label="Pular etapa"
+              label={t.session.skipStep}
               locked={locked}
               onBlocked={blocked}
               onPhase={focus}
@@ -381,7 +373,7 @@ export function SessionView({
       <View style={styles.top}>
         <RoundAction
           icon="close"
-          label="Encerrar treino"
+          label={t.session.stopWorkout}
           onPress={locked ? blocked : touch(confirmStop)}
         />
         <LockButton
@@ -406,13 +398,8 @@ export function SessionView({
           ) : (
             <RingBody timeline={timeline} snap={snap} segment={segment} />
           )}
-          {paused ? <Notice tone="alert">Pausado</Notice> : null}
-          {runner.progressFailed ? (
-            <Notice tone="danger">
-              Não deu para gravar o progresso. O treino continua, mas se o app fechar ele pode
-              voltar de um ponto anterior.
-            </Notice>
-          ) : null}
+          {paused ? <Notice tone="alert">{t.session.paused}</Notice> : null}
+          {runner.progressFailed ? <Notice tone="danger">{t.session.progressFailed}</Notice> : null}
         </View>
       ) : null}
     </Screen>

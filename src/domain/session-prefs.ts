@@ -11,12 +11,6 @@ export interface SessionPrefs {
 
 export const DEFAULT_SESSION_PREFS: SessionPrefs = { view: 'anel', lockOnStart: true };
 
-export const VIEW_LABEL: Record<SessionViewMode, string> = {
-  foco: 'Foco',
-  anel: 'Anel',
-  lista: 'Lista',
-};
-
 const isView = (value: unknown): value is SessionViewMode =>
   (SESSION_VIEWS as readonly unknown[]).includes(value);
 
