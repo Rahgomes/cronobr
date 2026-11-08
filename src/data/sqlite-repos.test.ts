@@ -101,17 +101,20 @@ describe('histórico', () => {
           ...finished(`s${String(i).padStart(3, '0')}`, 300),
           endedAt: 1000 + Math.floor(i / 2),
         };
-        await tx.run(`INSERT INTO history VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
-          entry.id,
-          entry.status,
-          entry.startedAt,
-          entry.endedAt,
-          entry.activeMs,
-          entry.workDone,
-          entry.workTotal,
-          entry.source,
-          JSON.stringify(entry.routine),
-        ]);
+        await tx.run(
+          `INSERT INTO history (id, status, started_at, ended_at, active_ms, work_done, work_total, source, routine) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            entry.id,
+            entry.status,
+            entry.startedAt,
+            entry.endedAt,
+            entry.activeMs,
+            entry.workDone,
+            entry.workTotal,
+            entry.source,
+            JSON.stringify(entry.routine),
+          ],
+        );
       }
     });
     const seen: string[] = [];
@@ -136,11 +139,21 @@ describe('histórico', () => {
       status: 'completed',
       routine: { id: preset.id },
     });
-    await db.run("INSERT INTO history VALUES ('ruim', 'completed', 0, 0, 0, 0, 0, 'app', '{}')");
+    await db.run(
+      "INSERT INTO history (id, status, started_at, ended_at, active_ms, work_done, work_total, source, routine) VALUES ('ruim', 'completed', 0, 0, 0, 0, 0, 'app', '{}')",
+    );
     expect((await repos.history.page()).entries.map((e) => e.id)).toEqual(['s1']);
     expect(await repos.history.get('ruim')).toBeNull();
     await repos.history.remove('s1');
     expect(await repos.history.get('s1')).toBeNull();
+  });
+
+  it('treino ajustado (salto ou relógio) volta marcado; o limpo volta sem a marca', async () => {
+    const { repos } = await setup();
+    await repos.session.finish({ ...finished('aj', 300), adjusted: true });
+    await repos.session.finish(finished('limpo', 400));
+    expect((await repos.history.get('aj'))?.adjusted).toBe(true);
+    expect(await repos.history.get('limpo')).not.toHaveProperty('adjusted');
   });
 });
 

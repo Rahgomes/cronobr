@@ -32,6 +32,8 @@ type Props = {
    * cima (a Hoje). O conteúdo rola por baixo dela, então os ícones brancos seguem legíveis.
    */
   statusTint?: string;
+  /** Pinta a tela inteira (fundo, rolagem e rodapé): a visualização Foco usa a cor da fase. */
+  tint?: string | undefined;
 };
 
 /**
@@ -42,24 +44,27 @@ type Props = {
 export const InsideTabsContext = createContext(false);
 
 /** Toda tela passa por aqui: edge-to-edge do targetSdk 36 exige respeitar as áreas seguras. */
-export function Screen({ children, footer, fab, scrollRef, statusTint }: Props) {
+export function Screen({ children, footer, fab, scrollRef, statusTint, tint }: Props) {
   const styles = useThemedStyles(makeStyles);
   const insideTabs = useContext(InsideTabsContext);
+  const painted = tint ? { backgroundColor: tint } : null;
   return (
     <SafeAreaView
       // Com statusTint, o recuo do topo (atrás da barra de status) pinta na cor do cabeçalho.
-      style={[styles.safe, statusTint ? { backgroundColor: statusTint } : null]}
+      style={[styles.safe, statusTint ? { backgroundColor: statusTint } : null, painted]}
       edges={insideTabs ? ['top'] : ['top', 'bottom']}
     >
       <ScrollView
-        style={styles.scroll}
+        style={[styles.scroll, painted]}
         ref={scrollRef}
         contentContainerStyle={[styles.content, fab ? styles.fabRoom : null]}
         keyboardShouldPersistTaps="handled"
       >
         {children}
       </ScrollView>
-      {footer ? <View style={styles.footer}>{footer}</View> : null}
+      {footer ? (
+        <View style={[styles.footer, tint ? [painted, styles.footerPlain] : null]}>{footer}</View>
+      ) : null}
       {fab ? (
         <View style={styles.fab} pointerEvents="box-none">
           {fab}
@@ -164,6 +169,7 @@ const makeStyles = (colors: Colors) =>
       shadowRadius: 8,
       shadowOffset: { width: 0, height: 3 },
     },
+    footerPlain: { borderTopWidth: 0 },
     footer: {
       gap: space.sm,
       paddingHorizontal: space.lg,

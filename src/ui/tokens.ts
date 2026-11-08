@@ -39,6 +39,14 @@ export const colors = {
   photoDeep: 'rgba(10, 10, 10, 0.94)',
   onPhoto: '#FFFFFF',
   onPhotoMuted: '#D9D9D9',
+  /** Fundo por fase na visualização Foco: o mesmo nos dois temas, texto branco por cima. */
+  phasePrep: '#8A5A00',
+  phaseWork: '#1B5E20',
+  phaseRest: '#1565C0',
+  phaseBlockRest: '#4527A0',
+  phaseCooldown: '#00695C',
+  onPhase: '#FFFFFF',
+  onPhaseMuted: '#EDEDED',
 } as const;
 
 export type ColorRole = keyof typeof colors;
@@ -78,6 +86,14 @@ export const darkColors: Record<ColorRole, string> = {
   photoDeep: 'rgba(10, 10, 10, 0.94)',
   onPhoto: '#FFFFFF',
   onPhotoMuted: '#D9D9D9',
+  /** Fundo por fase na visualização Foco: o mesmo nos dois temas, texto branco por cima. */
+  phasePrep: '#8A5A00',
+  phaseWork: '#1B5E20',
+  phaseRest: '#1565C0',
+  phaseBlockRest: '#4527A0',
+  phaseCooldown: '#00695C',
+  onPhase: '#FFFFFF',
+  onPhaseMuted: '#EDEDED',
 };
 
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32, xxxl: 48 } as const;

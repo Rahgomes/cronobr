@@ -3,13 +3,15 @@ import { useEffect, useState } from 'react';
 import { AccessibilityInfo, StyleSheet, View } from 'react-native';
 
 import { useRepos } from '@/data/data-context';
+import { useStored } from '@/data/use-stored';
 import { planAlerts } from '@/domain/alerts';
-import { cuesFor, PHASE_LABEL } from '@/domain/cues';
+import { cuesFor } from '@/domain/cues';
 import type { Session } from '@/domain/engine';
 import type { SessionEvent } from '@/domain/events';
 import { clock, duration } from '@/domain/format';
 import { historyFromSession } from '@/domain/history';
-import { summarize } from '@/domain/timeline';
+import { DEFAULT_SESSION_PREFS, parseSessionPrefs } from '@/domain/session-prefs';
+import { summarize, type Segment } from '@/domain/timeline';
 import { isAway } from '@/features/cues/away';
 import { useCues } from '@/features/cues/cue-context';
 import { Button } from '@/ui/button';
@@ -17,13 +19,25 @@ import { Card } from '@/ui/card';
 import { dialog } from '@/ui/dialog';
 import { Notice } from '@/ui/notice';
 import { Screen } from '@/ui/screen';
+import { Switch } from '@/ui/switch';
 import { Text } from '@/ui/text';
-import { space } from '@/ui/tokens';
+import { useColors } from '@/ui/theme-context';
+import { radius, space } from '@/ui/tokens';
 import { RoundAction } from '@/ui/top-bar';
 
 import { systemClock, type Clock } from './clock';
-import { roundLabel, segmentTitle } from './labels';
+import { segmentTitle } from './labels';
+import { FocusBody, ListBody, PHASE_TINT, RingBody } from './session-bodies';
+import {
+  LockButton,
+  LockedHint,
+  LOCKED_HINT,
+  RoundControl,
+  ViewSwitch,
+  WideControl,
+} from './session-controls';
 import { useSessionRunner } from './use-session-runner';
+import { useTouchLock } from './use-touch-lock';
 
 /** Leitor de tela ouve a troca de fase; contagem e meio do tempo viram som na E03. */
 function announce(events: SessionEvent[]) {
@@ -31,6 +45,8 @@ function announce(events: SessionEvent[]) {
     if (event.type === 'completed') AccessibilityInfo.announceForAccessibility('Treino concluído');
   }
 }
+
+export const SESSION_PREFS_KEY = 'sessao';
 
 /** Temporizador em repetição: tempo entre o fim e o recomeço, para dar para parar. */
 export const AGAIN_DELAY_MS = 3000;
@@ -68,6 +84,14 @@ export function SessionView({
   });
   const { session, snap, timeline } = runner;
   const active = session.status === 'running' || session.status === 'paused';
+  const colors = useColors();
+  const [prefsSession, setPrefs] = useStored(
+    SESSION_PREFS_KEY,
+    parseSessionPrefs,
+    DEFAULT_SESSION_PREFS,
+  );
+  const { view } = prefsSession;
+  const lock = useTouchLock({ auto: prefsSession.lockOnStart, active });
   const running = session.status === 'running';
 
   useEffect(() => {
@@ -148,6 +172,9 @@ export function SessionView({
             {session.adjusted ? (
               <Text color="textMuted">Tempo recalculado pelo relógio do aparelho.</Text>
             ) : null}
+            {session.jumped ? (
+              <Text color="textMuted">Teve salto de etapa: fica marcado como ajustado.</Text>
+            ) : null}
           </Card>
           {runner.saveFailed ? (
             <Notice
@@ -166,7 +193,7 @@ export function SessionView({
     const summary = summarize(timeline);
     return (
       <Screen footer={<Button label="Começar" onPress={runner.start} />}>
-        <View style={styles.top}>
+        <View style={styles.ready}>
           <RoundAction
             icon="close"
             label="Fechar"
@@ -186,58 +213,149 @@ export function SessionView({
               {summary.manualCount > 0 ? ` · ${String(summary.manualCount)} por repetições` : ''}
             </Text>
           </Card>
+          <Card>
+            <Text variant="label">Como ver o treino</Text>
+            <ViewSwitch
+              value={view}
+              onChange={(next) => {
+                setPrefs({ ...prefsSession, view: next });
+              }}
+            />
+            <View style={styles.option}>
+              <View style={styles.grow}>
+                <Text variant="label">Travar a tela ao começar</Text>
+                <Text variant="caption" color="textMuted">
+                  Evita pausar ou pular sem querer. Segure o cadeado para destravar.
+                </Text>
+              </View>
+              <Switch
+                value={prefsSession.lockOnStart}
+                accessibilityLabel="Travar a tela ao começar"
+                onValueChange={(value) => {
+                  setPrefs({ ...prefsSession, lockOnStart: value });
+                }}
+              />
+            </View>
+          </Card>
         </View>
       </Screen>
     );
   }
 
   const segment = timeline[snap.segment];
-  const next = timeline[snap.segment + 1];
   const manual = segment?.durationMs === null;
   const paused = session.status === 'paused';
+  const { locked } = lock;
+  const focus = view === 'foco';
+  const tint = focus && segment ? colors[PHASE_TINT[segment.phase]] : undefined;
+  const blocked = () => {
+    AccessibilityInfo.announceForAccessibility(LOCKED_HINT);
+  };
+  // Toda ação destravada adia a volta da trava.
+  const touch = (fn: () => void) => () => {
+    lock.poke();
+    fn();
+  };
+  const jump = (row: Segment) => {
+    lock.poke();
+    dialog.alert(
+      `Ir para ${segmentTitle(row)}?`,
+      'O treino segue dali. No histórico ele fica marcado como ajustado.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Ir para a etapa',
+          onPress: () => {
+            runner.jumpTo(row.index);
+          },
+        },
+      ],
+    );
+  };
   return (
     <Screen
+      tint={tint}
       footer={
         <View style={styles.actions}>
-          {manual ? <Button label="Concluí" onPress={runner.advanceManual} /> : null}
-          <Button
-            label={paused ? 'Retomar' : 'Pausar'}
-            kind={manual ? 'secondary' : 'primary'}
-            onPress={paused ? runner.resume : runner.pause}
-          />
-          <View style={styles.row}>
-            <View style={styles.flex}>
-              <Button label="Etapa anterior" kind="text" onPress={runner.back} />
-            </View>
-            <View style={styles.flex}>
-              <Button label="Pular etapa" kind="text" onPress={runner.skip} />
-            </View>
+          {manual ? (
+            <WideControl
+              label="Concluí"
+              locked={locked}
+              onBlocked={blocked}
+              onPress={touch(runner.advanceManual)}
+            />
+          ) : null}
+          {locked ? <LockedHint /> : null}
+          <View style={styles.controls}>
+            <RoundControl
+              icon="skip-previous"
+              label="Etapa anterior"
+              locked={locked}
+              onBlocked={blocked}
+              onPhase={focus}
+              onPress={touch(runner.back)}
+            />
+            <RoundControl
+              big
+              icon={paused ? 'play' : 'pause'}
+              label={paused ? 'Retomar' : 'Pausar'}
+              locked={locked}
+              holdWhenLocked
+              onBlocked={blocked}
+              onPhase={focus}
+              onPress={touch(paused ? runner.resume : runner.pause)}
+            />
+            <RoundControl
+              icon="skip-next"
+              label="Pular etapa"
+              locked={locked}
+              onBlocked={blocked}
+              onPhase={focus}
+              onPress={touch(runner.skip)}
+            />
           </View>
+          {locked ? null : (
+            <View style={focus ? [styles.switchBox, { backgroundColor: colors.surface }] : null}>
+              <ViewSwitch
+                value={view}
+                onChange={(next) => {
+                  lock.poke();
+                  setPrefs({ ...prefsSession, view: next });
+                }}
+              />
+            </View>
+          )}
         </View>
       }
     >
       <View style={styles.top}>
-        <RoundAction icon="close" label="Encerrar treino" onPress={confirmStop} />
+        <RoundAction
+          icon="close"
+          label="Encerrar treino"
+          onPress={locked ? blocked : touch(confirmStop)}
+        />
+        <LockButton
+          locked={locked}
+          lock={lock.lock}
+          unlock={lock.unlock}
+          onBlocked={blocked}
+          onPhase={focus}
+        />
       </View>
       {segment ? (
         <View style={styles.content}>
-          <Text variant="title" accessibilityRole="header">
-            {segmentTitle(segment)}
-          </Text>
-          {roundLabel(segment) ? <Text color="textMuted">{roundLabel(segment)}</Text> : null}
-          <Text
-            variant="display"
-            tabular
-            style={styles.clock}
-            accessibilityRole="timer"
-            accessibilityLabel={
-              manual
-                ? `${String(segment.reps)} repetições`
-                : `Faltam ${duration(Math.ceil((snap.remainingMs ?? 0) / 1000) * 1000)}`
-            }
-          >
-            {manual ? `${String(segment.reps)} rep.` : clock(snap.remainingMs ?? 0)}
-          </Text>
+          {view === 'foco' ? (
+            <FocusBody timeline={timeline} snap={snap} segment={segment} />
+          ) : view === 'lista' ? (
+            <ListBody
+              timeline={timeline}
+              snap={snap}
+              segment={segment}
+              onJump={locked ? null : jump}
+            />
+          ) : (
+            <RingBody timeline={timeline} snap={snap} segment={segment} />
+          )}
           {paused ? <Notice tone="alert">Pausado</Notice> : null}
           {runner.progressFailed ? (
             <Notice tone="danger">
@@ -245,12 +363,6 @@ export function SessionView({
               voltar de um ponto anterior.
             </Notice>
           ) : null}
-          <Text color="textMuted">
-            {next
-              ? `Depois: ${PHASE_LABEL[next.phase]} ${next.durationMs === null ? '' : clock(next.durationMs)}`
-              : 'Última etapa'}
-          </Text>
-          <Text color="textMuted">Restante no treino: {clock(snap.totalRemainingMs)}</Text>
         </View>
       ) : null}
     </Screen>
@@ -258,10 +370,12 @@ export function SessionView({
 }
 
 const styles = StyleSheet.create({
-  top: { alignItems: 'flex-end', paddingTop: space.md },
-  content: { gap: space.lg, paddingTop: space.lg },
-  clock: { fontSize: 96, lineHeight: 104, textAlign: 'center' },
-  actions: { gap: space.sm },
-  row: { flexDirection: 'row', gap: space.sm },
-  flex: { flex: 1 },
+  top: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: space.md },
+  ready: { alignItems: 'flex-end', paddingTop: space.md },
+  content: { gap: space.lg },
+  actions: { gap: space.md },
+  controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-evenly' },
+  switchBox: { alignSelf: 'center', borderRadius: radius.pill, padding: space.xs },
+  option: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  grow: { flex: 1 },
 });

@@ -9,6 +9,7 @@ import {
   advanceManual,
   back,
   checkpoint,
+  jumpTo,
   pause,
   resume,
   resync,
@@ -46,6 +47,8 @@ export interface Runner {
   back: () => void;
   stop: () => void;
   advanceManual: () => void;
+  /** Salto pela lista (P3). */
+  jumpTo: (segment: number) => void;
   retrySave: () => void;
 }
 
@@ -197,6 +200,9 @@ export function useSessionRunner({
     },
     advanceManual: () => {
       act((s, now) => advanceManual(s, timeline, now));
+    },
+    jumpTo: (segment: number) => {
+      act((s, now) => jumpTo(s, timeline, now, segment));
     },
     retrySave: () => {
       finalize(sessionRef.current);

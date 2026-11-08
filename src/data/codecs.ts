@@ -50,6 +50,7 @@ export const sessionShape: z.ZodType<Session> = z.object({
   startedAt: z.number().nullable(),
   endedAt: z.number().nullable(),
   adjusted: z.boolean(),
+  jumped: z.boolean().optional(),
 });
 
 export interface HistoryRow {
@@ -62,6 +63,8 @@ export interface HistoryRow {
   work_total: number;
   source: string;
   routine: string;
+  /** 1 = ajustado; ausente em banco antes da V3. */
+  adjusted?: number;
 }
 
 const historyShape = z.object({
@@ -74,6 +77,7 @@ const historyShape = z.object({
   workTotal: z.number(),
   source: z.enum(['app', 'legacy']),
   routine: routineShape,
+  adjusted: z.literal(true).optional(),
 });
 
 /** JSON ou forma inválida viram null: quem lê decide pular, sem derrubar a tela. */
@@ -99,6 +103,8 @@ export function historyFromRow(row: HistoryRow): HistoryEntry | null {
     workTotal: row.work_total,
     source: row.source,
     routine,
+    // Ausente = não ajustado: o registro de sempre continua igual.
+    ...(row.adjusted === 1 ? { adjusted: true } : {}),
   });
   return parsed.success ? parsed.data : null;
 }

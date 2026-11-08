@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { useStored } from '@/data/use-stored';
 import type { Instant } from '@/domain/engine';
 import { stopwatchTime } from '@/domain/format';
 import {
@@ -24,8 +25,6 @@ import { Screen } from '@/ui/screen';
 import { Text } from '@/ui/text';
 import { space } from '@/ui/tokens';
 import { TopBar } from '@/ui/top-bar';
-
-import { useStored } from './use-stored';
 
 export const STOPWATCH_KEY = 'cronometro';
 const TICK_MS = 100;

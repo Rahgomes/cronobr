@@ -28,6 +28,18 @@ async function freeze(page: Page) {
 
 const timer = (page: Page) => page.getByRole('timer');
 
+const LOCKED = 'Tela travada · segure o cadeado para usar os botões';
+
+/** Toque longo com o relógio da página parado: o tempo do "segurar" anda pelo runFor. */
+async function hold(page: Page, name: string, ms: number) {
+  const box = await page.getByRole('button', { name, exact: true }).boundingBox();
+  if (!box) throw new Error(`sem botão ${name}`);
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.clock.runFor(ms);
+  await page.mouse.up();
+}
+
 test('treino completo: fases pelo relógio, conclusão e histórico com um registro', async ({
   page,
 }) => {
@@ -58,17 +70,29 @@ test('treino completo: fases pelo relógio, conclusão e histórico com um regis
   await expect(page.getByText('Concluído · 4 min · 8/8 exercícios')).toBeVisible();
 });
 
-test('pausa congela o tempo; o X pede confirmação e encerra salvando', async ({ page }) => {
+test('travada: toque não pausa; segurar pausa e retoma; o X pede confirmação e encerra salvando', async ({
+  page,
+}) => {
   await openTabata(page);
   await page.getByRole('button', { name: 'Começar' }).click();
+  await expect(page.getByText(LOCKED)).toBeVisible();
   await page.clock.runFor(4_000);
+  // Esbarrar não pausa.
   await page.getByRole('button', { name: 'Pausar' }).click();
+  await expect(page.getByText('Pausado')).toBeHidden();
+  await hold(page, 'Pausar', 800);
   await expect(page.getByText('Pausado')).toBeVisible();
   await page.clock.runFor(60_000);
+  // O toque longo leva 0,6 s: a pausa entra em 4,6 s.
   await expect(timer(page)).toHaveText('0:06');
-  await page.getByRole('button', { name: 'Retomar' }).click();
-  await page.clock.runFor(31_000); // 6 s de preparação + 20 de exercício + 5 de descanso
+  await hold(page, 'Retomar', 800);
+  await page.clock.runFor(31_000); // resto da preparação + 20 de exercício + parte do descanso
 
+  // O X travado não abre nada; segurar o cadeado destrava.
+  await page.getByRole('button', { name: 'Encerrar treino' }).click();
+  await expect(page.getByRole('heading', { name: 'Encerrar o treino?' })).toBeHidden();
+  await hold(page, 'Destravar a tela', 1_200);
+  await expect(page.getByText(LOCKED)).toBeHidden();
   await page.getByRole('button', { name: 'Encerrar treino' }).click();
   await expect(page.getByRole('heading', { name: 'Encerrar o treino?' })).toBeVisible();
   await page.getByRole('button', { name: 'Continuar treino' }).click();
@@ -78,6 +102,33 @@ test('pausa congela o tempo; o X pede confirmação e encerra salvando', async (
   await page.getByRole('button', { name: 'Encerrar', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Treino encerrado' })).toBeVisible();
   await expect(page.getByText('Exercícios feitos: 1 de 8')).toBeVisible();
+});
+
+test('visualizações Lista, Foco e Anel com axe; salto pela lista confirmado', async ({ page }) => {
+  await openTabata(page);
+  await page.getByRole('button', { name: 'Lista' }).click();
+  await page.getByRole('switch', { name: 'Travar a tela ao começar' }).click();
+  await page.getByRole('button', { name: 'Começar' }).click();
+  await page.clock.runFor(12_000);
+  await expect(page.getByRole('button', { name: '2. Exercício, 0:20, agora' })).toBeVisible();
+  await page.clock.resume();
+  await expectNoAxeViolations(page);
+  await freeze(page);
+
+  await page.getByRole('button', { name: '9. Descanso, 0:10' }).click();
+  await expect(page.getByRole('heading', { name: 'Ir para Descanso?' })).toBeVisible();
+  await page.getByRole('button', { name: 'Ir para a etapa' }).click();
+  await expect(page.getByText('Rodada 4 de 8').first()).toBeVisible();
+
+  await page.getByRole('button', { name: 'Foco' }).click();
+  await expect(page.getByText('DESCANSO', { exact: true })).toBeVisible();
+  await page.clock.resume();
+  await expectNoAxeViolations(page);
+  await freeze(page);
+  await page.getByRole('button', { name: 'Anel' }).click();
+  await expect(page.getByText(/^Restante no treino/)).toBeVisible();
+  await page.clock.resume();
+  await expectNoAxeViolations(page);
 });
 
 test('recarregar a página no meio do treino retoma de onde o relógio está', async ({ page }) => {

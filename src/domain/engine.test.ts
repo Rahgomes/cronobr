@@ -6,6 +6,7 @@ import {
   back,
   checkpoint,
   createSession,
+  jumpTo,
   MAX_GAP_MS,
   pause,
   restore,
@@ -197,6 +198,33 @@ describe('ações', () => {
     expect(back(stopped, tl, t(30))).toEqual(stopped);
     expect(pause(stopped, tl, t(30))).toEqual(stopped);
     expect(stop(createSession('x', r), tl, t(1)).status).toBe('ready');
+  });
+
+  it('salto pela lista: vai ao início da etapa, marca ajustado e o histórico registra (P3)', () => {
+    // r tem 3 etapas: work 20 · rest 10 · work 20 (2 rodadas, sem descanso final)
+    const s = jumpTo(started(), tl, t(5), 2);
+    expect(s).toMatchObject({
+      status: 'running',
+      jumped: true,
+      position: { segment: 2, elapsedMs: 0 },
+    });
+    expect(at(s, 7)).toMatchObject({ segment: 2, elapsedMs: 2000 });
+    // Para trás também, e pausado continua pausado.
+    const back0 = jumpTo(pause(s, tl, t(8)), tl, t(9), 0);
+    expect(back0).toMatchObject({ status: 'paused', position: { segment: 0, elapsedMs: 0 } });
+    // O tempo ativo conta só o que correu: 5 s + 3 s.
+    expect(back0.activeMs).toBe(8000);
+    const done = stop(back0, tl, t(10));
+    expect(historyFromSession(done, tl)?.adjusted).toBe(true);
+    expect(historyFromSession(stop(started(), tl, t(3)), tl)?.adjusted).toBeUndefined();
+  });
+
+  it('salto fora da lista ou em sessão parada não faz nada', () => {
+    const s = started();
+    expect(jumpTo(s, tl, t(1), 99).position).toEqual({ segment: 0, elapsedMs: 1000 });
+    expect(jumpTo(s, tl, t(1), -1).jumped).toBeUndefined();
+    const ready = createSession('x', r);
+    expect(jumpTo(ready, tl, t(1), 1)).toEqual(ready);
   });
 
   it('encerrar depois do fim registra concluído, não interrompido', () => {

@@ -16,6 +16,8 @@ export interface HistoryEntry {
   workDone: number;
   workTotal: number;
   source: 'app' | 'legacy';
+  /** Houve salto pela lista ou o tempo foi recalculado pelo relógio: vale, mas não é limpo. */
+  adjusted?: true | undefined;
 }
 
 /** null enquanto a sessão não terminou (ou terminou sem nunca ter começado). */
@@ -37,6 +39,7 @@ export function historyFromSession(
     workDone: session.status === 'completed' ? work.length : workDone,
     workTotal: work.length,
     source: 'app',
+    ...(session.adjusted || session.jumped ? { adjusted: true as const } : {}),
   };
 }
 

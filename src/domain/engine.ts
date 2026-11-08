@@ -31,6 +31,8 @@ export interface Session {
   endedAt: number | null;
   /** A posição foi recalculada pelo relógio civil (app reaberto ou aparelho suspenso). */
   adjusted: boolean;
+  /** Houve salto pela lista (P3): o treino vale, mas não seguiu a ordem. */
+  jumped?: boolean | undefined;
 }
 
 export interface Snapshot {
@@ -208,6 +210,19 @@ export function back(session: Session, timeline: readonly Segment[], now: Instan
   if (marked.status !== 'running' && marked.status !== 'paused') return marked;
   const { segment, elapsedMs } = marked.position;
   return jump(marked, timeline, now, elapsedMs > BACK_RESTART_MS ? segment : segment - 1);
+}
+
+/** Salto pela lista (P3): vai para o início da etapa escolhida e marca a sessão como ajustada. */
+export function jumpTo(
+  session: Session,
+  timeline: readonly Segment[],
+  now: Instant,
+  target: number,
+): Session {
+  const marked = checkpoint(session, timeline, now);
+  if (marked.status !== 'running' && marked.status !== 'paused') return marked;
+  if (target < 0 || target >= timeline.length) return marked;
+  return { ...jump(marked, timeline, now, target), jumped: true };
 }
 
 /** "Concluí" em etapa por repetições. Em etapa com tempo não faz nada. */

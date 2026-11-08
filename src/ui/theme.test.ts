@@ -19,6 +19,12 @@ const TEXT_PAIRS: [ColorRole, ColorRole][] = [
   ['goldInk', 'goldSoft'],
   ['onHero', 'hero'],
   ['text', 'iconButton'],
+  ...(['phasePrep', 'phaseWork', 'phaseRest', 'phaseBlockRest', 'phaseCooldown'] as const).flatMap(
+    (bg): [ColorRole, ColorRole][] => [
+      ['onPhase', bg],
+      ['onPhaseMuted', bg],
+    ],
+  ),
 ];
 const UI_PAIRS: [ColorRole, ColorRole][] = [
   ['inputBorder', 'surface'],

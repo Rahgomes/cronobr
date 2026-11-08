@@ -10,7 +10,7 @@ import { must } from '@/test/domain';
 import { router, usePreventRemove } from '@/test/expo-router-mock';
 
 import { SessionScreen } from './session-screen';
-import { AGAIN_DELAY_MS } from './session-view';
+import { AGAIN_DELAY_MS, SESSION_PREFS_KEY } from './session-view';
 import { TICK_MS } from './use-session-runner';
 
 jest.mock('expo-router', () => jest.requireActual<object>('@/test/expo-router-mock'));
@@ -18,6 +18,33 @@ jest.mock('@expo/vector-icons', () => ({ MaterialCommunityIcons: () => null }));
 
 // Tabata clássico: prep 10 · (20 + 10) × 8 sem o último descanso = 240 s
 const TABATA = must(presetById('tabata-classic'));
+
+/**
+ * Espera uma gravação no banco. Com timers falsos, `waitFor` com callback assíncrono sobrepõe
+ * `act` e o React passa a engolir as atualizações seguintes (o toque seguinte não redesenha).
+ */
+async function eventually(check: () => Promise<void>) {
+  let last: unknown;
+  for (let i = 0; i < 20; i += 1) {
+    await act(async () => {
+      await Promise.resolve();
+    });
+    try {
+      await check();
+      return;
+    } catch (error) {
+      last = error;
+    }
+  }
+  throw last;
+}
+
+/** Estes testes são do tempo e das ações: a trava (P2) tem os seus em session-lock.test. */
+async function unlockedRepos() {
+  const env = await appRepos();
+  await env.repos.prefs.set(SESSION_PREFS_KEY, { view: 'anel', lockOnStart: false });
+  return env;
+}
 
 beforeEach(() => {
   jest.useFakeTimers();
@@ -28,7 +55,7 @@ afterEach(() => {
 });
 
 async function open(routineId: string | undefined = 'tabata-classic') {
-  const env = await appRepos();
+  const env = await unlockedRepos();
   const clock = fakeClock();
   const port = fakePort();
   await renderApp(<SessionScreen routineId={routineId} clockSource={clock} />, env.repos, port);
@@ -106,7 +133,7 @@ describe('sessão', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Encerrar' }));
     expect(screen.getByRole('header', { name: 'Treino encerrado' })).toBeOnTheScreen();
     expect(screen.getByText('Exercícios feitos: 1 de 8')).toBeOnTheScreen();
-    await waitFor(async () => {
+    await eventually(async () => {
       expect(await repos.history.count()).toBe(1);
     });
     expect(await repos.session.load()).toBeNull();
@@ -128,7 +155,7 @@ describe('sessão', () => {
     expect(screen.getByRole('header', { name: 'Treino concluído' })).toBeOnTheScreen();
     expect(screen.getByText('Tempo ativo: 4 min')).toBeOnTheScreen();
     await advance(10_000, 8);
-    await waitFor(async () => {
+    await eventually(async () => {
       expect(await repos.history.count()).toBe(1);
     });
     expect(
@@ -194,7 +221,7 @@ describe('sessão', () => {
   });
 
   it('repetir do histórico usa a rotina gravada naquele registro', async () => {
-    const env = await appRepos();
+    const env = await unlockedRepos();
     await env.repos.session.finish({
       id: 'h-rep',
       routine: { ...TABATA, name: 'Tabata da semana' },
@@ -215,7 +242,7 @@ describe('sessão', () => {
   });
 
   it('repetir um registro apagado: rotina não encontrada', async () => {
-    const env = await appRepos();
+    const env = await unlockedRepos();
     await renderApp(
       <SessionScreen routineId={undefined} repeatId="sumiu" clockSource={fakeClock()} />,
       env.repos,
@@ -257,7 +284,7 @@ describe('sessão', () => {
     });
 
     it('preferências gravadas valem: sem voz, a troca não fala', async () => {
-      const env = await appRepos();
+      const env = await unlockedRepos();
       await env.repos.prefs.set('avisos', { voice: false });
       const port = fakePort();
       const clock = fakeClock();
@@ -294,7 +321,7 @@ describe('sessão', () => {
 
   describe('início rápido', () => {
     it('intervalado vindo da rota: prévia com o total', async () => {
-      const env = await appRepos();
+      const env = await unlockedRepos();
       await renderApp(
         <SessionScreen
           routineId={undefined}
@@ -310,7 +337,7 @@ describe('sessão', () => {
     });
 
     it('fora dos limites: rotina não encontrada', async () => {
-      const env = await appRepos();
+      const env = await unlockedRepos();
       await renderApp(
         <SessionScreen
           routineId={undefined}
@@ -325,7 +352,7 @@ describe('sessão', () => {
     });
 
     it('temporizador em repetição: "Tempo esgotado", recomeça sozinho e dá para parar', async () => {
-      const env = await appRepos();
+      const env = await unlockedRepos();
       const clock = fakeClock();
       await renderApp(
         <SessionScreen
@@ -349,9 +376,10 @@ describe('sessão', () => {
       });
       // Nova sessão já rodando, sem passar pela prévia.
       expect(await screen.findByRole('button', { name: 'Pausar' })).toBeOnTheScreen();
-      await waitFor(async () => {
-        expect(await env.repos.history.count()).toBe(1);
+      await act(async () => {
+        await Promise.resolve();
       });
+      expect(await env.repos.history.count()).toBe(1);
 
       clock.advance(6_000);
       await act(() => {
@@ -374,7 +402,7 @@ describe('sessão', () => {
   });
 
   it('banco falhou ao carregar: mensagem própria', async () => {
-    const env = await appRepos();
+    const env = await unlockedRepos();
     env.raw.failOn('active_session');
     await renderApp(
       <SessionScreen routineId="tabata-classic" clockSource={fakeClock()} />,
@@ -395,7 +423,7 @@ describe('sessão', () => {
 
 describe('reabrir com treino em andamento', () => {
   async function withSaved(saveAtWall: (wall: number) => number) {
-    const env = await appRepos();
+    const env = await unlockedRepos();
     const clock = fakeClock();
     const tl = buildTimeline(TABATA);
     await env.repos.session.save(start(createSession('salva', TABATA), tl, clock.now()));
@@ -415,7 +443,7 @@ describe('reabrir com treino em andamento', () => {
     const { repos } = await withSaved(() => 3_600_000);
     expect(await screen.findByRole('header', { name: 'Treino concluído' })).toBeOnTheScreen();
     expect(screen.getByText('Tempo recalculado pelo relógio do aparelho.')).toBeOnTheScreen();
-    await waitFor(async () => {
+    await eventually(async () => {
       expect(await repos.history.count()).toBe(1);
     });
   });
@@ -423,7 +451,7 @@ describe('reabrir com treino em andamento', () => {
   it('relógio do aparelho voltou: fecha como encerrado, sem inventar tempo [PRD 4]', async () => {
     const { repos } = await withSaved(() => -60_000);
     expect(await screen.findByRole('header', { name: 'Treino encerrado' })).toBeOnTheScreen();
-    await waitFor(async () => {
+    await eventually(async () => {
       expect((await repos.history.page()).entries[0]).toMatchObject({
         status: 'interrupted',
         activeMs: 0,

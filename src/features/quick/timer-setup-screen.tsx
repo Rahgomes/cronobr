@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
+import { useStored } from '@/data/use-stored';
 import { clock } from '@/domain/format';
 import { LIMITS } from '@/domain/limits';
 import { quickParams, quickRoutine } from '@/domain/quick';
@@ -15,7 +16,6 @@ import { space } from '@/ui/tokens';
 import { TopBar } from '@/ui/top-bar';
 
 import { parseTimer, TIMER_START } from './parse';
-import { useStored } from './use-stored';
 
 export const TIMER_KEY = 'rapido.temporizador';
 

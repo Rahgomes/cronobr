@@ -142,3 +142,10 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
 - **08/11 — Mostrar só o que já gravou:** favorita aparecia marcada antes do banco terminar e o
   reload do E2E no CI (máquina lenta) perdia. Local passava sempre. Preferência pequena: grava e
   depois atualiza a tela. O axe também precisou esperar o `Modal` do RN-web ganhar `role="dialog"`.
+- **08/11 — `waitFor` assíncrono com timers falsos engole atualização:** callback `async` dentro
+  do `waitFor` sobrepõe `act()` e o React passa a descartar o `setState` do toque seguinte (o
+  botão foi tocado, a tela não mudou). Esperar gravação no banco com um laço de
+  `act(async () => {})` + checagem, não com `waitFor(async)`.
+- **08/11 — Toque longo no E2E:** com o relógio do Playwright parado, `mouse.down()`,
+  `clock.runFor(ms)` e `mouse.up()` simulam o segurar sem espera real.
+
