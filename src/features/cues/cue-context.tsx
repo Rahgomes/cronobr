@@ -40,9 +40,13 @@ export function CueProvider({ port, children }: { port: CuePort; children: React
     () => ({
       port,
       prefs,
+      // Grava e só então mostra: o que aparece escolhido já está no banco (fechar logo em
+      // seguida não perde a escolha; o CI pegou isso recarregando a página).
       setPrefs: (next: CuePrefs) => {
-        setState(next);
-        repos.prefs.set(CUE_PREFS_KEY, next).catch(() => undefined);
+        const show = () => {
+          setState(next);
+        };
+        repos.prefs.set(CUE_PREFS_KEY, next).then(show, show);
       },
     }),
     [port, prefs, repos],
