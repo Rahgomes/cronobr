@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { useRepos } from '@/data/data-context';
+import { useDataRevision, useRepos } from '@/data/data-context';
 
 export const FAVORITES_KEY = 'favoritos';
 
@@ -12,6 +12,7 @@ export const parseFavorites = (raw: unknown): string[] =>
  */
 export function useFavorites() {
   const repos = useRepos();
+  const revision = useDataRevision();
   const [ids, setIds] = useState<string[]>([]);
   useEffect(() => {
     let active = true;
@@ -24,7 +25,7 @@ export function useFavorites() {
     return () => {
       active = false;
     };
-  }, [repos]);
+  }, [repos, revision]);
   // Grava primeiro e só então mostra: o que aparece marcado já está no banco.
   const toggle = useCallback(
     (id: string) => {

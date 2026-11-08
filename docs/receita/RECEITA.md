@@ -166,3 +166,12 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
 - **08/11 — Rótulo repetido na pilha:** botão "Voltar" num diálogo colidiu com o "Voltar" do topo.
   Verbo da ação no diálogo ("Desfazer"), nunca um rótulo de navegação.
 
+- **08/11 — E06, idioma "do aparelho" e o E2E:** o Chromium do Playwright vem em `en-US`. Ligar
+  a língua do aparelho como padrão trocaria a suíte inteira para inglês; `locale: 'pt-BR'` no
+  `use` do config e um teste próprio para cada outra língua.
+- **08/11 — Preferência guardada em memória envelhece:** provedor que lê a preferência uma vez
+  (avisos, tema, favoritas) não vê a restauração de um backup, e a próxima mudança grava o valor
+  velho por cima do restaurado. Um número de revisão no provedor de dados, incrementado depois de
+  restaurar, entra nas dependências de quem lê.
+- **08/11 — Textos tipados sem biblioteca:** `type Messages` derivado do objeto em português
+  (string vira `string`, função mantém a assinatura) faz o `tsc` cobrar cada chave em cada língua.

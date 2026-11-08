@@ -64,8 +64,8 @@ describe('Início', () => {
     expect(router.push).toHaveBeenCalledWith('/modalidades');
     await fireEvent.press(screen.getByRole('button', { name: 'Histórico' }));
     expect(router.push).toHaveBeenCalledWith('/historico');
-    await fireEvent.press(screen.getByRole('button', { name: 'Som e avisos' }));
-    expect(router.push).toHaveBeenCalledWith('/avisos');
+    await fireEvent.press(screen.getByRole('button', { name: 'Ajustes' }));
+    expect(router.push).toHaveBeenCalledWith('/ajustes');
   });
 
   it('três entradas rápidas: cronômetro, temporizador e intervalado', async () => {

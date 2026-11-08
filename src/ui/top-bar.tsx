@@ -3,6 +3,8 @@ import { router } from 'expo-router';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { useT } from '@/i18n/i18n-context';
+
 import { Text } from './text';
 import type { Colors } from './theme';
 import { useColors, useThemedStyles } from './theme-context';
@@ -14,15 +16,18 @@ import { radius, space, touch } from './tokens';
  */
 export function TopBar({ title, right }: { title: string; right?: ReactNode }) {
   const colors = useColors();
+  const t = useT();
   const styles = useThemedStyles(makeStyles);
   return (
     <View style={styles.bar}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Voltar"
+        accessibilityLabel={t.common.back}
         hitSlop={2}
         onPress={() => {
-          router.back();
+          // Aberta direto (link, recarregar a página): sem tela anterior, volta para a Início.
+          if (router.canGoBack()) router.back();
+          else router.replace('/');
         }}
         style={({ pressed }) => [styles.round, pressed && styles.pressed]}
       >

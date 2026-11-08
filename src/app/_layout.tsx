@@ -1,15 +1,19 @@
 import { SplashScreen, Stack, type ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { DataProvider } from '@/data/data-context';
+import { resolveLanguage } from '@/domain/appearance';
 import { CueProvider } from '@/features/cues/cue-context';
 import { createExpoPort } from '@/features/cues/expo-port';
+import { AppearanceProvider } from '@/features/settings/appearance-context';
 import { createFilePort } from '@/features/transfer/expo-file-port';
 import { FilePortProvider } from '@/features/transfer/file-port';
+import { deviceLanguageTags } from '@/i18n/device';
+import { LocaleProvider, useT } from '@/i18n/i18n-context';
 import { Button } from '@/ui/button';
 import { DialogHost } from '@/ui/dialog';
 import { HintProvider } from '@/ui/hint';
@@ -21,24 +25,35 @@ import { space } from '@/ui/tokens';
 void SplashScreen.preventAutoHideAsync();
 
 /** Erro que derrubaria a tela vira uma saída digna, com os dados intactos. */
-export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
+/** Antes do banco abrir, tema e língua seguem o aparelho; depois, a escolha gravada (Ajustes). */
+function DeviceDefaults({ children }: { children: ReactNode }) {
+  const [language] = useState(() => resolveLanguage('auto', deviceLanguageTags()));
   return (
     <ThemeProvider mode="auto">
-      <ErrorView retry={retry} />
+      <LocaleProvider language={language}>{children}</LocaleProvider>
     </ThemeProvider>
+  );
+}
+
+export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
+  return (
+    <DeviceDefaults>
+      <ErrorView retry={retry} />
+    </DeviceDefaults>
   );
 }
 
 function ErrorView({ retry }: { retry: () => Promise<void> }) {
   const colors = useColors();
+  const t = useT();
   return (
     <View style={[styles.error, { backgroundColor: colors.background }]}>
       <Text variant="title" accessibilityRole="header">
-        Algo deu errado
+        {t.crash.title}
       </Text>
-      <Text color="textMuted">Seus treinos estão guardados. Tente de novo.</Text>
+      <Text color="textMuted">{t.crash.body}</Text>
       <Button
-        label="Tentar de novo"
+        label={t.common.retry}
         onPress={() => {
           void retry();
         }}
@@ -66,18 +81,19 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
-        {/* Preferência de tema entra com a tela de Ajustes (E04); até lá, segue o sistema. */}
-        <ThemeProvider mode="auto">
-          <HintProvider>
-            <DataProvider>
-              <CueProvider port={port}>
-                <FilePortProvider port={files}>
-                  <AppStack />
-                </FilePortProvider>
-              </CueProvider>
-            </DataProvider>
-          </HintProvider>
-        </ThemeProvider>
+        <DeviceDefaults>
+          <DataProvider>
+            <AppearanceProvider>
+              <HintProvider>
+                <CueProvider port={port}>
+                  <FilePortProvider port={files}>
+                    <AppStack />
+                  </FilePortProvider>
+                </CueProvider>
+              </HintProvider>
+            </AppearanceProvider>
+          </DataProvider>
+        </DeviceDefaults>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

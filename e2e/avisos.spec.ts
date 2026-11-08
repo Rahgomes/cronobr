@@ -6,6 +6,7 @@ test('som e avisos: canais independentes, escolha com prévia e gravado no apare
   page,
 }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Ajustes' }).click();
   await page.getByRole('button', { name: 'Som e avisos' }).click();
   await expect(page.getByRole('heading', { name: 'Som e avisos' })).toBeVisible();
   await expectNoAxeViolations(page);

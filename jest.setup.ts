@@ -23,3 +23,6 @@ jest.mock('@react-native-async-storage/async-storage', () =>
   jest.requireActual<object>('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 jest.mock('expo-sqlite', () => ({ openDatabaseAsync: jest.fn() }));
+
+// Língua do aparelho nos testes: português (o expo-localization nativo não existe no Jest).
+jest.mock('@/i18n/device', () => ({ deviceLanguageTags: () => ['pt-BR'] }));

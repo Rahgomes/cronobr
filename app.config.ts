@@ -73,6 +73,8 @@ const config: ExpoConfig = {
   web: { output: 'single', favicon: './assets/images/favicon.png', bundler: 'metro' },
   plugins: [
     'expo-router',
+    // Idiomas do app: o aparelho oferece a troca por app (Android 13+, iOS) entre estes.
+    ['expo-localization', { supportedLocales: ['pt-BR', 'en', 'es', 'fr'] }],
     ['expo-audio', { microphonePermission: false }],
     [
       'expo-notifications',

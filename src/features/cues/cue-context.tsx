@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-import { useRepos } from '@/data/data-context';
+import { useDataRevision, useRepos } from '@/data/data-context';
 import { DEFAULT_CUE_PREFS, parseCuePrefs, type CuePrefs } from '@/domain/cues';
 
 import { silentPort, type CuePort } from './port';
@@ -23,6 +23,7 @@ const CueContext = createContext<CueState>({
 /** Avisos do app: a porta (real ou falsa) e as preferências gravadas no banco. */
 export function CueProvider({ port, children }: { port: CuePort; children: ReactNode }) {
   const repos = useRepos();
+  const revision = useDataRevision();
   const [prefs, setState] = useState(DEFAULT_CUE_PREFS);
   useEffect(() => {
     let active = true;
@@ -35,7 +36,7 @@ export function CueProvider({ port, children }: { port: CuePort; children: React
     return () => {
       active = false;
     };
-  }, [repos]);
+  }, [repos, revision]);
   const value = useMemo(
     () => ({
       port,

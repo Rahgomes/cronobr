@@ -81,7 +81,7 @@ Cabeçalho mais:
 | Campo | Conteúdo |
 | --- | --- |
 | `routines` | Rotinas na ordem da lista do app, cada uma com `origin` (`custom`, `preset`, `legacy`), `createdAt` e `updatedAt` (ISO). Até 1.000 |
-| `preferences` | Objeto por chave: `avisos`, `sessao`, `favoritos`, `rapido.intervalo`, `rapido.temporizador`. Chave desconhecida é ignorada; valor estranho volta ao padrão |
+| `preferences` | Objeto por chave: `avisos`, `sessao`, `favoritos`, `rapido.intervalo`, `rapido.temporizador`, `aparencia` (tema e idioma, desde a E06). Chave desconhecida é ignorada; valor estranho volta ao padrão |
 | `history` | Opcional (ausente = backup sem histórico). Até 20.000 registros: `id`, `routine` (a cópia que rodou), `status` (`completed`, `interrupted`), `startedAt`, `endedAt` (ISO), `activeMs`, `workDone`, `workTotal`, `source` (`app`, `legacy`) e, quando houver, `adjusted: true`, `rounds`, `note` |
 
 Fica de fora do backup: cronômetro em andamento, rascunhos do editor, a marca de importação do

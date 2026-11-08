@@ -1,7 +1,8 @@
 import { SplashScreen } from 'expo-router';
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
+import { useT } from '@/i18n/i18n-context';
 import { Button } from '@/ui/button';
 import { Text } from '@/ui/text';
 import { useColors } from '@/ui/theme-context';
@@ -13,10 +14,19 @@ import { StorageError } from './sql';
 
 const ReposContext = createContext<Repos | null>(null);
 
-type State =
-  { status: 'loading' } | { status: 'ready'; repos: Repos } | { status: 'error'; message: string };
+/**
+ * Muda quando um backup troca preferências por baixo das telas abertas (restaurar, desfazer):
+ * quem guarda preferência em memória (avisos, aparência, favoritas) relê.
+ */
+const RevisionContext = createContext<{ revision: number; bump: () => void }>({
+  revision: 0,
+  bump: () => undefined,
+});
 
-const FALLBACK = 'Não deu para abrir seus treinos neste aparelho.';
+type State =
+  | { status: 'loading' }
+  | { status: 'ready'; repos: Repos }
+  | { status: 'error'; message: string | null };
 
 /**
  * Abre o banco antes de qualquer tela. Armazenamento indisponível não vira tela branca:
@@ -30,8 +40,19 @@ export function DataProvider({
   children: ReactNode;
 }) {
   const colors = useColors();
+  const t = useT();
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<State>({ status: 'loading' });
+  const [revision, setRevision] = useState(0);
+  const changes = useMemo(
+    () => ({
+      revision,
+      bump: () => {
+        setRevision((value) => value + 1);
+      },
+    }),
+    [revision],
+  );
   useEffect(() => {
     let active = true;
     open().then(
@@ -42,7 +63,7 @@ export function DataProvider({
         if (active) {
           setState({
             status: 'error',
-            message: error instanceof StorageError ? error.message : FALLBACK,
+            message: error instanceof StorageError ? error.message : null,
           });
         }
       },
@@ -58,21 +79,25 @@ export function DataProvider({
   }, [state.status]);
 
   if (state.status === 'ready') {
-    return <ReposContext.Provider value={state.repos}>{children}</ReposContext.Provider>;
+    return (
+      <ReposContext.Provider value={state.repos}>
+        <RevisionContext value={changes}>{children}</RevisionContext>
+      </ReposContext.Provider>
+    );
   }
   return (
     <View style={[styles.center, { backgroundColor: colors.background }]}>
       {state.status === 'loading' ? (
-        <ActivityIndicator color={colors.primary} accessibilityLabel="Abrindo seus treinos" />
+        <ActivityIndicator color={colors.primary} accessibilityLabel={t.boot.opening} />
       ) : (
         <>
           <Text variant="title" accessibilityRole="header">
-            Armazenamento indisponível
+            {t.boot.unavailable}
           </Text>
-          <Text color="textMuted">{state.message}</Text>
-          <Text color="textMuted">Seus dados não foram apagados.</Text>
+          <Text color="textMuted">{state.message ?? t.boot.fallback}</Text>
+          <Text color="textMuted">{t.boot.notErased}</Text>
           <Button
-            label="Tentar de novo"
+            label={t.common.retry}
             onPress={() => {
               setState({ status: 'loading' });
               setAttempt((value) => value + 1);
@@ -88,6 +113,16 @@ export function useRepos(): Repos {
   const repos = useContext(ReposContext);
   if (!repos) throw new Error('useRepos fora do DataProvider');
   return repos;
+}
+
+/** Número que muda quando os dados foram trocados por inteiro (ver RevisionContext). */
+export function useDataRevision(): number {
+  return useContext(RevisionContext).revision;
+}
+
+/** Avisa as telas abertas de que os dados foram trocados (depois de restaurar ou desfazer). */
+export function useDataChanged(): () => void {
+  return useContext(RevisionContext).bump;
 }
 
 const styles = StyleSheet.create({

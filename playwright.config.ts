@@ -14,6 +14,8 @@ export default defineConfig({
   reporter: env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
+    // Língua do navegador = língua "do aparelho" do app (E06). Os outros idiomas: e2e/idiomas.
+    locale: 'pt-BR',
     trace: 'retain-on-failure',
     ...(env.CHROME_PATH ? { launchOptions: { executablePath: env.CHROME_PATH } } : {}),
   },

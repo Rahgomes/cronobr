@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useEffect, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { useRepos } from '@/data/data-context';
+import { useDataChanged, useRepos } from '@/data/data-context';
 import { ActiveSessionError } from '@/data/repos';
 import { clock } from '@/domain/format';
 import type { Routine } from '@/domain/routine';
@@ -80,6 +80,7 @@ function Lines({ lines }: { lines: string[] }) {
 
 export function ImportScreen({ uri }: { uri?: string | undefined }) {
   const repos = useRepos();
+  const changed = useDataChanged();
   const port = useFilePort();
   const [state, setState] = useState<State>(uri ? { status: 'loading' } : { status: 'idle' });
   const [busy, setBusy] = useState(false);
@@ -115,6 +116,7 @@ export function ImportScreen({ uri }: { uri?: string | undefined }) {
     try {
       const point = restore ? await backupText(repos, true) : null;
       await repos.transfer.apply(ops, PORTABLE_PREF_KEYS, point);
+      changed();
       setState({ status: 'done', lines });
     } catch (error) {
       setFailure(

@@ -14,6 +14,7 @@ import { idGenerator } from '@/features/editor/ids';
 import { MODALITY } from '@/features/modality/catalog';
 import { useFavorites } from '@/features/routines/favorites';
 import { RoutineOptions, type RoutineOptionActions } from '@/features/routines/routine-options';
+import { useT } from '@/i18n/i18n-context';
 import { BrandMark } from '@/ui/brand-mark';
 import { Button } from '@/ui/button';
 import { Carousel } from '@/ui/carousel';
@@ -47,6 +48,7 @@ function models(count: number) {
 /** Início (C01b): recentes e modalidades em carrossel com foto; a lista completa fica um toque adiante. */
 export function HomeScreen() {
   const repos = useRepos();
+  const t = useT();
   const [data, setData] = useState<HomeData | null>(null);
   const [reloads, setReloads] = useState(0);
   const favorites = useFavorites();
@@ -130,23 +132,23 @@ export function HomeScreen() {
         <View style={styles.actions}>
           <RoundAction
             icon="history"
-            label="Histórico"
+            label={t.home.history}
             onPress={() => {
               router.push('/historico');
             }}
           />
           <RoundAction
             icon="backup-restore"
-            label="Backup e transferência"
+            label={t.home.backup}
             onPress={() => {
               router.push('/backup');
             }}
           />
           <RoundAction
             icon="cog-outline"
-            label="Som e avisos"
+            label={t.home.settings}
             onPress={() => {
-              router.push('/avisos');
+              router.push('/ajustes');
             }}
           />
         </View>

@@ -1,7 +1,12 @@
 // expo-router nos testes de tela: navegação vira jest.fn e o foco roda como efeito de montagem.
 import { useEffect } from 'react';
 
-export const router = { push: jest.fn(), replace: jest.fn(), back: jest.fn() };
+export const router = {
+  push: jest.fn(),
+  replace: jest.fn(),
+  back: jest.fn(),
+  canGoBack: jest.fn(() => true),
+};
 export const SplashScreen = {
   hideAsync: jest.fn(() => Promise.resolve()),
   preventAutoHideAsync: jest.fn(),

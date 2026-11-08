@@ -4,7 +4,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { useRepos } from '@/data/data-context';
+import { useDataChanged, useRepos } from '@/data/data-context';
 import { ActiveSessionError } from '@/data/repos';
 import { readTransferFile } from '@/domain/transfer';
 import { replaceOps } from '@/domain/transfer-plan';
@@ -31,6 +31,7 @@ const WHEN = new Intl.DateTimeFormat('pt-BR', {
 
 export function BackupScreen() {
   const repos = useRepos();
+  const changed = useDataChanged();
   const port = useFilePort();
   const [withHistory, setWithHistory] = useState(true);
   const [historyCount, setHistoryCount] = useState(0);
@@ -74,6 +75,7 @@ export function BackupScreen() {
       if (!read.ok || read.file.kind !== 'backup') throw new Error('cópia ilegível');
       await repos.transfer.apply(replaceOps(read.file), PORTABLE_PREF_KEYS, null);
       await repos.transfer.dropRestorePoint();
+      changed();
       setRestorePoint(null);
       setMessage({ tone: 'positive', text: 'Pronto: tudo voltou a como estava antes.' });
     } catch (error) {

@@ -5,7 +5,14 @@ import { PORTABLE_PREF_KEYS, portablePrefs } from './portable-prefs';
 describe('preferências portáveis', () => {
   it('só as chaves do app viajam; as do aparelho ou do momento ficam de fora', () => {
     expect(PORTABLE_PREF_KEYS.sort()).toEqual(
-      ['avisos', 'favoritos', 'rapido.intervalo', 'rapido.temporizador', 'sessao'].sort(),
+      [
+        'aparencia',
+        'avisos',
+        'favoritos',
+        'rapido.intervalo',
+        'rapido.temporizador',
+        'sessao',
+      ].sort(),
     );
     const { prefs } = portablePrefs(
       { cronometro: { laps: [] }, 'rascunho:x': {}, 'legacy.import': 1, sessao: { view: 'foco' } },

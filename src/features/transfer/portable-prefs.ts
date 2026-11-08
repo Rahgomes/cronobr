@@ -1,5 +1,6 @@
 // Preferências que viajam no backup (E05). Fica de fora o que é do aparelho ou do momento:
 // cronômetro em andamento, rascunhos do editor, marca da importação do app antigo, permissões.
+import { parseAppearance } from '@/domain/appearance';
 import { parseCuePrefs, SOUND_IDS } from '@/domain/cues';
 import { parseSessionPrefs } from '@/domain/session-prefs';
 import { CUE_PREFS_KEY } from '@/features/cues/cue-context';
@@ -8,9 +9,11 @@ import { parseInterval, parseTimer } from '@/features/quick/parse';
 import { TIMER_KEY } from '@/features/quick/timer-setup-screen';
 import { FAVORITES_KEY, parseFavorites } from '@/features/routines/favorites';
 import { SESSION_PREFS_KEY } from '@/features/session/session-view';
+import { APPEARANCE_KEY } from '@/features/settings/appearance-context';
 
 const PARSERS: Record<string, (raw: unknown) => unknown> = {
   [CUE_PREFS_KEY]: parseCuePrefs,
+  [APPEARANCE_KEY]: parseAppearance,
   [SESSION_PREFS_KEY]: parseSessionPrefs,
   [FAVORITES_KEY]: parseFavorites,
   [INTERVAL_KEY]: parseInterval,
