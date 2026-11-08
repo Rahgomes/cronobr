@@ -1,3 +1,4 @@
+import { pt } from '@/i18n/messages/pt';
 import { must, routine } from '@/test/domain';
 
 import type { HistoryEntry } from './history';
@@ -12,6 +13,8 @@ import {
   summarize,
   type RoutineItem,
 } from './transfer-plan';
+
+const W = pt.words;
 
 const NOW = 5_000;
 const ids = () => {
@@ -49,21 +52,23 @@ describe('rotina compartilhada', () => {
 
   it('nova entra como própria, com o id do arquivo', () => {
     const fresh: RoutineItem = { routine: { ...other, origin: 'preset' }, status: 'new' };
-    expect(shareOps(fresh, 'add', ids(), NOW).routines).toEqual([{ ...other, origin: 'custom' }]);
+    expect(shareOps(fresh, 'add', ids(), NOW, W).routines).toEqual([
+      { ...other, origin: 'custom' },
+    ]);
   });
 
   it('cópia: ids novos e "(cópia)" no nome; nada daqui muda', () => {
-    const [copy] = shareOps(item, 'copy', ids(), NOW).routines;
+    const [copy] = shareOps(item, 'copy', ids(), NOW, W).routines;
     expect(copy).toMatchObject({ id: 'n1', name: 'Pernas (cópia)', version: 1, createdAt: NOW });
     expect(copy?.blocks[0]?.id).not.toBe(mine.blocks[0]?.id);
   });
 
   it('já existente sem escolher "atualizar" vira cópia (nunca sobrescreve sozinho)', () => {
-    expect(shareOps(item, 'add', ids(), NOW).routines[0]?.name).toBe('Pernas (cópia)');
+    expect(shareOps(item, 'add', ids(), NOW, W).routines[0]?.name).toBe('Pernas (cópia)');
   });
 
   it('atualizar: mesmo id, versão sobe, data de criação mantida, conteúdo do arquivo', () => {
-    expect(shareOps(item, 'update', ids(), NOW)).toEqual({
+    expect(shareOps(item, 'update', ids(), NOW, W)).toEqual({
       replace: false,
       routines: [{ ...incoming, version: 3, createdAt: 10, updatedAt: NOW }],
       history: [],
@@ -73,7 +78,7 @@ describe('rotina compartilhada', () => {
   });
 
   it('cópia de nome longo não passa de 60 letras', () => {
-    const copy = asCopy(routine({ name: `${'x'.repeat(58)} y` }), ids(), NOW);
+    const copy = asCopy(routine({ name: `${'x'.repeat(58)} y` }), ids(), NOW, W);
     expect(copy.name).toHaveLength(60);
     expect(copy.name.endsWith(' (cópia)')).toBe(true);
   });
@@ -101,7 +106,7 @@ describe('backup', () => {
   const history = [historyEntry('h1'), historyEntry('h2')];
 
   it('juntar: nova entra, igual fica, conflito vira cópia; histórico vai por id', () => {
-    const ops = mergeOps(items, history, 'copy', ids(), NOW);
+    const ops = mergeOps(items, history, 'copy', ids(), NOW, W);
     expect(ops.routines.map((r) => [r.id, r.name])).toEqual([
       ['novo', 'Nova'],
       ['n1', 'Pernas (cópia)'],
@@ -110,14 +115,14 @@ describe('backup', () => {
   });
 
   it('juntar com "usar a do arquivo": conflito atualiza a daqui', () => {
-    const ops = mergeOps(items, null, 'update', ids(), NOW);
+    const ops = mergeOps(items, null, 'update', ids(), NOW, W);
     expect(ops.routines[1]).toMatchObject({ id: 'a', prepSeconds: 30, version: 3, updatedAt: NOW });
     expect(ops.history).toEqual([]);
   });
 
   it('conflito sem a daqui registrada (defensivo) usa a versão do arquivo', () => {
     const lone: RoutineItem = { routine: mine, status: 'conflict' };
-    expect(mergeOps([lone], null, 'update', ids(), NOW).routines[0]?.version).toBe(3);
+    expect(mergeOps([lone], null, 'update', ids(), NOW, W).routines[0]?.version).toBe(3);
   });
 
   it('restaurar: biblioteca e preferências iguais às do arquivo; histórico só se veio', () => {

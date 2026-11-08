@@ -1,9 +1,12 @@
+import { pt } from '@/i18n/messages/pt';
 import { must } from '@/test/domain';
 import { LEGADO_V1 } from '@/test/fixtures/legado-v1';
 
 import { convertLegacy, LEGACY_DEFAULT_CONFIG, legacyConfig } from './legacy';
 import { checkRoutine } from './limits';
 import { buildTimeline, summarize } from './timeline';
+
+const W = pt.words;
 
 describe('migração dos dados antigos [PRD 9]', () => {
   const result = convertLegacy(LEGADO_V1);
@@ -13,7 +16,7 @@ describe('migração dos dados antigos [PRD 9]', () => {
       ['legacy-p-1', 'Meu HIIT', 'hiit', 'legacy'],
       ['legacy-p-2', 'Alongar', 'personalizada', 'legacy'],
     ]);
-    for (const routine of result.routines) expect(checkRoutine(routine).ok).toBe(true);
+    for (const routine of result.routines) expect(checkRoutine(routine, W).ok).toBe(true);
     // Valores absurdos foram trazidos para dentro dos limites, sem descanso de 0 s.
     expect(summarize(buildTimeline(must(result.routines[1])))).toMatchObject({
       knownMs: 1000,

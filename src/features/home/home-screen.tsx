@@ -7,12 +7,12 @@ import { copyRoutine } from '@/domain/editor';
 import type { Session } from '@/domain/engine';
 import { clock, relativeDay } from '@/domain/format';
 import { recentRoutines, type RecentRoutine } from '@/domain/history';
-import { PRESET_MODALITIES, PRESETS, presetsOf } from '@/domain/presets';
 import type { Routine } from '@/domain/routine';
 import { buildTimeline, summarize } from '@/domain/timeline';
 import { idGenerator } from '@/features/editor/ids';
 import { MODALITY } from '@/features/modality/catalog';
 import { useFavorites } from '@/features/routines/favorites';
+import { usePresets } from '@/features/routines/presets';
 import { RoutineOptions, type RoutineOptionActions } from '@/features/routines/routine-options';
 import { useT } from '@/i18n/i18n-context';
 import { BrandMark } from '@/ui/brand-mark';
@@ -49,6 +49,7 @@ function models(count: number) {
 export function HomeScreen() {
   const repos = useRepos();
   const t = useT();
+  const presets = usePresets();
   const [data, setData] = useState<HomeData | null>(null);
   const [reloads, setReloads] = useState(0);
   const favorites = useFavorites();
@@ -83,7 +84,7 @@ export function HomeScreen() {
   };
 
   const mine = data?.mine ?? [];
-  const byId = new Map([...PRESETS, ...mine].map((r) => [r.id, r]));
+  const byId = new Map([...presets.all, ...mine].map((r) => [r.id, r]));
   const favoriteRoutines = favorites.ids.flatMap((id) => byId.get(id) ?? []);
   const open = (routine: Routine) => {
     router.push({ pathname: '/sessao', params: { rotina: routine.id } });
@@ -111,7 +112,7 @@ export function HomeScreen() {
       },
       duplicate: own
         ? () => {
-            const copy = copyRoutine(routine, idGenerator(), Date.now());
+            const copy = copyRoutine(routine, idGenerator(), Date.now(), t.words);
             void repos.routines.save(copy).then(reload);
           }
         : undefined,
@@ -183,7 +184,7 @@ export function HomeScreen() {
         >
           {data.recent.map(({ entryId, routine, lastEndedAt }) => {
             const total = clock(summarize(buildTimeline(routine)).knownMs);
-            const when = relativeDay(lastEndedAt, data.now);
+            const when = relativeDay(lastEndedAt, data.now, t.words);
             return (
               <PhotoCard
                 key={entryId}
@@ -211,9 +212,9 @@ export function HomeScreen() {
           },
         }}
       >
-        {PRESET_MODALITIES.map((modality) => {
+        {presets.modalities.map((modality) => {
           const info = MODALITY[modality];
-          const count = models(presetsOf(modality).length);
+          const count = models(presets.of(modality).length);
           return (
             <PhotoCard
               key={modality}

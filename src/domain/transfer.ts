@@ -6,6 +6,7 @@ import { z } from 'zod';
 import type { HistoryEntry } from './history';
 import { checkRoutine } from './limits';
 import { MODALITIES, type Routine } from './routine';
+import type { Words } from './words';
 
 const FORMAT_ID = 'cronobr';
 export const SCHEMA_VERSION = 1;
@@ -269,8 +270,8 @@ const libraryFrom = (body: LibraryRoutineFile) =>
   });
 
 /** Rotina que vai para a biblioteca passa pelos limites do editor: o motor nunca vê nada pior. */
-function checked(routine: Routine, details: string[]): Routine | null {
-  const check = checkRoutine(routine);
+function checked(routine: Routine, details: string[], w: Words): Routine | null {
+  const check = checkRoutine(routine, w);
   if (check.ok) return check.routine;
   const reasons = check.issues.map((issue) => issue.message).join('; ');
   details.push(`"${routine.name || routine.id}": ${reasons}`);
@@ -285,36 +286,36 @@ function issuesOf(error: z.ZodError): string[] {
 
 /**
  * Lê o texto de um arquivo. Tudo ou nada: se alguma parte não passa, nada é aproveitado e a
- * mensagem diz o motivo em português. `now` só entra na rotina compartilhada (sem datas).
+ * mensagem diz o motivo na língua de `w`. `now` só entra na rotina compartilhada (sem datas).
  */
-export function readTransferFile(text: string, byteSize: number, now: number): ReadResult {
+export function readTransferFile(
+  text: string,
+  byteSize: number,
+  now: number,
+  w: Words,
+): ReadResult {
+  const f = w.file;
   if (byteSize > MAX_FILE_BYTES) {
-    return fail(
-      'tooBig',
-      `O arquivo passa de ${String(MAX_FILE_BYTES / 1024 / 1024)} MB. Exporte de novo sem o histórico.`,
-    );
+    return fail('tooBig', f.tooBig(MAX_FILE_BYTES / 1024 / 1024));
   }
   let raw: unknown;
   try {
     raw = JSON.parse(text);
   } catch {
-    return fail('notJson', 'O arquivo está incompleto ou não é do CronôBR.');
+    return fail('notJson', f.notJson);
   }
   const top = header.safeParse(raw);
   if (!top.success) {
     const format = (raw as { format?: unknown } | null)?.format;
     return format === FORMAT_ID
-      ? fail('invalid', 'O arquivo do CronôBR está com o cabeçalho estragado.', issuesOf(top.error))
-      : fail('notCronobr', 'Este arquivo não é do CronôBR.');
+      ? fail('invalid', f.headerBroken, issuesOf(top.error))
+      : fail('notCronobr', f.notCronobr);
   }
   if (top.data.schemaVersion > SCHEMA_VERSION) {
-    return fail(
-      'newerVersion',
-      `Este arquivo foi feito por uma versão mais nova do CronôBR (${top.data.appVersion}). Atualize o app para abrir.`,
-    );
+    return fail('newerVersion', f.newer(top.data.appVersion));
   }
   if (top.data.schemaVersion < 1) {
-    return fail('olderVersion', 'Versão do arquivo desconhecida.');
+    return fail('olderVersion', f.older);
   }
   const meta: FileMeta = {
     schemaVersion: top.data.schemaVersion,
@@ -325,28 +326,26 @@ export function readTransferFile(text: string, byteSize: number, now: number): R
 
   if (top.data.kind === 'routine') {
     const parsed = routineEnvelope.safeParse(raw);
-    if (!parsed.success)
-      return fail('invalid', 'A rotina do arquivo está com dados errados.', issuesOf(parsed.error));
+    if (!parsed.success) return fail('invalid', f.routineInvalid, issuesOf(parsed.error));
     const routine = checked(
       routineFrom(parsed.data.routine, { origin: 'custom', createdAt: now, updatedAt: now }),
       details,
+      w,
     );
-    if (!routine) return fail('invalid', 'A rotina do arquivo passa dos limites do app.', details);
+    if (!routine) return fail('invalid', f.routineLimits, details);
     return { ok: true, file: { kind: 'routine', meta, routine } };
   }
 
   const parsed = backupEnvelope.safeParse(raw);
-  if (!parsed.success)
-    return fail('invalid', 'O backup está com dados errados.', issuesOf(parsed.error));
-  const routines = parsed.data.routines.map((body) => checked(libraryFrom(body), details));
-  if (details.length > 0)
-    return fail('invalid', 'Há rotinas no backup que passam dos limites do app.', details);
+  if (!parsed.success) return fail('invalid', f.backupInvalid, issuesOf(parsed.error));
+  const routines = parsed.data.routines.map((body) => checked(libraryFrom(body), details, w));
+  if (details.length > 0) return fail('invalid', f.backupLimits, details);
   const ids = new Set<string>();
   for (const routine of parsed.data.routines) {
-    if (ids.has(routine.id)) details.push(`Rotina repetida no arquivo: "${routine.name}"`);
+    if (ids.has(routine.id)) details.push(f.duplicate(routine.name));
     ids.add(routine.id);
   }
-  if (details.length > 0) return fail('invalid', 'O backup tem rotinas repetidas.', details);
+  if (details.length > 0) return fail('invalid', f.duplicates, details);
   const history = parsed.data.history?.map((entry): HistoryEntry => ({
     id: entry.id,
     routine: libraryFrom(entry.routine),

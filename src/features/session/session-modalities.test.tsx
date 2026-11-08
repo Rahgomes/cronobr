@@ -48,11 +48,14 @@ describe('EMOM', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Terminei' }));
     expect(screen.getByRole('header', { name: 'Descanso' })).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Terminei' })).toBeNull();
-    expect(port.play).toHaveBeenLastCalledWith({
-      sound: 'whistle',
-      speech: 'Descanso',
-      haptic: 'phase',
-    });
+    expect(port.play).toHaveBeenLastCalledWith(
+      {
+        sound: 'whistle',
+        speech: 'Descanso',
+        haptic: 'phase',
+      },
+      'pt-BR',
+    );
     // O relógio não muda: faltam os mesmos 40 s.
     expect(screen.getByRole('timer')).toHaveTextContent('0:40');
     await advance(41_000);

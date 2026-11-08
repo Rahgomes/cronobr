@@ -5,6 +5,7 @@ import { useStored } from '@/data/use-stored';
 import { clock } from '@/domain/format';
 import { LIMITS } from '@/domain/limits';
 import { quickParams, quickRoutine } from '@/domain/quick';
+import { useT } from '@/i18n/i18n-context';
 import { Button } from '@/ui/button';
 import { Card } from '@/ui/card';
 import { Screen } from '@/ui/screen';
@@ -21,10 +22,11 @@ export const TIMER_KEY = 'rapido.temporizador';
 
 /** Temporizador: um tempo só, nome opcional e, se quiser, recomeça sozinho ao acabar. */
 export function TimerSetupScreen() {
+  const t = useT();
   const [timer, setTimer, ready] = useStored(TIMER_KEY, parseTimer, TIMER_START);
   const minutes = Math.floor(timer.seconds / 60);
   const seconds = timer.seconds % 60;
-  const result = quickRoutine(timer);
+  const result = quickRoutine(timer, t.words);
   const start = () => {
     router.push({
       pathname: '/sessao',

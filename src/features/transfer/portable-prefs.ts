@@ -56,7 +56,7 @@ export function portablePrefs(
     const missing = unknownSounds(raw[CUE_PREFS_KEY]);
     if (missing > 0) notes.push('Som que não existe nesta versão: ficou o som padrão.');
     if (parseCuePrefs(raw[CUE_PREFS_KEY]).voice) {
-      notes.push('Voz: usa a voz em português deste aparelho.');
+      notes.push('Voz: usa a voz deste aparelho, na língua do app.');
     }
   }
   const favorites = prefs[FAVORITES_KEY];

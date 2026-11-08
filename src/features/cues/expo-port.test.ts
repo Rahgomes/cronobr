@@ -100,6 +100,13 @@ describe('porta real dos avisos', () => {
     expect(Speech.speak).toHaveBeenCalledWith('Descanso', { language: 'pt-BR' });
   });
 
+  it('voz na língua do app', async () => {
+    const port = createExpoPort();
+    port.play({ sound: null, speech: 'Rest', haptic: null }, 'en');
+    await flush();
+    expect(Speech.speak).toHaveBeenCalledWith('Rest', { language: 'en-US' });
+  });
+
   it('som e voz juntos: a voz espera o ataque do som e o som baixa por baixo dela', () => {
     jest.useFakeTimers();
     const port = createExpoPort();

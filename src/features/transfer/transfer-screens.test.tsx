@@ -8,6 +8,7 @@ import { presetById } from '@/domain/presets';
 import { buildTimeline } from '@/domain/timeline';
 import { readTransferFile, routineFileText, type TransferFile } from '@/domain/transfer';
 import { RoutineOptions } from '@/features/routines/routine-options';
+import { pt } from '@/i18n/messages/pt';
 import { appRepos, fakeFiles, renderApp } from '@/test/app';
 import { block, clockAt, must, routine, step } from '@/test/domain';
 import { router } from '@/test/expo-router-mock';
@@ -79,7 +80,7 @@ async function library(env?: Awaited<ReturnType<typeof appRepos>>) {
 }
 
 const parsed = (text: string): TransferFile => {
-  const result = readTransferFile(text, text.length, 0);
+  const result = readTransferFile(text, text.length, 0, pt.words);
   if (!result.ok) throw new Error(result.message);
   return result.file;
 };

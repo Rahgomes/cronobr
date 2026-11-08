@@ -34,9 +34,11 @@ it('corrida e caminhada alternadas, com nome', () => {
 });
 
 it('mobilidade: etapa dos dois lados vira esquerdo e direito', () => {
-  const names = buildTimeline(must(presetById('mobilidade-manha'))).map((s) => s.name);
-  expect(names).toContain('Quadril, lado esquerdo');
-  expect(names.indexOf('Quadril, lado direito')).toBe(names.indexOf('Quadril, lado esquerdo') + 1);
+  const names = buildTimeline(must(presetById('mobilidade-manha'))).map((s) =>
+    s.side ? `${String(s.name)}, ${s.side}` : s.name,
+  );
+  expect(names).toContain('Quadril, left');
+  expect(names.indexOf('Quadril, right')).toBe(names.indexOf('Quadril, left') + 1);
   expect(names).toContain('Pescoço');
-  expect(names).not.toContain('Pescoço, lado esquerdo');
+  expect(names).not.toContain('Pescoço, left');
 });

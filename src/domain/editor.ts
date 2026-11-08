@@ -1,27 +1,28 @@
 // Operações do editor de rotinas (E04, C02). Puras: recebem a rotina em edição e devolvem
 // outra, sem mexer na original (o rascunho e o "descartar" dependem disso). Ids vêm de fora.
-import { presetById } from './presets';
+import { LIMITS } from './limits';
 import type { Block, Modality, Routine, Step, StepKind } from './routine';
+import type { Words } from './words';
 
 export type NewId = () => string;
 
-function stepOf(kind: StepKind, id: string): Step {
+function stepOf(kind: StepKind, id: string, w: Words): Step {
   return kind === 'work'
-    ? { id, name: 'Exercício', kind, seconds: 30, reps: null }
-    : { id, name: 'Descanso', kind, seconds: 15, reps: null };
+    ? { id, name: w.newWork, kind, seconds: 30, reps: null }
+    : { id, name: w.newRest, kind, seconds: 15, reps: null };
 }
 
-function blockOf(newId: NewId, number: number): Block {
+function blockOf(newId: NewId, number: number, w: Words): Block {
   return {
     id: newId(),
-    name: `Bloco ${String(number)}`,
+    name: w.newBlock(number),
     repeat: 3,
-    steps: [stepOf('work', newId()), stepOf('rest', newId())],
+    steps: [stepOf('work', newId(), w), stepOf('rest', newId(), w)],
     restAfterSeconds: 60,
   };
 }
 
-export function newRoutine(modality: Modality, newId: NewId, now: number): Routine {
+export function newRoutine(modality: Modality, newId: NewId, now: number, w: Words): Routine {
   return {
     id: newId(),
     name: '',
@@ -29,19 +30,28 @@ export function newRoutine(modality: Modality, newId: NewId, now: number): Routi
     version: 1,
     origin: 'custom',
     prepSeconds: 10,
-    blocks: [blockOf(newId, 1)],
+    blocks: [blockOf(newId, 1, w)],
     cooldownSeconds: 0,
     createdAt: now,
     updatedAt: now,
   };
 }
 
-/** Cópia editável (de modelo pronto ou rotina própria): ids novos, versão 1, sempre "custom". */
-export function copyRoutine(source: Routine, newId: NewId, now: number, name?: string): Routine {
+/** "Treino (cópia)", sem passar do limite de letras do nome. */
+function copyName(name: string, w: Words): string {
+  const base = name.slice(0, LIMITS.nameMax - w.copySuffix.length).trimEnd();
+  return `${base}${w.copySuffix}`;
+}
+
+/**
+ * Cópia editável (de modelo pronto ou rotina própria): ids novos, versão 1, sempre "custom".
+ * Modelo pronto mantém o nome; rotina própria ganha "(cópia)".
+ */
+export function copyRoutine(source: Routine, newId: NewId, now: number, w: Words): Routine {
   return {
     ...source,
     id: newId(),
-    name: name ?? (source.origin === 'preset' ? source.name : `${source.name} (cópia)`),
+    name: source.origin === 'preset' ? source.name : copyName(source.name, w),
     origin: 'custom',
     version: 1,
     createdAt: now,
@@ -56,13 +66,13 @@ export function copyRoutine(source: Routine, newId: NewId, now: number, name?: s
 
 /** Ponto de partida do editor: modelo pronto vira cópia; sem modelo, uma rotina nova. */
 export function startFrom(
-  from: string | undefined,
+  preset: Routine | undefined,
   modality: Modality,
   newId: NewId,
   now: number,
+  w: Words,
 ): Routine {
-  const preset = from ? presetById(from) : undefined;
-  return preset ? copyRoutine(preset, newId, now) : newRoutine(modality, newId, now);
+  return preset ? copyRoutine(preset, newId, now, w) : newRoutine(modality, newId, now, w);
 }
 
 /** Gravar: versão sobe só quando a rotina já existia. */
@@ -106,8 +116,11 @@ export const edit = {
   ): Routine {
     return withBlock(routine, at, (block) => ({ ...block, ...patch }));
   },
-  addBlock(routine: Routine, newId: NewId): Routine {
-    return { ...routine, blocks: [...routine.blocks, blockOf(newId, routine.blocks.length + 1)] };
+  addBlock(routine: Routine, newId: NewId, w: Words): Routine {
+    return {
+      ...routine,
+      blocks: [...routine.blocks, blockOf(newId, routine.blocks.length + 1, w)],
+    };
   },
   removeBlock(routine: Routine, at: number): Routine {
     if (routine.blocks.length <= 1) return routine;
@@ -117,10 +130,17 @@ export const edit = {
     return { ...routine, blocks: move(routine.blocks, at, to) };
   },
   /** Insere depois de `after` (-1 = no começo). */
-  addStep(routine: Routine, block: number, after: number, kind: StepKind, newId: NewId): Routine {
+  addStep(
+    routine: Routine,
+    block: number,
+    after: number,
+    kind: StepKind,
+    newId: NewId,
+    w: Words,
+  ): Routine {
     return withBlock(routine, block, (b) => {
       const steps = [...b.steps];
-      steps.splice(after + 1, 0, stepOf(kind, newId()));
+      steps.splice(after + 1, 0, stepOf(kind, newId(), w));
       return { ...b, steps };
     });
   },

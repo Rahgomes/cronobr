@@ -31,7 +31,7 @@ describe('preferências portáveis', () => {
     });
     expect(notes).toEqual([
       'Som que não existe nesta versão: ficou o som padrão.',
-      'Voz: usa a voz em português deste aparelho.',
+      'Voz: usa a voz deste aparelho, na língua do app.',
     ]);
     expect(portablePrefs({ avisos: { voice: false, sounds: 'x' } }, new Set()).notes).toEqual([]);
   });

@@ -4,6 +4,7 @@
 import { clock } from './format';
 import { checkRoutine } from './limits';
 import { intervalRoutine, type IntervalConfig, type Routine } from './routine';
+import type { Words } from './words';
 
 export type QuickSetup =
   | { kind: 'temporizador'; seconds: number; name: string }
@@ -18,35 +19,40 @@ export const DEFAULT_INTERVAL = {
   rounds: 8,
 } as const;
 
-/** Rotina pronta para o motor, ou a primeira mensagem de limite em português. */
+/** Rotina pronta para o motor, ou as mensagens de limite na língua de `w`. */
 export function quickRoutine(
   setup: QuickSetup,
+  w: Words,
 ): { ok: true; routine: Routine } | { ok: false; message: string } {
   const routine =
     setup.kind === 'temporizador'
-      ? timerRoutine(setup.seconds, setup.name.trim())
+      ? timerRoutine(setup.seconds, setup.name.trim(), w)
       : intervalRoutine(
           {
             // Id pela configuração: cada combinação vira um card próprio em Recentes.
             id: `rapido-i-${[setup.prepSeconds, setup.workSeconds, setup.restSeconds, setup.rounds].join('-')}`,
-            name: `Intervalado ${clock(setup.workSeconds * 1000)}/${clock(setup.restSeconds * 1000)} × ${String(setup.rounds)}`,
+            name: w.interval(
+              clock(setup.workSeconds * 1000),
+              clock(setup.restSeconds * 1000),
+              setup.rounds,
+            ),
             modality: 'personalizada',
             origin: 'custom',
             createdAt: 0,
           },
           setup,
         );
-  const check = checkRoutine(routine);
+  const check = checkRoutine(routine, w);
   return check.ok
     ? { ok: true, routine: check.routine }
     : { ok: false, message: check.issues.map((issue) => issue.message).join(' ') };
 }
 
-function timerRoutine(seconds: number, name: string): Routine {
+function timerRoutine(seconds: number, name: string, w: Words): Routine {
   const routine = intervalRoutine(
     {
       id: `rapido-t-${String(seconds)}`,
-      name: name || `Temporizador ${clock(seconds * 1000)}`,
+      name: name || w.timer(clock(seconds * 1000)),
       modality: 'temporizador',
       origin: 'custom',
       createdAt: 0,
@@ -57,7 +63,7 @@ function timerRoutine(seconds: number, name: string): Routine {
     ...routine,
     blocks: routine.blocks.map((b) => ({
       ...b,
-      steps: b.steps.map((step) => ({ ...step, name: 'Tempo' })),
+      steps: b.steps.map((step) => ({ ...step, name: w.timerStep })),
     })),
   };
 }

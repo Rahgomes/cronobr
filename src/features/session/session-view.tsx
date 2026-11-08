@@ -5,7 +5,7 @@ import { AccessibilityInfo, StyleSheet, View } from 'react-native';
 import { useRepos } from '@/data/data-context';
 import { useStored } from '@/data/use-stored';
 import { planAlerts } from '@/domain/alerts';
-import { cuesFor, earlyRestCues, PHASE_LABEL } from '@/domain/cues';
+import { cuesFor, earlyRestCues, segmentTitle } from '@/domain/cues';
 import { restingEarly, type Session } from '@/domain/engine';
 import type { SessionEvent } from '@/domain/events';
 import { clock, duration } from '@/domain/format';
@@ -14,6 +14,7 @@ import { DEFAULT_SESSION_PREFS, parseSessionPrefs } from '@/domain/session-prefs
 import { summarize, type Segment } from '@/domain/timeline';
 import { isAway } from '@/features/cues/away';
 import { useCues } from '@/features/cues/cue-context';
+import { useT } from '@/i18n/i18n-context';
 import { Button } from '@/ui/button';
 import { Card } from '@/ui/card';
 import { dialog } from '@/ui/dialog';
@@ -26,7 +27,6 @@ import { radius, space } from '@/ui/tokens';
 import { RoundAction } from '@/ui/top-bar';
 
 import { systemClock, type Clock } from './clock';
-import { segmentTitle } from './labels';
 import { FocusBody, ListBody, PHASE_TINT, RingBody } from './session-bodies';
 import {
   LockButton,
@@ -66,13 +66,14 @@ export function SessionView({
   again?: (() => void) | undefined;
 }) {
   const repos = useRepos();
+  const w = useT().words;
   const { port, prefs } = useCues();
   const runner = useSessionRunner({
     initial,
     repo: repos.session,
     clock: clockSource,
     onMilestone: (next, now) => {
-      port.schedule(planAlerts(next, runner.timeline, now, prefs));
+      port.schedule(planAlerts(next, runner.timeline, now, prefs, w));
     },
     onEvents: (all, snap) => {
       // EMOM terminado antes: a metade do minuto já é descanso, não tem o que avisar.
@@ -80,11 +81,11 @@ export function SessionView({
         ? all.filter((event) => event.type !== 'halfway')
         : all;
       // Fora da tela quem avisa são as notificações agendadas; tocar aqui também dobraria.
-      if (!isAway()) port.play(cuesFor(events, runner.timeline, prefs));
+      if (!isAway()) port.play(cuesFor(events, runner.timeline, prefs, w));
       announce(events);
       const phase = events.find((event) => event.type === 'phase');
       const segment = phase ? runner.timeline[phase.segment] : undefined;
-      if (segment) AccessibilityInfo.announceForAccessibility(segmentTitle(segment));
+      if (segment) AccessibilityInfo.announceForAccessibility(segmentTitle(segment, w));
     },
   });
   const { session, snap, timeline } = runner;
@@ -264,7 +265,7 @@ export function SessionView({
   // EMOM terminado antes: a tela mostra descanso até a virada do minuto.
   const segment: Segment | undefined =
     current && resting
-      ? { ...current, phase: 'rest', name: PHASE_LABEL.rest, early: false }
+      ? { ...current, phase: 'rest', name: null, side: undefined, early: false }
       : current;
   const manual = segment?.durationMs === null;
   const canFinishEarly = segment?.early === true;
@@ -284,7 +285,7 @@ export function SessionView({
   const jump = (row: Segment) => {
     lock.poke();
     dialog.alert(
-      `Ir para ${segmentTitle(row)}?`,
+      `Ir para ${segmentTitle(row, w)}?`,
       'O treino segue dali. No histórico ele fica marcado como ajustado.',
       [
         { text: 'Cancelar', style: 'cancel' },
@@ -322,7 +323,7 @@ export function SessionView({
               onBlocked={blocked}
               onPress={touch(() => {
                 runner.finishEarly();
-                if (!isAway()) port.play(earlyRestCues(prefs));
+                if (!isAway()) port.play(earlyRestCues(prefs, w));
               })}
             />
           ) : null}

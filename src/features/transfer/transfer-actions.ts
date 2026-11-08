@@ -14,6 +14,7 @@ import {
   type ReadResult,
 } from '@/domain/transfer';
 import { classify, summarize, type BackupSummary, type RoutineItem } from '@/domain/transfer-plan';
+import type { Words } from '@/domain/words';
 
 import { APP_VERSION, type FilePort } from './file-port';
 import { PORTABLE_PREF_KEYS, portablePrefs } from './portable-prefs';
@@ -62,9 +63,10 @@ async function prepareFromText(
   repos: Repos,
   text: string,
   size: number,
-  now = Date.now(),
+  w: Words,
+  now: number,
 ): Promise<Prepared> {
-  const read: ReadResult = readTransferFile(text, size, now);
+  const read: ReadResult = readTransferFile(text, size, now, w);
   if (!read.ok) return { kind: 'error', message: read.message, details: read.details };
   const library = await repos.routines.list();
   const { file } = read;
@@ -101,11 +103,12 @@ export async function prepareFromUri(
   repos: Repos,
   port: FilePort,
   uri: string,
+  w: Words,
   now = Date.now(),
 ): Promise<Prepared> {
   try {
     const { text, size } = await port.read(uri, MAX_FILE_BYTES);
-    return await prepareFromText(repos, text, size, now);
+    return await prepareFromText(repos, text, size, w, now);
   } catch {
     return {
       kind: 'error',

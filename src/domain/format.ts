@@ -1,3 +1,5 @@
+import type { Words } from './words';
+
 // Tempo para leitura humana. Arredonda PARA CIMA: com 0,4 s restantes a tela ainda mostra 0:01,
 // e o zero só aparece quando a etapa acabou de fato.
 export function clock(ms: number): string {
@@ -25,17 +27,17 @@ export function duration(ms: number): string {
 const DAY = 24 * 60 * 60 * 1000;
 
 /** "hoje", "ontem", "há 3 dias", "há 2 semanas", "há 5 meses", por dia do calendário local. */
-export function relativeDay(when: number, now: number): string {
+export function relativeDay(when: number, now: number, w: Words): string {
   const start = (t: number) => {
     const d = new Date(t);
     return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
   };
   const days = Math.max(0, Math.round((start(now) - start(when)) / DAY));
-  if (days === 0) return 'hoje';
-  if (days === 1) return 'ontem';
-  if (days < 14) return `há ${String(days)} dias`;
-  if (days < 60) return `há ${String(Math.floor(days / 7))} semanas`;
-  return `há ${String(Math.floor(days / 30))} meses`;
+  if (days === 0) return w.today;
+  if (days === 1) return w.yesterday;
+  if (days < 14) return w.daysAgo(days);
+  if (days < 60) return w.weeksAgo(Math.floor(days / 7));
+  return w.monthsAgo(Math.floor(days / 30));
 }
 
 /** Cronômetro: "0:05.3", "12:34.5", "1:02:03.4". Trunca (não arredonda): nunca mostra adiantado. */

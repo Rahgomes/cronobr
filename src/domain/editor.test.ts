@@ -1,9 +1,12 @@
+import { pt } from '@/i18n/messages/pt';
 import { block, must, routine, step } from '@/test/domain';
 
 import { copyRoutine, edit, newRoutine, stamp, startFrom } from './editor';
 import { checkRoutine } from './limits';
 import { presetById } from './presets';
 import { buildTimeline, summarize } from './timeline';
+
+const W = pt.words;
 
 function ids() {
   let n = 0;
@@ -12,31 +15,33 @@ function ids() {
 
 describe('editor de rotinas', () => {
   it('rotina nova: um bloco com exercício e descanso, sem nome (o salvar pede)', () => {
-    const r = newRoutine('circuito', ids(), 5);
+    const r = newRoutine('circuito', ids(), 5, W);
     expect(r).toMatchObject({ modality: 'circuito', origin: 'custom', version: 1, name: '' });
     expect(r.blocks[0]?.steps.map((s) => s.kind)).toEqual(['work', 'rest']);
-    const check = checkRoutine(r);
+    const check = checkRoutine(r, W);
     expect(check.ok).toBe(false);
-    expect(checkRoutine(edit.routine(r, { name: 'Circuito de terça' })).ok).toBe(true);
+    expect(checkRoutine(edit.routine(r, { name: 'Circuito de terça' }), W).ok).toBe(true);
   });
 
   it('cópia: ids novos, versão 1, "(cópia)" só para rotina própria', () => {
     const tabata = must(presetById('tabata-classic'));
-    const copy = copyRoutine(tabata, ids(), 9);
+    const copy = copyRoutine(tabata, ids(), 9, W);
     expect(copy).toMatchObject({ name: 'Tabata clássico', origin: 'custom', version: 1 });
     expect(copy.id).not.toBe(tabata.id);
     expect(copy.blocks[0]?.steps[0]?.id).not.toBe(tabata.blocks[0]?.steps[0]?.id);
     const mine = { ...routine({ name: 'Meu' }), version: 4 };
-    expect(copyRoutine(mine, ids(), 9).name).toBe('Meu (cópia)');
-    expect(copyRoutine(mine, ids(), 9, 'Outro').name).toBe('Outro');
+    expect(copyRoutine(mine, ids(), 9, W).name).toBe('Meu (cópia)');
     // A original não muda.
     expect(tabata.origin).toBe('preset');
   });
 
-  it('ponto de partida: modelo pronto vira cópia; id desconhecido ou nenhum, rotina nova', () => {
-    expect(startFrom('boxe-pro', 'boxe', ids(), 0).name).toBe('Boxe avançado');
-    expect(startFrom('nao-existe', 'emom', ids(), 0)).toMatchObject({ name: '', modality: 'emom' });
-    expect(startFrom(undefined, 'hiit', ids(), 0).modality).toBe('hiit');
+  it('ponto de partida: modelo pronto vira cópia; sem modelo, rotina nova', () => {
+    expect(startFrom(presetById('boxe-pro'), 'boxe', ids(), 0, W).name).toBe('Boxe avançado');
+    expect(startFrom(presetById('nao-existe'), 'emom', ids(), 0, W)).toMatchObject({
+      name: '',
+      modality: 'emom',
+    });
+    expect(startFrom(undefined, 'hiit', ids(), 0, W).modality).toBe('hiit');
   });
 
   it('gravar: versão sobe só se já existia; nome sem espaços nas pontas', () => {
@@ -48,9 +53,9 @@ describe('editor de rotinas', () => {
   it('etapas: inserir no meio, duplicar, mover, remover (nunca a última)', () => {
     const newId = ids();
     let r = routine();
-    r = edit.addStep(r, 0, 0, 'work', newId);
+    r = edit.addStep(r, 0, 0, 'work', newId, W);
     expect(r.blocks[0]?.steps.map((s) => s.kind)).toEqual(['work', 'work', 'rest']);
-    r = edit.addStep(r, 0, -1, 'rest', newId);
+    r = edit.addStep(r, 0, -1, 'rest', newId, W);
     expect(r.blocks[0]?.steps[0]?.kind).toBe('rest');
     r = edit.duplicateStep(r, 0, 1, newId);
     expect(r.blocks[0]?.steps).toHaveLength(5);
@@ -81,7 +86,7 @@ describe('editor de rotinas', () => {
   it('blocos: adicionar, ajustar, mover e remover (nunca o último)', () => {
     const newId = ids();
     let r = routine();
-    r = edit.addBlock(r, newId);
+    r = edit.addBlock(r, newId, W);
     expect(r.blocks.map((b) => b.name)).toEqual(['Bloco', 'Bloco 2']);
     r = edit.block(r, 1, { repeat: 5, restAfterSeconds: 0 });
     expect(r.blocks[1]).toMatchObject({ repeat: 5, restAfterSeconds: 0 });
@@ -102,7 +107,7 @@ describe('editor de rotinas', () => {
     // Bloco com todos os exercícios desativados não roda e o salvar explica.
     r = edit.step(r, 0, 0, { disabled: true });
     expect(buildTimeline(r)).toEqual([]);
-    const check = checkRoutine(edit.routine(r, { name: 'X' }));
+    const check = checkRoutine(edit.routine(r, { name: 'X' }), W);
     expect(check.ok ? '' : check.issues[0]?.message).toBe(
       'O bloco precisa de pelo menos 1 exercício ativo.',
     );

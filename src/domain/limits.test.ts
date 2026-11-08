@@ -1,17 +1,20 @@
+import { pt } from '@/i18n/messages/pt';
 import { block, routine, step } from '@/test/domain';
 
 import { checkRoutine, LIMITS } from './limits';
 import { PRESETS } from './presets';
 
+const W = pt.words;
+
 function messages(input: unknown): string[] {
-  const result = checkRoutine(input);
+  const result = checkRoutine(input, W);
   return result.ok ? [] : result.issues.map((issue) => issue.message);
 }
 
 describe('limites da rotina', () => {
   it('todas as rotinas prontas passam', () => {
     for (const preset of PRESETS)
-      expect(checkRoutine(preset)).toEqual({ ok: true, routine: preset });
+      expect(checkRoutine(preset, W)).toEqual({ ok: true, routine: preset });
   });
 
   it('nome: vazio, só espaço e longo demais', () => {
@@ -22,7 +25,7 @@ describe('limites da rotina', () => {
   });
 
   it('nome é aparado ao salvar', () => {
-    const result = checkRoutine(routine({ name: '  Pernas  ' }));
+    const result = checkRoutine(routine({ name: '  Pernas  ' }), W);
     expect(result.ok && result.routine.name).toBe('Pernas');
   });
 
@@ -115,7 +118,7 @@ describe('limites da rotina', () => {
   });
 
   it('tipo errado vira mensagem, não exceção', () => {
-    const result = checkRoutine({ ...routine(), prepSeconds: 'dez' });
+    const result = checkRoutine({ ...routine(), prepSeconds: 'dez' }, W);
     expect(result).toEqual({
       ok: false,
       issues: [{ path: 'prepSeconds', message: 'Informe a preparação.' }],

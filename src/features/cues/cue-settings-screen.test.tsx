@@ -1,9 +1,12 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
+import { DataProvider } from '@/data/data-context';
 import { DEFAULT_CUE_PREFS } from '@/domain/cues';
+import { LocaleProvider } from '@/i18n/i18n-context';
 import { appRepos, fakePort, renderApp } from '@/test/app';
+import { Button } from '@/ui/button';
 
-import { CUE_PREFS_KEY } from './cue-context';
+import { CUE_PREFS_KEY, CueProvider, useCues } from './cue-context';
 import { CueSettingsScreen } from './cue-settings-screen';
 
 jest.mock('expo-router', () => jest.requireActual<object>('@/test/expo-router-mock'));
@@ -63,5 +66,34 @@ describe('Som e avisos', () => {
       expect(screen.getByRole('switch', { name: 'Voz' })).not.toBeChecked();
     });
     expect(screen.getAllByRole('button', { name: 'Gongo', selected: true })).toHaveLength(1);
+  });
+});
+
+describe('voz na língua do app', () => {
+  it('a porta recebe a língua em uso junto com os avisos', async () => {
+    const { repos } = await appRepos();
+    const port = fakePort();
+    function Probe() {
+      const cues = useCues();
+      return (
+        <Button
+          label="tocar"
+          onPress={() => {
+            cues.port.play({ sound: null, speech: 'Repos', haptic: null });
+          }}
+        />
+      );
+    }
+    await render(
+      <DataProvider open={() => Promise.resolve(repos)}>
+        <LocaleProvider language="fr">
+          <CueProvider port={port}>
+            <Probe />
+          </CueProvider>
+        </LocaleProvider>
+      </DataProvider>,
+    );
+    await fireEvent.press(await screen.findByRole('button', { name: 'tocar' }));
+    expect(port.play).toHaveBeenCalledWith({ sound: null, speech: 'Repos', haptic: null }, 'fr');
   });
 });

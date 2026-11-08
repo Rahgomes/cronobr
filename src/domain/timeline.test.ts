@@ -18,7 +18,8 @@ describe('linha do tempo', () => {
       'cooldown',
     ]);
     expect(buildTimeline(routine({ prepSeconds: 10 }))[0]).toMatchObject({
-      name: 'Preparação',
+      phase: 'prep',
+      name: null,
       durationMs: 10_000,
       block: null,
       round: null,
@@ -34,7 +35,7 @@ describe('linha do tempo', () => {
     });
     expect(phases(r)).toEqual(['work', 'rest', 'work', 'blockRest', 'work']);
     expect(buildTimeline(r)[3]).toMatchObject({
-      name: 'Descanso entre blocos',
+      name: null,
       durationMs: 60_000,
     });
   });

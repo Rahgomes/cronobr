@@ -1,3 +1,4 @@
+import { pt } from '@/i18n/messages/pt';
 import { clockAt } from '@/test/domain';
 
 import { stopwatchTime } from './format';
@@ -17,9 +18,11 @@ import {
 } from './stopwatch';
 import { buildTimeline, summarize } from './timeline';
 
+const W = pt.words;
+
 describe('início rápido', () => {
   it('temporizador: uma etapa só, nome opcional e duração certa', () => {
-    const plain = quickRoutine(DEFAULT_TIMER);
+    const plain = quickRoutine(DEFAULT_TIMER, W);
     if (!plain.ok) throw new Error(plain.message);
     expect(plain.routine).toMatchObject({
       id: 'rapido-t-300',
@@ -28,12 +31,12 @@ describe('início rápido', () => {
       prepSeconds: 0,
     });
     expect(buildTimeline(plain.routine).map((s) => [s.phase, s.name])).toEqual([['work', 'Tempo']]);
-    const named = quickRoutine({ kind: 'temporizador', seconds: 90, name: '  Prancha ' });
+    const named = quickRoutine({ kind: 'temporizador', seconds: 90, name: '  Prancha ' }, W);
     expect(named.ok && named.routine.name).toBe('Prancha');
   });
 
   it('intervalado: id pela configuração e nome que diz o que é', () => {
-    const r = quickRoutine(DEFAULT_INTERVAL);
+    const r = quickRoutine(DEFAULT_INTERVAL, W);
     if (!r.ok) throw new Error(r.message);
     expect(r.routine.id).toBe('rapido-i-10-30-15-8');
     expect(r.routine.name).toBe('Intervalado 0:30/0:15 × 8');
@@ -42,9 +45,9 @@ describe('início rápido', () => {
   });
 
   it('fora dos limites: a mensagem do editor, em português', () => {
-    const r = quickRoutine({ kind: 'temporizador', seconds: 0, name: '' });
+    const r = quickRoutine({ kind: 'temporizador', seconds: 0, name: '' }, W);
     expect(r).toEqual({ ok: false, message: expect.stringMatching(/pelo menos 1 s/) as unknown });
-    const many = quickRoutine({ ...DEFAULT_INTERVAL, rounds: 500 });
+    const many = quickRoutine({ ...DEFAULT_INTERVAL, rounds: 500 }, W);
     expect(many.ok).toBe(false);
   });
 

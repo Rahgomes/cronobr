@@ -3,11 +3,15 @@
 import type { Routine, Step } from './routine';
 
 export type Phase = 'prep' | 'work' | 'rest' | 'blockRest' | 'cooldown';
+export type Side = 'left' | 'right';
 
 export interface Segment {
   index: number;
   phase: Phase;
-  name: string;
+  /** Nome escrito pela pessoa; null nas fases do app (preparação, entre blocos, desaquecimento). */
+  name: string | null;
+  /** Mobilidade: a mesma etapa para cada lado. */
+  side?: Side | undefined;
   /** null = etapa manual (por repetições). */
   durationMs: number | null;
   reps: number | null;
@@ -22,12 +26,13 @@ export interface Segment {
 type Draft = Omit<Segment, 'index'>;
 
 const SECOND = 1000;
-const SIDES = ['lado esquerdo', 'lado direito'] as const;
+const SIDES: readonly Side[] = ['left', 'right'];
 
-function stepDraft(step: Step, block: number, round: number, rounds: number, side?: string): Draft {
+function stepDraft(step: Step, block: number, round: number, rounds: number, side?: Side): Draft {
   return {
     phase: step.kind,
-    name: side ? `${step.name}, ${side}` : step.name,
+    name: step.name,
+    ...(side ? { side } : {}),
     ...(step.early && step.kind === 'work' && step.seconds !== null ? { early: true } : {}),
     durationMs: step.seconds === null ? null : step.seconds * SECOND,
     reps: step.reps,
@@ -37,10 +42,10 @@ function stepDraft(step: Step, block: number, round: number, rounds: number, sid
   };
 }
 
-function plain(phase: Phase, name: string, seconds: number): Draft {
+function plain(phase: Phase, seconds: number): Draft {
   return {
     phase,
-    name,
+    name: null,
     durationMs: seconds * SECOND,
     reps: null,
     block: null,
@@ -56,7 +61,7 @@ function plain(phase: Phase, name: string, seconds: number): Draft {
  */
 export function buildTimeline(routine: Routine): Segment[] {
   const drafts: Draft[] = [];
-  if (routine.prepSeconds > 0) drafts.push(plain('prep', 'Preparação', routine.prepSeconds));
+  if (routine.prepSeconds > 0) drafts.push(plain('prep', routine.prepSeconds));
 
   // Etapa desativada some da execução; bloco sem etapa ativa também.
   const blocks = routine.blocks
@@ -79,12 +84,12 @@ export function buildTimeline(routine: Routine): Segment[] {
     }
     const isLastBlock = position === blocks.length - 1;
     if (!isLastBlock && block.restAfterSeconds > 0) {
-      drafts.push(plain('blockRest', 'Descanso entre blocos', block.restAfterSeconds));
+      drafts.push(plain('blockRest', block.restAfterSeconds));
     }
   });
 
   if (routine.cooldownSeconds > 0) {
-    drafts.push(plain('cooldown', 'Desaquecimento', routine.cooldownSeconds));
+    drafts.push(plain('cooldown', routine.cooldownSeconds));
   }
   return drafts
     .filter((draft) => draft.durationMs !== 0)

@@ -4,13 +4,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { useRepos } from '@/data/data-context';
+import { segmentTitle } from '@/domain/cues';
 import { edit, stamp, startFrom } from '@/domain/editor';
 import { clock } from '@/domain/format';
 import { checkRoutine, LIMITS } from '@/domain/limits';
 import { MODALITIES, type Modality, type Routine, type Step } from '@/domain/routine';
 import { buildTimeline, summarize } from '@/domain/timeline';
 import { MODALITY } from '@/features/modality/catalog';
-import { segmentTitle } from '@/features/session/labels';
+import { usePresets } from '@/features/routines/presets';
+import { useT } from '@/i18n/i18n-context';
 import { Button } from '@/ui/button';
 import { Card } from '@/ui/card';
 import { Chip } from '@/ui/chip';
@@ -68,6 +70,8 @@ export function EditorScreen({
   modality?: string | undefined;
 }) {
   const repos = useRepos();
+  const t = useT();
+  const presets = usePresets();
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const key = draftKey(id, from, modality);
@@ -89,10 +93,11 @@ export function EditorScreen({
         return [{ ...ready, recovered: saved !== null }, saved ?? existing];
       }
       const start = startFrom(
-        from,
+        from ? presets.byId(from) : undefined,
         isModality(modality) ? modality : 'personalizada',
         newId,
         Date.now(),
+        t.words,
       );
       return [
         { status: 'ready', existed: false, base: start, recovered: saved !== null },
@@ -109,7 +114,7 @@ export function EditorScreen({
     return () => {
       active = false;
     };
-  }, [repos, id, key, from, modality, newId]);
+  }, [repos, id, key, from, modality, newId, presets, t]);
 
   const dirty =
     load.status === 'ready' &&
@@ -185,12 +190,12 @@ export function EditorScreen({
   if (load.status === 'loading' || !draft) return <Screen>{null}</Screen>;
 
   const existed = load.existed;
-  const check = checkRoutine(stamp(draft, existed, draft.updatedAt));
+  const check = checkRoutine(stamp(draft, existed, draft.updatedAt), t.words);
   const problem = check.ok ? null : (check.issues[0]?.message ?? null);
   const summary = summarize(timeline);
 
   const save = async (then: 'back' | 'start') => {
-    const result = checkRoutine(stamp(draft, existed, Date.now()));
+    const result = checkRoutine(stamp(draft, existed, Date.now()), t.words);
     if (!result.ok) return;
     await repos.routines.save(result.routine);
     await repos.prefs.set(key, undefined);
@@ -223,7 +228,7 @@ export function EditorScreen({
         setStepAt([b, s + 1]);
       },
       insertAfter: () => {
-        update(edit.addStep(draft, b, s, 'work', newId));
+        update(edit.addStep(draft, b, s, 'work', newId, t.words));
         setStepAt([b, s + 1]);
       },
       remove:
@@ -441,7 +446,7 @@ export function EditorScreen({
                 kind="text"
                 accessibilityLabel={`Adicionar etapa em ${block.name}`}
                 onPress={() => {
-                  update(edit.addStep(draft, b, block.steps.length - 1, 'work', newId));
+                  update(edit.addStep(draft, b, block.steps.length - 1, 'work', newId, t.words));
                   setStepAt([b, block.steps.length]);
                 }}
               />
@@ -474,7 +479,7 @@ export function EditorScreen({
         disabled={draft.blocks.length >= LIMITS.blocksMax}
         disabledHint={`A rotina pode ter até ${String(LIMITS.blocksMax)} blocos.`}
         onPress={() => {
-          update(edit.addBlock(draft, newId));
+          update(edit.addBlock(draft, newId, t.words));
         }}
       />
 
@@ -500,7 +505,7 @@ export function EditorScreen({
               {String(segment.index + 1)}
             </Text>
             <Text style={styles.flex} numberOfLines={1}>
-              {segmentTitle(segment)}
+              {segmentTitle(segment, t.words)}
             </Text>
             <Text tabular>
               {segment.durationMs === null

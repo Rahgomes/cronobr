@@ -2,18 +2,20 @@
 // visualização não muda nada no tempo, só no desenho.
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { PHASE_LABEL } from '@/domain/cues';
+import { ownName, segmentTitle } from '@/domain/cues';
 import type { Snapshot } from '@/domain/engine';
 import { clock, duration } from '@/domain/format';
 import { overallProgress, phaseProgress, rowState, type RowState } from '@/domain/progress';
 import type { Phase, Segment } from '@/domain/timeline';
+import type { Words } from '@/domain/words';
+import { useT } from '@/i18n/i18n-context';
 import { ProgressRing } from '@/ui/progress-ring';
 import { Text } from '@/ui/text';
 import type { Colors } from '@/ui/theme';
 import { useColors, useThemedStyles } from '@/ui/theme-context';
 import { radius, space, type ColorRole } from '@/ui/tokens';
 
-import { roundLabel, segmentTitle } from './labels';
+import { roundLabel } from './labels';
 
 export const PHASE_TINT: Record<Phase, ColorRole> = {
   prep: 'phasePrep',
@@ -28,9 +30,6 @@ export interface BodyProps {
   snap: Snapshot;
   segment: Segment;
 }
-
-/** A etapa tem nome além do da fase ("Agachamento" e não só "Exercício"). */
-const named = (segment: Segment) => segment.name !== PHASE_LABEL[segment.phase];
 
 /** Número grande: o que falta, ou as repetições numa etapa manual. */
 function BigTime({ segment, snap, size, color }: BodyProps & { size: number; color?: string }) {
@@ -56,10 +55,10 @@ function BigTime({ segment, snap, size, color }: BodyProps & { size: number; col
   );
 }
 
-function nextLine(next: Segment | undefined): string {
+function nextLine(next: Segment | undefined, w: Words): string {
   if (!next) return 'Última etapa';
   const time = next.durationMs === null ? `${String(next.reps)} rep.` : clock(next.durationMs);
-  return `Depois: ${segmentTitle(next)} ${time}`;
+  return `Depois: ${segmentTitle(next, w)} ${time}`;
 }
 
 /** Barra fina do treino inteiro. */
@@ -81,13 +80,14 @@ function TrainingBar({ timeline, snap }: Omit<BodyProps, 'segment'>) {
 
 /** Anel (C03): o padrão. Etapa atual, próxima, rodada e total. */
 export function RingBody({ timeline, snap, segment }: BodyProps) {
+  const w = useT().words;
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
-  const round = roundLabel(segment);
+  const round = roundLabel(segment, w);
   return (
     <View style={styles.body}>
       <Text variant="title" accessibilityRole="header" style={styles.center}>
-        {segmentTitle(segment)}
+        {segmentTitle(segment, w)}
       </Text>
       {round ? (
         <Text color="textMuted" style={styles.center}>
@@ -106,7 +106,7 @@ export function RingBody({ timeline, snap, segment }: BodyProps) {
         </ProgressRing>
       </View>
       <Text color="textMuted" style={styles.center}>
-        {nextLine(timeline[segment.index + 1])}
+        {nextLine(timeline[segment.index + 1], w)}
       </Text>
       <TrainingBar timeline={timeline} snap={snap} />
       <Text color="textMuted" style={styles.center}>
@@ -118,6 +118,8 @@ export function RingBody({ timeline, snap, segment }: BodyProps) {
 
 /** Foco (C03b): número gigante sobre a cor da fase, pouca informação. */
 export function FocusBody({ timeline, snap, segment }: BodyProps) {
+  const w = useT().words;
+  const name = ownName(segment, w);
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const ink = { color: colors.onPhase };
@@ -126,13 +128,13 @@ export function FocusBody({ timeline, snap, segment }: BodyProps) {
     <View style={styles.body}>
       <View>
         {/* Sem nome próprio, a fase aparece uma vez só (C03b). */}
-        {named(segment) ? (
+        {name ? (
           <Text variant="label" style={[styles.center, ink]}>
-            {PHASE_LABEL[segment.phase].toUpperCase()}
+            {w.phase[segment.phase].toUpperCase()}
           </Text>
         ) : null}
         <Text variant="title" accessibilityRole="header" style={[styles.center, ink]}>
-          {named(segment) ? segment.name : PHASE_LABEL[segment.phase].toUpperCase()}
+          {name ?? w.phase[segment.phase].toUpperCase()}
         </Text>
       </View>
       <BigTime
@@ -142,7 +144,7 @@ export function FocusBody({ timeline, snap, segment }: BodyProps) {
         size={120}
         color={colors.onPhase}
       />
-      <Text style={[styles.center, soft]}>{nextLine(timeline[segment.index + 1])}</Text>
+      <Text style={[styles.center, soft]}>{nextLine(timeline[segment.index + 1], w)}</Text>
       <View style={styles.facts}>
         {segment.round !== null && segment.rounds !== null ? (
           <View style={styles.fact}>
@@ -179,29 +181,31 @@ export function ListBody({
   segment,
   onJump,
 }: BodyProps & { onJump: ((target: Segment) => void) | null }) {
+  const w = useT().words;
+  const name = ownName(segment, w);
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
-  const round = roundLabel(segment);
+  const round = roundLabel(segment, w);
   return (
     <View style={styles.body}>
       <View style={styles.listHead}>
         <View style={[styles.pill, { backgroundColor: colors[PHASE_TINT[segment.phase]] }]}>
           <Text variant="caption" style={{ color: colors.onPhase }}>
-            {PHASE_LABEL[segment.phase].toUpperCase()}
+            {w.phase[segment.phase].toUpperCase()}
           </Text>
         </View>
-        {named(segment) ? (
+        {name ? (
           <Text variant="title" accessibilityRole="header" style={styles.grow} numberOfLines={1}>
-            {segment.name}
+            {name}
           </Text>
         ) : (
           <Text variant="title" accessibilityRole="header" style={styles.grow} numberOfLines={1}>
-            {roundLabel(segment) ?? PHASE_LABEL[segment.phase]}
+            {round ?? w.phase[segment.phase]}
           </Text>
         )}
       </View>
       <BigTime timeline={timeline} snap={snap} segment={segment} size={64} />
-      {round && named(segment) ? (
+      {round && name ? (
         <Text color="textMuted" style={styles.center}>
           {round}
         </Text>
@@ -211,7 +215,7 @@ export function ListBody({
         {timeline.map((row) => {
           const state = rowState(row.index, snap);
           const time = row.durationMs === null ? `${String(row.reps)} rep.` : clock(row.durationMs);
-          const label = `${String(row.index + 1)}. ${segmentTitle(row)}, ${time}${STATE_SUFFIX[state]}`;
+          const label = `${String(row.index + 1)}. ${segmentTitle(row, w)}, ${time}${STATE_SUFFIX[state]}`;
           return (
             <Pressable
               key={row.index}
@@ -233,7 +237,7 @@ export function ListBody({
                 variant={state === 'current' ? 'label' : 'body'}
                 numberOfLines={1}
               >
-                {segmentTitle(row)}
+                {segmentTitle(row, w)}
               </Text>
               <Text tabular color={state === 'done' ? 'textMuted' : 'text'}>
                 {state === 'done' ? `✓ ${time}` : time}

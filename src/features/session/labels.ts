@@ -1,13 +1,8 @@
-import { PHASE_LABEL } from '@/domain/cues';
 import type { Segment } from '@/domain/timeline';
+import type { Words } from '@/domain/words';
 
-/** "Exercício" ou "Exercício · Agachamento" quando a etapa tem nome próprio. */
-export function segmentTitle(segment: Segment): string {
-  const label = PHASE_LABEL[segment.phase];
-  return segment.name === label ? label : `${label} · ${segment.name}`;
-}
-
-export function roundLabel(segment: Segment): string | null {
+/** "Rodada 2 de 8"; null fora dos blocos. */
+export function roundLabel(segment: Segment, w: Words): string | null {
   if (segment.round === null || segment.rounds === null) return null;
-  return `Rodada ${String(segment.round)} de ${String(segment.rounds)}`;
+  return w.round(segment.round, segment.rounds);
 }

@@ -19,8 +19,8 @@ importação faz).
 - **Sons por nome** (`beepShort`, `beepLong`, `bell`, `gong`, `whistle`, `finish`). Áudio próprio
   ainda não existe; se existir um dia, vai num pacote com manifesto, limite e validação, numa
   versão nova do formato.
-- **Voz:** o arquivo guarda só "voz ligada ou desligada". O aparelho que importa usa a voz dele em
-  português.
+- **Voz:** o arquivo guarda só "voz ligada ou desligada". O aparelho que importa usa a voz dele, na
+  língua escolhida no app.
 - **O arquivo é dado, nunca código.** Campo desconhecido é ignorado; nada é executado.
 
 ## Cabeçalho (todos os arquivos)

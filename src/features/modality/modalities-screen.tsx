@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
-import { PRESET_MODALITIES, presetsOf } from '@/domain/presets';
+import { usePresets } from '@/features/routines/presets';
 import { PhotoBadge, PhotoCard } from '@/ui/photo-card';
 import { Screen } from '@/ui/screen';
 import { space } from '@/ui/tokens';
@@ -11,13 +11,14 @@ import { MODALITY } from './catalog';
 
 /** "Ver todas": as modalidades em grade, o mesmo card da Início. */
 export function ModalitiesScreen() {
+  const presets = usePresets();
   return (
     <Screen>
       <TopBar title="Modalidades" />
       <View style={styles.grid}>
-        {PRESET_MODALITIES.map((modality) => {
+        {presets.modalities.map((modality) => {
           const info = MODALITY[modality];
-          const n = presetsOf(modality).length;
+          const n = presets.of(modality).length;
           const count = n === 1 ? '1 modelo' : `${String(n)} modelos`;
           return (
             <PhotoCard

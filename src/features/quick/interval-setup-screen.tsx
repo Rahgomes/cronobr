@@ -6,6 +6,7 @@ import { clock } from '@/domain/format';
 import { LIMITS } from '@/domain/limits';
 import { quickParams, quickRoutine } from '@/domain/quick';
 import { buildTimeline, summarize } from '@/domain/timeline';
+import { useT } from '@/i18n/i18n-context';
 import { Button } from '@/ui/button';
 import { Card } from '@/ui/card';
 import { Screen } from '@/ui/screen';
@@ -43,12 +44,13 @@ const FIELDS: {
 
 /** Intervalado: preparação, exercício, descanso e rodadas. Lembra a última configuração. */
 export function IntervalSetupScreen() {
+  const t = useT();
   const [config, setConfig, ready] = useStored(
     INTERVAL_KEY,
     parseInterval,
     parseInterval(undefined),
   );
-  const result = quickRoutine(config);
+  const result = quickRoutine(config, t.words);
   const total = result.ok ? summarize(buildTimeline(result.routine)).knownMs : 0;
   return (
     <Screen

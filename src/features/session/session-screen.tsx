@@ -4,10 +4,11 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { useRepos } from '@/data/data-context';
 import { createSession, restore, type Session } from '@/domain/engine';
-import { presetById } from '@/domain/presets';
 import { quickRoutine, type QuickSetup } from '@/domain/quick';
 import type { Routine } from '@/domain/routine';
 import { buildTimeline } from '@/domain/timeline';
+import { usePresets } from '@/features/routines/presets';
+import { useT } from '@/i18n/i18n-context';
 import { Button } from '@/ui/button';
 import { Screen } from '@/ui/screen';
 import { Text } from '@/ui/text';
@@ -43,6 +44,8 @@ export function SessionScreen({
   clockSource?: Clock;
 }) {
   const repos = useRepos();
+  const t = useT();
+  const presets = usePresets();
   const colors = useColors();
   const [load, setLoad] = useState<Load>({ status: 'loading' });
   const quickKey = quick ? JSON.stringify(quick) : '';
@@ -51,11 +54,11 @@ export function SessionScreen({
     let active = true;
     const pick = async (): Promise<Routine | null> => {
       if (quick) {
-        const built = quickRoutine(quick);
+        const built = quickRoutine(quick, t.words);
         return built.ok ? built.routine : null;
       }
       if (repeatId) return (await repos.history.get(repeatId))?.routine ?? null;
-      if (routineId) return presetById(routineId) ?? (await repos.routines.get(routineId));
+      if (routineId) return presets.byId(routineId) ?? (await repos.routines.get(routineId));
       return null;
     };
     const resolve = async (): Promise<Load> => {
@@ -83,7 +86,7 @@ export function SessionScreen({
     };
     // `quick` muda de identidade a cada render da rota: a chave é o conteúdo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [repos, routineId, repeatId, clockSource, quickKey]);
+  }, [repos, routineId, repeatId, clockSource, quickKey, presets, t]);
 
   if (load.status === 'ready') {
     const routine = load.session.routine;

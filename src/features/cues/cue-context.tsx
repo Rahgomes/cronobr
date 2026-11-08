@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 
 import { useDataRevision, useRepos } from '@/data/data-context';
 import { DEFAULT_CUE_PREFS, parseCuePrefs, type CuePrefs } from '@/domain/cues';
+import { useLanguage } from '@/i18n/i18n-context';
 
 import { silentPort, type CuePort } from './port';
 
@@ -37,9 +38,20 @@ export function CueProvider({ port, children }: { port: CuePort; children: React
       active = false;
     };
   }, [repos, revision]);
+  const language = useLanguage();
+  // A voz acompanha a língua do app: quem chama a porta não precisa saber qual é.
+  const spoken = useMemo<CuePort>(
+    () => ({
+      ...port,
+      play: (cues) => {
+        port.play(cues, language);
+      },
+    }),
+    [port, language],
+  );
   const value = useMemo(
     () => ({
-      port,
+      port: spoken,
       prefs,
       // Grava e só então mostra: o que aparece escolhido já está no banco (fechar logo em
       // seguida não perde a escolha; o CI pegou isso recarregando a página).
@@ -50,7 +62,7 @@ export function CueProvider({ port, children }: { port: CuePort; children: React
         repos.prefs.set(CUE_PREFS_KEY, next).then(show, show);
       },
     }),
-    [port, prefs, repos],
+    [spoken, prefs, repos],
   );
   return <CueContext.Provider value={value}>{children}</CueContext.Provider>;
 }

@@ -41,3 +41,7 @@ export function LocaleProvider({
 export function useT(): Messages {
   return useContext(I18nContext).t;
 }
+
+export function useLanguage(): Language {
+  return useContext(I18nContext).language;
+}

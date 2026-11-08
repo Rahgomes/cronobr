@@ -8,6 +8,7 @@ import { useDataChanged, useRepos } from '@/data/data-context';
 import { ActiveSessionError } from '@/data/repos';
 import { readTransferFile } from '@/domain/transfer';
 import { replaceOps } from '@/domain/transfer-plan';
+import { useT } from '@/i18n/i18n-context';
 import { Button } from '@/ui/button';
 import { Card } from '@/ui/card';
 import { dialog } from '@/ui/dialog';
@@ -31,6 +32,7 @@ const WHEN = new Intl.DateTimeFormat('pt-BR', {
 
 export function BackupScreen() {
   const repos = useRepos();
+  const t = useT();
   const changed = useDataChanged();
   const port = useFilePort();
   const [withHistory, setWithHistory] = useState(true);
@@ -70,7 +72,7 @@ export function BackupScreen() {
   }
 
   async function undo(point: { text: string }) {
-    const read = readTransferFile(point.text, point.text.length, Date.now());
+    const read = readTransferFile(point.text, point.text.length, Date.now(), t.words);
     try {
       if (!read.ok || read.file.kind !== 'backup') throw new Error('cópia ilegível');
       await repos.transfer.apply(replaceOps(read.file), PORTABLE_PREF_KEYS, null);

@@ -18,6 +18,7 @@ import {
 } from '@/domain/transfer-plan';
 import { idGenerator } from '@/features/editor/ids';
 import { MODALITY } from '@/features/modality/catalog';
+import { useT } from '@/i18n/i18n-context';
 import { Button } from '@/ui/button';
 import { Card } from '@/ui/card';
 import { dialog } from '@/ui/dialog';
@@ -80,6 +81,7 @@ function Lines({ lines }: { lines: string[] }) {
 
 export function ImportScreen({ uri }: { uri?: string | undefined }) {
   const repos = useRepos();
+  const t = useT();
   const changed = useDataChanged();
   const port = useFilePort();
   const [state, setState] = useState<State>(uri ? { status: 'loading' } : { status: 'idle' });
@@ -90,20 +92,20 @@ export function ImportScreen({ uri }: { uri?: string | undefined }) {
   async function open(target: string) {
     setFailure(null);
     setState({ status: 'loading' });
-    setState({ status: 'ready', prepared: await prepareFromUri(repos, port, target) });
+    setState({ status: 'ready', prepared: await prepareFromUri(repos, port, target, t.words) });
   }
 
   // Aberto com um arquivo (do seletor ou de outro app): lê assim que a tela monta.
   useEffect(() => {
     if (!uri) return;
     let active = true;
-    void prepareFromUri(repos, port, uri).then((prepared) => {
+    void prepareFromUri(repos, port, uri, t.words).then((prepared) => {
       if (active) setState({ status: 'ready', prepared });
     });
     return () => {
       active = false;
     };
-  }, [repos, port, uri]);
+  }, [repos, port, uri, t]);
 
   async function choose() {
     const picked = await port.pick();
@@ -170,7 +172,7 @@ export function ImportScreen({ uri }: { uri?: string | undefined }) {
     } else if (prepared.kind === 'routine') {
       const { item } = prepared;
       const run = (choice: ShareChoice, line: string) => {
-        void apply(shareOps(item, choice, idGenerator(), Date.now()), [line]);
+        void apply(shareOps(item, choice, idGenerator(), Date.now(), t.words), [line]);
       };
       body = (
         <>
@@ -304,6 +306,7 @@ export function ImportScreen({ uri }: { uri?: string | undefined }) {
                 conflicts,
                 idGenerator(),
                 Date.now(),
+                t.words,
               );
               void apply(merged, [
                 `${plural(merged.routines.length, 'rotina entrou', 'rotinas entraram')} na biblioteca.`,

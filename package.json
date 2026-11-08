@@ -82,7 +82,8 @@
     ],
     "collectCoverageFrom": [
       "src/domain/**/*.ts",
-      "!src/domain/**/*.test.ts"
+      "!src/domain/**/*.test.ts",
+      "!src/domain/words.ts"
     ],
     "testTimeout": 20000,
     "setupFiles": [

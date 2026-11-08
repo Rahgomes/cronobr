@@ -1,6 +1,10 @@
+import { pt } from '@/i18n/messages/pt';
+
 import { relativeDay } from './format';
 import { recentRoutines, type HistoryEntry } from './history';
 import { PRESET_MODALITIES, PRESETS, presetsOf } from './presets';
+
+const W = pt.words;
 
 function entry(id: string, routineId: string, endedAt: number): HistoryEntry {
   const routine = { ...PRESETS[0], id: routineId } as HistoryEntry['routine'];
@@ -62,6 +66,6 @@ describe('dia relativo', () => {
     [new Date(2026, 5, 1, 12, 0), 'há 5 meses'],
     [new Date(2026, 10, 9, 12, 0), 'hoje'],
   ])('%s → %s', (when, text) => {
-    expect(relativeDay(when.getTime(), now)).toBe(text);
+    expect(relativeDay(when.getTime(), now, W)).toBe(text);
   });
 });

@@ -1,3 +1,4 @@
+import { pt } from '@/i18n/messages/pt';
 import { block, must, routine, step } from '@/test/domain';
 
 import type { HistoryEntry } from './history';
@@ -14,9 +15,11 @@ import {
   type TransferFile,
 } from './transfer';
 
+const W = pt.words;
+
 const NOW = Date.UTC(2026, 10, 8, 13, 0);
 const bytes = (text: string) => new TextEncoder().encode(text).length;
-const read = (text: string, now = NOW) => readTransferFile(text, bytes(text), now);
+const read = (text: string, now = NOW) => readTransferFile(text, bytes(text), now, W);
 
 function ok(text: string): TransferFile {
   const result = read(text);
@@ -197,7 +200,7 @@ describe('arquivos recusados antes de mexer em qualquer dado', () => {
   const good = routineFileText(rich, '2.0.0', NOW);
 
   it('grande demais: recusa pelo tamanho, sem ler', () => {
-    expect(readTransferFile('{}', MAX_FILE_BYTES + 1, NOW)).toMatchObject({
+    expect(readTransferFile('{}', MAX_FILE_BYTES + 1, NOW, W)).toMatchObject({
       ok: false,
       reason: 'tooBig',
     });

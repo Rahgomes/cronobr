@@ -2,9 +2,9 @@
 // plano como prévia; o banco aplica as operações numa transação só.
 import { copyRoutine, type NewId } from './editor';
 import type { HistoryEntry } from './history';
-import { LIMITS } from './limits';
 import type { Routine } from './routine';
 import { fingerprint, type TransferFile } from './transfer';
+import type { Words } from './words';
 
 /** new: não existe aqui · same: já existe igual (pelo id ou pelo conteúdo) · conflict: mesmo id, conteúdo diferente. */
 export type RoutineStatus = 'new' | 'same' | 'conflict';
@@ -46,12 +46,9 @@ export interface TransferOps {
   prefs: Record<string, unknown> | null;
 }
 
-const SUFFIX = ' (cópia)';
-
 /** Cópia com ids novos e "(cópia)" no nome, sem passar do limite de letras. */
-export function asCopy(routine: Routine, newId: NewId, now: number): Routine {
-  const base = routine.name.slice(0, LIMITS.nameMax - SUFFIX.length).trimEnd();
-  return copyRoutine({ ...routine, origin: 'custom' }, newId, now, `${base}${SUFFIX}`);
+export function asCopy(routine: Routine, newId: NewId, now: number, w: Words): Routine {
+  return copyRoutine({ ...routine, origin: 'custom' }, newId, now, w);
 }
 
 export type ShareChoice = 'add' | 'copy' | 'update';
@@ -62,6 +59,7 @@ export function shareOps(
   choice: ShareChoice,
   newId: NewId,
   now: number,
+  w: Words,
 ): TransferOps {
   const base = { replace: false, history: [], replaceHistory: false, prefs: null };
   if (choice === 'update' && item.existing) {
@@ -76,7 +74,7 @@ export function shareOps(
     return { ...base, routines: [updated] };
   }
   if (choice === 'copy' || item.status !== 'new')
-    return { ...base, routines: [asCopy(item.routine, newId, now)] };
+    return { ...base, routines: [asCopy(item.routine, newId, now, w)] };
   return { ...base, routines: [{ ...item.routine, origin: 'custom' }] };
 }
 
@@ -92,11 +90,12 @@ export function mergeOps(
   conflicts: ConflictChoice,
   newId: NewId,
   now: number,
+  w: Words,
 ): TransferOps {
   const routines = items.flatMap((item): Routine[] => {
     if (item.status === 'new') return [item.routine];
     if (item.status === 'same') return [];
-    if (conflicts === 'copy') return [asCopy(item.routine, newId, now)];
+    if (conflicts === 'copy') return [asCopy(item.routine, newId, now, w)];
     const existing = item.existing ?? item.routine;
     return [{ ...item.routine, version: existing.version + 1, updatedAt: now }];
   });

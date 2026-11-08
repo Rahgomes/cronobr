@@ -279,17 +279,23 @@ describe('sessão', () => {
       const { port, advance } = await startTabata();
       port.play.mockClear();
       await advance(7_000);
-      expect(port.play).toHaveBeenLastCalledWith({
-        sound: 'beepShort',
-        speech: null,
-        haptic: 'tick',
-      });
+      expect(port.play).toHaveBeenLastCalledWith(
+        {
+          sound: 'beepShort',
+          speech: null,
+          haptic: 'tick',
+        },
+        'pt-BR',
+      );
       await advance(3_000);
-      expect(port.play).toHaveBeenLastCalledWith({
-        sound: 'bell',
-        speech: 'Vai, 20 segundos',
-        haptic: 'phase',
-      });
+      expect(port.play).toHaveBeenLastCalledWith(
+        {
+          sound: 'bell',
+          speech: 'Vai, 20 segundos',
+          haptic: 'phase',
+        },
+        'pt-BR',
+      );
     });
 
     it('preferências gravadas valem: sem voz, a troca não fala', async () => {
@@ -307,7 +313,10 @@ describe('sessão', () => {
       await act(() => {
         jest.advanceTimersByTime(TICK_MS);
       });
-      expect(port.play).toHaveBeenLastCalledWith({ sound: 'bell', speech: null, haptic: 'phase' });
+      expect(port.play).toHaveBeenLastCalledWith(
+        { sound: 'bell', speech: null, haptic: 'phase' },
+        'pt-BR',
+      );
     });
 
     it('com o app fora da tela não toca nada: quem avisa é a notificação', async () => {

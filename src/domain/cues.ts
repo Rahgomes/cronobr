@@ -4,14 +4,7 @@
 // coisas ao mesmo tempo no ouvido não se entendem.
 import type { SessionEvent } from './events';
 import type { Phase, Segment } from './timeline';
-
-export const PHASE_LABEL: Record<Phase, string> = {
-  prep: 'Preparação',
-  work: 'Exercício',
-  rest: 'Descanso',
-  blockRest: 'Descanso entre blocos',
-  cooldown: 'Desaquecimento',
-};
+import type { Words } from './words';
 
 /** Sons do pacote (originais, gerados para o app). */
 export const SOUND_IDS = ['beepShort', 'beepLong', 'bell', 'gong', 'whistle', 'finish'] as const;
@@ -53,20 +46,30 @@ export function soundSlot(phase: Phase): SoundSlot {
 }
 
 /** "20 segundos", "1 minuto", "1 minuto e 30 segundos". */
-export function spokenDuration(ms: number): string {
+export function spokenDuration(ms: number, w: Words): string {
   const total = Math.round(ms / 1000);
   const minutes = Math.floor(total / 60);
   const seconds = total % 60;
-  const unit = (n: number, one: string, many: string) => `${String(n)} ${n === 1 ? one : many}`;
   const parts: string[] = [];
-  if (minutes > 0) parts.push(unit(minutes, 'minuto', 'minutos'));
-  if (seconds > 0 || minutes === 0) parts.push(unit(seconds, 'segundo', 'segundos'));
-  return parts.join(' e ');
+  if (minutes > 0) parts.push(w.spokenMinutes(minutes));
+  if (seconds > 0 || minutes === 0) parts.push(w.spokenSeconds(seconds));
+  return parts.join(w.spokenAnd);
 }
 
-/** Nome próprio da etapa, ou null quando é o rótulo genérico ("Exercício", "Descanso"). */
-function ownName(segment: Segment): string | null {
-  return segment.name === PHASE_LABEL[segment.phase] ? null : segment.name;
+/**
+ * Nome próprio da etapa (com o lado, na mobilidade), ou null quando não há: fase do app ou nome
+ * igual ao rótulo da fase ("Exercício" numa rotina em português).
+ */
+export function ownName(segment: Segment, w: Words): string | null {
+  if (segment.name === null || segment.name === w.phase[segment.phase]) return null;
+  return segment.side ? w.withSide(segment.name, w.side[segment.side]) : segment.name;
+}
+
+/** "Exercício" ou "Exercício · Agachamento" quando a etapa tem nome próprio. */
+export function segmentTitle(segment: Segment, w: Words): string {
+  const label = w.phase[segment.phase];
+  const name = ownName(segment, w);
+  return name ? `${label} · ${name}` : label;
 }
 
 function nextWork(timeline: readonly Segment[], from: number): Segment | undefined {
@@ -82,41 +85,38 @@ function isLastRoundStart(timeline: readonly Segment[], segment: Segment): boole
 }
 
 /** A frase falada ao entrar na etapa. */
-export function phasePhrase(timeline: readonly Segment[], segment: Segment): string {
-  const name = ownName(segment);
+export function phasePhrase(timeline: readonly Segment[], segment: Segment, w: Words): string {
+  const name = ownName(segment, w);
   switch (segment.phase) {
     case 'work': {
-      const what = name ?? 'Vai';
+      const what = name ?? w.go;
       const amount =
         segment.durationMs === null
-          ? `${String(segment.reps ?? 0)} repetições`
-          : spokenDuration(segment.durationMs);
-      const lead = isLastRoundStart(timeline, segment) ? 'Última rodada. ' : '';
+          ? w.reps(segment.reps ?? 0)
+          : spokenDuration(segment.durationMs, w);
+      const lead = isLastRoundStart(timeline, segment) ? w.lastRound : '';
       return `${lead}${what}, ${amount}`;
     }
     case 'prep':
     case 'rest': {
       const upcoming = nextWork(timeline, segment.index);
-      const upcomingName = upcoming ? ownName(upcoming) : null;
-      const label = segment.phase === 'prep' ? 'Preparar' : PHASE_LABEL.rest;
-      return upcomingName ? `${label}. Próximo: ${upcomingName}` : label;
+      const upcomingName = upcoming ? ownName(upcoming, w) : null;
+      const label = segment.phase === 'prep' ? w.prepare : w.phase.rest;
+      return upcomingName ? w.next(label, upcomingName) : label;
     }
     default:
-      return name ?? PHASE_LABEL[segment.phase];
+      return name ?? w.phase[segment.phase];
   }
 }
 
-export const COMPLETED_PHRASE = 'Treino concluído';
-
 /** EMOM: "Terminei" antes do fim. Som e frase de descanso, pela mesma regra dos canais. */
-export function earlyRestCues(prefs: CuePrefs): Cues {
+export function earlyRestCues(prefs: CuePrefs, w: Words): Cues {
   return {
     sound: prefs.sound ? prefs.sounds.rest : null,
-    speech: prefs.voice ? PHASE_LABEL.rest : null,
+    speech: prefs.voice ? w.phase.rest : null,
     haptic: prefs.vibration ? 'phase' : null,
   };
 }
-const HALFWAY_PHRASE = 'Metade';
 
 /** Ordem de importância dentro de uma mesma leitura. */
 const RANK: Record<SessionEvent['type'], number> = {
@@ -130,13 +130,14 @@ export function cuesFor(
   events: readonly SessionEvent[],
   timeline: readonly Segment[],
   prefs: CuePrefs,
+  w: Words,
 ): Cues {
   const top = [...events].sort((a, b) => RANK[b.type] - RANK[a.type])[0];
   if (!top) return NONE;
   let cues: Cues;
   switch (top.type) {
     case 'completed':
-      cues = { sound: prefs.sounds.finish, speech: COMPLETED_PHRASE, haptic: 'finish' };
+      cues = { sound: prefs.sounds.finish, speech: w.completed, haptic: 'finish' };
       break;
     case 'phase': {
       const segment = timeline[top.segment];
@@ -144,13 +145,13 @@ export function cuesFor(
       if (!segment || top.late) return NONE;
       cues = {
         sound: prefs.sounds[soundSlot(top.phase)],
-        speech: phasePhrase(timeline, segment),
+        speech: phasePhrase(timeline, segment, w),
         haptic: 'phase',
       };
       break;
     }
     case 'halfway':
-      cues = { sound: null, speech: HALFWAY_PHRASE, haptic: null };
+      cues = { sound: null, speech: w.halfway, haptic: null };
       break;
     case 'countdown':
       cues = prefs.countdown ? { sound: 'beepShort', speech: null, haptic: 'tick' } : NONE;

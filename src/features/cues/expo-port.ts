@@ -9,6 +9,7 @@ import * as Speech from 'expo-speech';
 import { Platform } from 'react-native';
 
 import type { PlannedAlert } from '@/domain/alerts';
+import type { Language } from '@/domain/appearance';
 import { SOUND_IDS, type Haptic, type SoundId } from '@/domain/cues';
 
 import { isAway } from './away';
@@ -128,6 +129,9 @@ async function replaceAlerts(alerts: PlannedAlert[]) {
   );
 }
 
+/** Voz do aparelho em cada língua do app (português do Brasil, não de Portugal). */
+const VOICE: Record<Language, string> = { 'pt-BR': 'pt-BR', en: 'en-US', es: 'es-ES', fr: 'fr-FR' };
+
 export function createExpoPort(): CuePort {
   const players = new Map<SoundId, AudioPlayer>();
   const native = Platform.OS !== 'web';
@@ -156,18 +160,18 @@ export function createExpoPort(): CuePort {
     }
   }
 
-  function speak(text: string, under: AudioPlayer | null) {
+  function speak(text: string, language: Language, under: AudioPlayer | null) {
     if (under) under.volume = UNDER_SPEECH_VOLUME;
     // A frase nova substitui a anterior: nunca uma fila de avisos atrasados.
     Speech.stop()
       .catch(ignore)
       .finally(() => {
-        Speech.speak(text, { language: 'pt-BR' });
+        Speech.speak(text, { language: VOICE[language] });
       });
   }
 
   return {
-    play: ({ sound, speech, haptic }) => {
+    play: ({ sound, speech, haptic }, language = 'pt-BR') => {
       if (pendingSpeech) clearTimeout(pendingSpeech);
       pendingSpeech = null;
       const player = sound ? playSound(sound) : null;
@@ -175,12 +179,12 @@ export function createExpoPort(): CuePort {
       if (!speech) return;
       const wait = sound && player ? Math.min(SOUND_MS[sound], SPEECH_AFTER_MS) : 0;
       if (wait === 0) {
-        speak(speech, null);
+        speak(speech, language, null);
         return;
       }
       pendingSpeech = setTimeout(() => {
         pendingSpeech = null;
-        speak(speech, player);
+        speak(speech, language, player);
       }, wait);
     },
     preview: (sound) => {

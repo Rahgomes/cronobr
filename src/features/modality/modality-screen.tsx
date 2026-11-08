@@ -3,10 +3,10 @@ import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { useRepos } from '@/data/data-context';
-import { presetsOf } from '@/domain/presets';
 import { MODALITIES, type Modality, type Routine } from '@/domain/routine';
 import { RoutineRow } from '@/features/home/routine-row';
 import { useFavorites } from '@/features/routines/favorites';
+import { usePresets } from '@/features/routines/presets';
 import { RoutineOptions } from '@/features/routines/routine-options';
 import { Button } from '@/ui/button';
 import { PhotoFade, PhotoFill } from '@/ui/photo-card';
@@ -26,6 +26,7 @@ function isModality(value: string | undefined): value is Modality {
 
 /** Uma modalidade: foto no topo e os modelos prontos dela. Criar e editar modelos entra na E04. */
 export function ModalityScreen({ id }: { id: string | undefined }) {
+  const library = usePresets();
   const styles = useThemedStyles(makeStyles);
   const repos = useRepos();
   const favorites = useFavorites();
@@ -45,7 +46,7 @@ export function ModalityScreen({ id }: { id: string | undefined }) {
       };
     }, [repos, id]),
   );
-  if (!isModality(id) || presetsOf(id).length === 0) {
+  if (!isModality(id) || library.of(id).length === 0) {
     return (
       <Screen
         footer={
@@ -64,7 +65,7 @@ export function ModalityScreen({ id }: { id: string | undefined }) {
     );
   }
   const info = MODALITY[id];
-  const presets = presetsOf(id);
+  const presets = library.of(id);
   const row = (routine: Routine) => (
     <RoutineRow
       key={routine.id}
