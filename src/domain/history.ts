@@ -39,3 +39,26 @@ export function historyFromSession(
     source: 'app',
   };
 }
+
+export interface RecentRoutine {
+  /** Registro de onde veio: "Repetir" usa a cópia exata que rodou. */
+  entryId: string;
+  routine: Routine;
+  lastEndedAt: number;
+}
+
+/**
+ * Rotinas feitas por último, sem repetir (a mais recente de cada id), na ordem do histórico.
+ * Recebe o histórico já do mais novo para o mais velho.
+ */
+export function recentRoutines(entries: readonly HistoryEntry[], max: number): RecentRoutine[] {
+  const seen = new Set<string>();
+  const result: RecentRoutine[] = [];
+  for (const entry of entries) {
+    if (result.length >= max) break;
+    if (seen.has(entry.routine.id)) continue;
+    seen.add(entry.routine.id);
+    result.push({ entryId: entry.id, routine: entry.routine, lastEndedAt: entry.endedAt });
+  }
+  return result;
+}

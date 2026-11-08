@@ -113,3 +113,12 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
 - **07/11 — `page.clock`:** `install()` sozinho deixa o tempo correr de verdade e o texto do
   timer muda durante a checagem. Congelar (`pauseAt`) só com a tela pronta: o banco do web e o
   `axe` usam timers e travam com o relógio parado. Recarregar e rodar o `axe` com `resume()`.
+- **07/11 — Início em carrossel (C01b):** lista longa de modelos virou carrossel por modalidade
+  com foto, e o histórico virou "Recentes" em cards (tocar repete o registro). Cada modalidade abre
+  uma tela com os modelos dela. Ganho: a Início cabe numa tela; o E2E passou a navegar como o
+  usuário (Início, modalidade, modelo).
+- **07/11 — Foto de fundo no web:** `Image` com `absoluteFill` sozinho mostra a foto no tamanho
+  natural (ampliada) no react-native-web. Precisa de `width`/`height` `'100%'` explícitos. Só
+  apareceu na captura de tela, não em teste: conferir o visual exportado antes de fechar.
+- **07/11 — Texto sobre foto:** faixa escura fixa (scrim) embaixo do card e contraste medido no
+  pior caso em `theme.test.ts`, em vez de confiar na foto ser escura.

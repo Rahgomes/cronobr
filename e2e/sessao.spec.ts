@@ -10,6 +10,7 @@ const T0 = Date.parse('2026-11-07T10:00:00-03:00');
 async function openTabata(page: Page) {
   await page.clock.install({ time: T0 });
   await page.goto('/');
+  await page.getByRole('button', { name: /^Tabata: / }).click();
   await page.getByRole('button', { name: 'Tabata clássico, 4:00 · 8 exercícios' }).click();
   await expect(page.getByRole('heading', { name: 'Tabata clássico' })).toBeVisible();
   await expect(page.getByText('Duração total: 4:00')).toBeVisible();
@@ -48,7 +49,11 @@ test('treino completo: fases pelo relógio, conclusão e histórico com um regis
   await expectNoAxeViolations(page);
 
   await page.getByRole('button', { name: 'Voltar ao início' }).click();
-  await page.getByRole('button', { name: 'Histórico (1)' }).click();
+  // O treino feito vira um card em Recentes, pronto para repetir.
+  await expect(
+    page.getByRole('button', { name: 'Repetir Tabata clássico, 4:00, feito hoje' }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Ver histórico' }).click();
   await expect(page.getByText('1 treino registrado')).toBeVisible();
   await expect(page.getByText('Concluído · 4 min · 8/8 exercícios')).toBeVisible();
 });

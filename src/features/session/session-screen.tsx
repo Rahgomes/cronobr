@@ -24,9 +24,12 @@ type Load =
  */
 export function SessionScreen({
   routineId,
+  repeatId,
   clockSource = systemClock,
 }: {
   routineId: string | undefined;
+  /** Id de um registro do histórico: repete exatamente a rotina que rodou ali. */
+  repeatId?: string | undefined;
   clockSource?: Clock;
 }) {
   const repos = useRepos();
@@ -41,9 +44,11 @@ export function SessionScreen({
         const now = clockSource.now();
         return { status: 'ready', session: restore(saved, buildTimeline(saved.routine), now) };
       }
-      const routine = routineId
-        ? (presetById(routineId) ?? (await repos.routines.get(routineId)))
-        : null;
+      const routine = repeatId
+        ? ((await repos.history.get(repeatId))?.routine ?? null)
+        : routineId
+          ? (presetById(routineId) ?? (await repos.routines.get(routineId)))
+          : null;
       return routine
         ? { status: 'ready', session: createSession(newSessionId(), routine) }
         : { status: 'missing' };
@@ -56,7 +61,7 @@ export function SessionScreen({
     return () => {
       active = false;
     };
-  }, [repos, routineId, clockSource]);
+  }, [repos, routineId, repeatId, clockSource]);
 
   if (load.status === 'ready')
     return <SessionView initial={load.session} clockSource={clockSource} />;

@@ -38,6 +38,14 @@ describe.each<ColorScheme>(['light', 'dark'])('tema %s', (scheme) => {
   });
 });
 
+it('texto sobre foto passa 4,5:1 no pior caso (faixa escura sobre foto clara)', () => {
+  // A faixa de 78% de #0A0A0A sobre branco puro resulta em ~#3B3B3B: o fundo mais claro possível.
+  const worst = mix('#0A0A0A', '#FFFFFF', 0.22);
+  const c = themeColors('dark');
+  expect(contrast(c.onPhoto, worst)).toBeGreaterThanOrEqual(4.5);
+  expect(contrast(c.onPhotoMuted, worst)).toBeGreaterThanOrEqual(4.5);
+});
+
 describe('resolveScheme', () => {
   it('respeita a escolha explícita', () => {
     expect(resolveScheme('light', 'dark')).toBe('light');

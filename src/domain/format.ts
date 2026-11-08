@@ -21,3 +21,19 @@ export function duration(ms: number): string {
   if (seconds === 0) return `${String(minutes)} min`;
   return `${String(minutes)} min ${String(seconds)} s`;
 }
+
+const DAY = 24 * 60 * 60 * 1000;
+
+/** "hoje", "ontem", "há 3 dias", "há 2 semanas", "há 5 meses", por dia do calendário local. */
+export function relativeDay(when: number, now: number): string {
+  const start = (t: number) => {
+    const d = new Date(t);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  };
+  const days = Math.max(0, Math.round((start(now) - start(when)) / DAY));
+  if (days === 0) return 'hoje';
+  if (days === 1) return 'ontem';
+  if (days < 14) return `há ${String(days)} dias`;
+  if (days < 60) return `há ${String(Math.floor(days / 7))} semanas`;
+  return `há ${String(Math.floor(days / 30))} meses`;
+}

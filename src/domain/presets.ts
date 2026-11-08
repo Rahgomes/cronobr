@@ -99,3 +99,12 @@ export const PRESETS: readonly Routine[] = DEFS.map((def) =>
 export function presetById(id: string): Routine | undefined {
   return PRESETS.find((preset) => preset.id === id);
 }
+
+/** Modalidades que têm modelos prontos, na ordem em que aparecem na Início. */
+export const PRESET_MODALITIES: readonly Modality[] = [
+  ...new Set(PRESETS.map((preset) => preset.modality)),
+];
+
+export function presetsOf(modality: Modality): Routine[] {
+  return PRESETS.filter((preset) => preset.modality === modality);
+}

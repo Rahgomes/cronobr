@@ -190,6 +190,36 @@ describe('sessão', () => {
     expect(await repos.history.count()).toBe(1);
   });
 
+  it('repetir do histórico usa a rotina gravada naquele registro', async () => {
+    const env = await appRepos();
+    await env.repos.session.finish({
+      id: 'h-rep',
+      routine: { ...TABATA, name: 'Tabata da semana' },
+      status: 'completed',
+      startedAt: 0,
+      endedAt: 240_000,
+      activeMs: 240_000,
+      workDone: 8,
+      workTotal: 8,
+      source: 'app',
+    });
+    await renderApp(
+      <SessionScreen routineId={undefined} repeatId="h-rep" clockSource={fakeClock()} />,
+      env.repos,
+    );
+    expect(await screen.findByRole('header', { name: 'Tabata da semana' })).toBeOnTheScreen();
+    expect(screen.getByText('Duração total: 4:00')).toBeOnTheScreen();
+  });
+
+  it('repetir um registro apagado: rotina não encontrada', async () => {
+    const env = await appRepos();
+    await renderApp(
+      <SessionScreen routineId={undefined} repeatId="sumiu" clockSource={fakeClock()} />,
+      env.repos,
+    );
+    expect(await screen.findByRole('header', { name: 'Rotina não encontrada' })).toBeOnTheScreen();
+  });
+
   it('rotina inexistente ou sem rotina: explica e volta', async () => {
     await open('nao-existe');
     expect(await screen.findByRole('header', { name: 'Rotina não encontrada' })).toBeOnTheScreen();
