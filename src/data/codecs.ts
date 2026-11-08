@@ -15,6 +15,8 @@ const stepShape = z.object({
   seconds: int.nullable(),
   reps: int.nullable(),
   disabled: z.boolean().optional(),
+  sides: z.boolean().optional(),
+  early: z.boolean().optional(),
 });
 
 export const routineShape: z.ZodType<Routine> = z.object({
@@ -51,6 +53,8 @@ export const sessionShape: z.ZodType<Session> = z.object({
   endedAt: z.number().nullable(),
   adjusted: z.boolean(),
   jumped: z.boolean().optional(),
+  early: z.object({ segment: int.nonnegative() }).optional(),
+  tally: int.nonnegative().optional(),
 });
 
 export interface HistoryRow {
@@ -65,6 +69,8 @@ export interface HistoryRow {
   routine: string;
   /** 1 = ajustado; ausente em banco antes da V3. */
   adjusted?: number;
+  /** AMRAP: rodadas registradas; null fora do AMRAP ou antes da V4. */
+  rounds_logged?: number | null;
 }
 
 const historyShape = z.object({
@@ -78,6 +84,7 @@ const historyShape = z.object({
   source: z.enum(['app', 'legacy']),
   routine: routineShape,
   adjusted: z.literal(true).optional(),
+  rounds: z.number().int().nonnegative().optional(),
 });
 
 /** JSON ou forma inválida viram null: quem lê decide pular, sem derrubar a tela. */
@@ -105,6 +112,7 @@ export function historyFromRow(row: HistoryRow): HistoryEntry | null {
     routine,
     // Ausente = não ajustado: o registro de sempre continua igual.
     ...(row.adjusted === 1 ? { adjusted: true } : {}),
+    ...(typeof row.rounds_logged === 'number' ? { rounds: row.rounds_logged } : {}),
   });
   return parsed.success ? parsed.data : null;
 }

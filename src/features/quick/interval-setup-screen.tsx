@@ -5,7 +5,6 @@ import { useStored } from '@/data/use-stored';
 import { clock } from '@/domain/format';
 import { LIMITS } from '@/domain/limits';
 import { quickParams, quickRoutine } from '@/domain/quick';
-import type { IntervalConfig } from '@/domain/routine';
 import { buildTimeline, summarize } from '@/domain/timeline';
 import { Button } from '@/ui/button';
 import { Card } from '@/ui/card';
@@ -22,7 +21,7 @@ export const INTERVAL_KEY = 'rapido.intervalo';
 const seconds = (s: number) => clock(s * 1000);
 
 const FIELDS: {
-  key: keyof IntervalConfig;
+  key: 'prepSeconds' | 'workSeconds' | 'restSeconds' | 'rounds';
   label: string;
   min: number;
   max: number;

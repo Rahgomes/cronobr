@@ -37,9 +37,18 @@ describe('recentes', () => {
 
 describe('modalidades com modelos', () => {
   it('na ordem da lista, sem repetir, e o filtro por modalidade', () => {
-    expect(PRESET_MODALITIES).toEqual(['tabata', 'hiit', 'emom', 'amrap', 'boxe', 'circuito']);
+    expect(PRESET_MODALITIES).toEqual([
+      'tabata',
+      'hiit',
+      'emom',
+      'amrap',
+      'boxe',
+      'circuito',
+      'corrida',
+      'mobilidade',
+    ]);
     expect(presetsOf('boxe').map((p) => p.id)).toEqual(['boxe-beginner', 'boxe-pro']);
-    expect(presetsOf('corrida')).toEqual([]);
+    expect(presetsOf('personalizada')).toEqual([]);
   });
 });
 

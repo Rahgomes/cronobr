@@ -109,6 +109,27 @@ describe('editor de rotinas', () => {
     expect(screen.getByText('O bloco precisa de pelo menos uma etapa.')).toBeOnTheScreen();
   });
 
+  it('etapa dos dois lados e que pode terminar antes: gravadas e vistas na prévia', async () => {
+    const { repos } = await appRepos();
+    await renderApp(<EditorScreen id="nova" />, repos);
+    await fireEvent.changeText(await screen.findByLabelText('Nome da rotina'), 'Lados');
+    await fireEvent.press(screen.getByRole('button', { name: /^Exercício, 0:30\. Editar etapa$/ }));
+    await fireEvent(screen.getByRole('switch', { name: 'Os dois lados' }), 'press');
+    await fireEvent(screen.getByRole('switch', { name: 'Pode terminar antes' }), 'press');
+    // Por repetições, "terminar antes" não faz sentido e some.
+    await fireEvent.press(screen.getByRole('button', { name: 'Por repetições' }));
+    expect(screen.queryByRole('switch', { name: 'Pode terminar antes' })).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: 'Por tempo' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Fechar' }));
+    // 3 rodadas × 2 lados = 6 exercícios na prévia.
+    expect(screen.getByText(/1 bloco · \d+ etapas/)).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
+    await waitFor(async () => {
+      const [saved] = await repos.routines.list();
+      expect(saved?.blocks[0]?.steps[0]).toMatchObject({ sides: true, early: true });
+    });
+  });
+
   it('modelo pronto vira cópia; o modelo não muda', async () => {
     const { repos } = await appRepos();
     await renderApp(<EditorScreen id="nova" from="tabata-classic" />, repos);

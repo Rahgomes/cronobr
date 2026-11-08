@@ -148,4 +148,9 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   `act(async () => {})` + checagem, não com `waitFor(async)`.
 - **08/11 — Toque longo no E2E:** com o relógio do Playwright parado, `mouse.down()`,
   `clock.runFor(ms)` e `mouse.up()` simulam o segurar sem espera real.
-
+- **08/11 — Treino longo no E2E:** `clock.runFor` de 10 minutos desenha cada tique do motor e
+  leva uns 25 s reais; passa do limite padrão de 30 s do teste. `test.slow()` no teste, e um
+  `runFor` só (em passos de 1 min a tela parava atrás).
+- **08/11 — Schema de limites descarta campo novo:** campo opcional novo no modelo precisa entrar
+  também no schema zod de validação, senão o editor salva e o campo some em silêncio. Teste de tela
+  que salva e relê pega; teste só de domínio não.

@@ -5,8 +5,8 @@ import { AccessibilityInfo, StyleSheet, View } from 'react-native';
 import { useRepos } from '@/data/data-context';
 import { useStored } from '@/data/use-stored';
 import { planAlerts } from '@/domain/alerts';
-import { cuesFor } from '@/domain/cues';
-import type { Session } from '@/domain/engine';
+import { cuesFor, earlyRestCues, PHASE_LABEL } from '@/domain/cues';
+import { restingEarly, type Session } from '@/domain/engine';
 import type { SessionEvent } from '@/domain/events';
 import { clock, duration } from '@/domain/format';
 import { historyFromSession } from '@/domain/history';
@@ -33,6 +33,7 @@ import {
   LockedHint,
   LOCKED_HINT,
   RoundControl,
+  RoundCounter,
   ViewSwitch,
   WideControl,
 } from './session-controls';
@@ -73,7 +74,11 @@ export function SessionView({
     onMilestone: (next, now) => {
       port.schedule(planAlerts(next, runner.timeline, now, prefs));
     },
-    onEvents: (events) => {
+    onEvents: (all, snap) => {
+      // EMOM terminado antes: a metade do minuto já é descanso, não tem o que avisar.
+      const events = restingEarly(runner.session, snap)
+        ? all.filter((event) => event.type !== 'halfway')
+        : all;
       // Fora da tela quem avisa são as notificações agendadas; tocar aqui também dobraria.
       if (!isAway()) port.play(cuesFor(events, runner.timeline, prefs));
       announce(events);
@@ -172,6 +177,9 @@ export function SessionView({
             {session.adjusted ? (
               <Text color="textMuted">Tempo recalculado pelo relógio do aparelho.</Text>
             ) : null}
+            {session.tally === undefined ? null : (
+              <Text color="textMuted">Rodadas registradas: {String(session.tally)}</Text>
+            )}
             {session.jumped ? (
               <Text color="textMuted">Teve salto de etapa: fica marcado como ajustado.</Text>
             ) : null}
@@ -242,8 +250,16 @@ export function SessionView({
     );
   }
 
-  const segment = timeline[snap.segment];
+  const current = timeline[snap.segment];
+  const resting = restingEarly(session, snap);
+  // EMOM terminado antes: a tela mostra descanso até a virada do minuto.
+  const segment: Segment | undefined =
+    current && resting
+      ? { ...current, phase: 'rest', name: PHASE_LABEL.rest, early: false }
+      : current;
   const manual = segment?.durationMs === null;
+  const canFinishEarly = segment?.early === true;
+  const amrap = session.routine.modality === 'amrap';
   const paused = session.status === 'paused';
   const { locked } = lock;
   const focus = view === 'foco';
@@ -277,6 +293,30 @@ export function SessionView({
       tint={tint}
       footer={
         <View style={styles.actions}>
+          {amrap ? (
+            <RoundCounter
+              count={session.tally ?? 0}
+              locked={locked}
+              onAdd={() => {
+                lock.poke();
+                runner.logRound(1);
+              }}
+              onUndo={touch(() => {
+                runner.logRound(-1);
+              })}
+            />
+          ) : null}
+          {canFinishEarly ? (
+            <WideControl
+              label="Terminei"
+              locked={locked}
+              onBlocked={blocked}
+              onPress={touch(() => {
+                runner.finishEarly();
+                if (!isAway()) port.play(earlyRestCues(prefs));
+              })}
+            />
+          ) : null}
           {manual ? (
             <WideControl
               label="Concluí"

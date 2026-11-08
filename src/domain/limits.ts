@@ -62,6 +62,8 @@ const stepSchema = z
       .max(LIMITS.repsMax, `As repetições podem ir até ${String(LIMITS.repsMax)}.`)
       .nullable(),
     disabled: z.boolean().optional(),
+    sides: z.boolean().optional(),
+    early: z.boolean().optional(),
   })
   .refine((step) => step.seconds !== null || step.reps !== null, {
     message: 'Etapa sem tempo precisa de repetições.',

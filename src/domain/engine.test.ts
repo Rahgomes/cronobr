@@ -6,7 +6,10 @@ import {
   back,
   checkpoint,
   createSession,
+  finishEarly,
   jumpTo,
+  logRound,
+  restingEarly,
   MAX_GAP_MS,
   pause,
   restore,
@@ -225,6 +228,41 @@ describe('ações', () => {
     expect(jumpTo(s, tl, t(1), -1).jumped).toBeUndefined();
     const ready = createSession('x', r);
     expect(jumpTo(ready, tl, t(1), 1)).toEqual(ready);
+  });
+
+  it('EMOM: "Terminei" vira descanso até a virada do minuto; a próxima rodada não muda de hora', () => {
+    const emom = routine({
+      blocks: [block({ repeat: 2, steps: [step({ kind: 'work', seconds: 60, early: true })] })],
+    });
+    const etl = buildTimeline(emom);
+    const s = start(createSession('e', emom), etl, t(0));
+    const early = finishEarly(s, etl, t(25));
+    expect(early.early).toEqual({ segment: 0 });
+    expect(restingEarly(early, snapshot(early, etl, t(30)))).toBe(true);
+    // Repetir o toque não muda nada; a rodada 2 começa no minuto 1, como sem o toque.
+    expect(finishEarly(early, etl, t(26))).toBe(early);
+    expect(snapshot(early, etl, t(61))).toMatchObject({ segment: 1, elapsedMs: 1000 });
+    expect(restingEarly(early, snapshot(early, etl, t(61)))).toBe(false);
+    // Fora de etapa EMOM, ou parada, não faz nada.
+    expect(finishEarly(started(), tl, t(5))).toEqual(started());
+    const ready = createSession('x', emom);
+    expect(finishEarly(ready, etl, t(1))).toBe(ready);
+    const done = stop(early, etl, t(70));
+    expect(finishEarly(done, etl, t(71))).toBe(done);
+    expect(
+      finishEarly(start(createSession('e2', emom), etl, t(0)), etl, t(200)).early,
+    ).toBeUndefined();
+  });
+
+  it('AMRAP: rodadas registradas sobem, descem até zero e vão para o histórico', () => {
+    let s = logRound(logRound(started(), 1), 1);
+    s = logRound(logRound(logRound(s, -1), -1), -1);
+    expect(s.tally).toBe(0);
+    s = logRound(s, 1);
+    const done = stop(s, tl, t(10));
+    expect(historyFromSession(done, tl)?.rounds).toBe(1);
+    expect(logRound(done, 1)).toBe(done);
+    expect(historyFromSession(stop(started(), tl, t(3)), tl)).not.toHaveProperty('rounds');
   });
 
   it('encerrar depois do fim registra concluído, não interrompido', () => {

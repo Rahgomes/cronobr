@@ -110,21 +110,32 @@ export function StepSheet({
           }}
         />
       )}
-      <View style={styles.row}>
-        <View style={styles.rowText}>
-          <Text variant="label">Etapa ativa</Text>
-          <Text variant="caption" color="textMuted">
-            Desativada fica guardada, mas não roda.
-          </Text>
-        </View>
-        <Switch
-          value={!step.disabled}
-          accessibilityLabel="Etapa ativa"
-          onValueChange={(on) => {
-            actions.change({ disabled: !on });
+      <Toggle
+        label="Etapa ativa"
+        hint="Desativada fica guardada, mas não roda."
+        value={!step.disabled}
+        onChange={(on) => {
+          actions.change({ disabled: !on });
+        }}
+      />
+      <Toggle
+        label="Os dois lados"
+        hint="Roda uma vez para cada lado: esquerdo, depois direito."
+        value={step.sides === true}
+        onChange={(on) => {
+          actions.change({ sides: on });
+        }}
+      />
+      {step.kind === 'work' && step.seconds !== null ? (
+        <Toggle
+          label="Pode terminar antes"
+          hint='Como no EMOM: "Terminei" transforma o resto do tempo em descanso.'
+          value={step.early === true}
+          onChange={(on) => {
+            actions.change({ early: on });
           }}
         />
-      </View>
+      ) : null}
       <View style={styles.actions}>
         <Button label="Inserir etapa depois" kind="secondary" onPress={actions.insertAfter} />
         <Button label="Duplicar" kind="secondary" onPress={actions.duplicate} />
@@ -144,6 +155,30 @@ export function StepSheet({
         )}
       </View>
     </Sheet>
+  );
+}
+
+function Toggle({
+  label,
+  hint,
+  value,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  value: boolean;
+  onChange: (on: boolean) => void;
+}) {
+  return (
+    <View style={styles.row}>
+      <View style={styles.rowText}>
+        <Text variant="label">{label}</Text>
+        <Text variant="caption" color="textMuted">
+          {hint}
+        </Text>
+      </View>
+      <Switch value={value} accessibilityLabel={label} onValueChange={onChange} />
+    </View>
   );
 }
 

@@ -3,8 +3,9 @@ import { block, clockAt, must, routine, step } from '@/test/domain';
 import { planAlerts, MAX_ALERTS } from './alerts';
 import {
   cuesFor,
-  parseCuePrefs,
   DEFAULT_CUE_PREFS,
+  earlyRestCues,
+  parseCuePrefs,
   phasePhrase,
   soundSlot,
   spokenDuration,
@@ -267,5 +268,18 @@ describe('preferências gravadas', () => {
       sounds: { prep: 'gong', work: 'whistle', rest: 'beepLong', finish: 'bell' },
     };
     expect(parseCuePrefs(mine)).toEqual(mine);
+  });
+});
+
+describe('EMOM terminado antes', () => {
+  it('soa e fala descanso, respeitando cada canal', () => {
+    expect(earlyRestCues(DEFAULT_CUE_PREFS)).toEqual({
+      sound: 'whistle',
+      speech: 'Descanso',
+      haptic: 'phase',
+    });
+    expect(
+      earlyRestCues({ ...DEFAULT_CUE_PREFS, sound: false, voice: false, vibration: false }),
+    ).toEqual({ sound: null, speech: null, haptic: null });
   });
 });

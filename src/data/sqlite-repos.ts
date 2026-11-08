@@ -20,12 +20,13 @@ export async function insertHistory(tx: SqlTx, entry: HistoryEntry): Promise<boo
     entry.source,
     JSON.stringify(entry.routine),
     entry.adjusted ? 1 : 0,
+    entry.rounds ?? null,
   ];
   const result = await tx.run(
     `INSERT OR IGNORE INTO history
        (id, status, started_at, ended_at, active_ms, work_done, work_total, source, routine,
-        adjusted)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        adjusted, rounds_logged)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     params,
   );
   return result.changes > 0;

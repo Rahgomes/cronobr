@@ -18,6 +18,8 @@ export interface HistoryEntry {
   source: 'app' | 'legacy';
   /** Houve salto pela lista ou o tempo foi recalculado pelo relógio: vale, mas não é limpo. */
   adjusted?: true | undefined;
+  /** AMRAP: rodadas registradas na sessão. */
+  rounds?: number | undefined;
 }
 
 /** null enquanto a sessão não terminou (ou terminou sem nunca ter começado). */
@@ -40,6 +42,7 @@ export function historyFromSession(
     workTotal: work.length,
     source: 'app',
     ...(session.adjusted || session.jumped ? { adjusted: true as const } : {}),
+    ...(session.tally === undefined ? {} : { rounds: session.tally }),
   };
 }
 

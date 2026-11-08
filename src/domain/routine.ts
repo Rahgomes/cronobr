@@ -27,6 +27,13 @@ export interface Step {
   reps: number | null;
   /** Desativada sem apagar (E04): fica no editor, fora da execução e da prévia. */
   disabled?: boolean | undefined;
+  /** Mobilidade: roda duas vezes, lado esquerdo e lado direito. */
+  sides?: boolean | undefined;
+  /**
+   * EMOM: dá para tocar em "Terminei" antes do fim; o resto do tempo vira descanso e a próxima
+   * rodada começa na hora certa (o relógio não muda).
+   */
+  early?: boolean | undefined;
 }
 
 export interface Block {
@@ -60,6 +67,11 @@ export interface IntervalConfig {
   workSeconds: number;
   restSeconds: number;
   rounds: number;
+  /** Nomes próprios (corrida e caminhada); sem eles, "Exercício" e "Descanso". */
+  workName?: string;
+  restName?: string;
+  /** EMOM: o exercício pode terminar antes e o resto vira descanso. */
+  early?: boolean;
 }
 
 /**
@@ -73,16 +85,17 @@ export function intervalRoutine(
   const steps: Step[] = [
     {
       id: `${base.id}-work`,
-      name: 'Exercício',
+      name: config.workName ?? 'Exercício',
       kind: 'work',
       seconds: config.workSeconds,
       reps: null,
+      ...(config.early ? { early: true } : {}),
     },
   ];
   if (config.restSeconds > 0) {
     steps.push({
       id: `${base.id}-rest`,
-      name: 'Descanso',
+      name: config.restName ?? 'Descanso',
       kind: 'rest',
       seconds: config.restSeconds,
       reps: null,

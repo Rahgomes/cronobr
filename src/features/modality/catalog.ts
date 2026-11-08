@@ -21,12 +21,12 @@ export const MODALITY: Record<Modality, ModalityInfo> = {
   },
   emom: {
     label: 'EMOM',
-    tagline: 'Um exercício a cada minuto',
+    tagline: 'Uma rodada por minuto; terminou antes, descansa',
     photo: require('@assets/images/modalidades/emom.jpg') as number,
   },
   amrap: {
     label: 'AMRAP',
-    tagline: 'O máximo de repetições no tempo',
+    tagline: 'Máximo de rodadas no tempo; você marca cada uma',
     photo: require('@assets/images/modalidades/amrap.jpg') as number,
   },
   boxe: {
@@ -39,8 +39,16 @@ export const MODALITY: Record<Modality, ModalityInfo> = {
     tagline: 'Estações em sequência',
     photo: require('@assets/images/modalidades/circuito.jpg') as number,
   },
-  corrida: { label: 'Corrida', tagline: 'Tiros e trotes', photo: null },
-  mobilidade: { label: 'Mobilidade', tagline: 'Alongar e soltar', photo: null },
+  corrida: {
+    label: 'Corrida',
+    tagline: 'Correr e caminhar alternado',
+    photo: require('@assets/images/modalidades/corrida.jpg') as number,
+  },
+  mobilidade: {
+    label: 'Mobilidade',
+    tagline: 'Alongar e soltar, lado a lado',
+    photo: require('@assets/images/modalidades/mobilidade.jpg') as number,
+  },
   personalizada: { label: 'Personalizada', tagline: 'Do seu jeito', photo: null },
   temporizador: { label: 'Temporizador', tagline: 'Contagem regressiva', photo: null },
 };

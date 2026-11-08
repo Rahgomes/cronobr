@@ -16,7 +16,8 @@ aqui com o mesmo ID e o conceito vai para `arquivado/`.
 
 ## Fotos das modalidades
 
-`assets/images/modalidades/*.jpg` (Tabata, HIIT, EMOM, AMRAP, Boxe, Circuito) foram geradas pelo
+`assets/images/modalidades/*.jpg` (Tabata, HIIT, EMOM, AMRAP, Boxe, Circuito; Corrida e Mobilidade
+em 08/11) foram geradas pelo
 Codex com `fotos-modalidades.sh <nome> "<assunto>"` e reduzidas para 720×1080 JPEG q72 (~45 KB).
 Regras do prompt: foto realista, sem texto nem marca, atleta adulto, terço de baixo escuro para o
 título. Variar pessoa (homem e mulher, idades) entre os cards: o primeiro lote saiu com a mesma

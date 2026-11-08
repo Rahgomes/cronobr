@@ -155,6 +155,16 @@ describe('histórico', () => {
     expect((await repos.history.get('aj'))?.adjusted).toBe(true);
     expect(await repos.history.get('limpo')).not.toHaveProperty('adjusted');
   });
+
+  it('AMRAP: as rodadas registradas voltam; sem elas, nada', async () => {
+    const { repos } = await setup();
+    await repos.session.finish({ ...finished('amrap', 300), rounds: 7 });
+    await repos.session.finish({ ...finished('zero', 400), rounds: 0 });
+    expect((await repos.history.get('amrap'))?.rounds).toBe(7);
+    expect((await repos.history.get('zero'))?.rounds).toBe(0);
+    await repos.session.finish(finished('sem', 500));
+    expect(await repos.history.get('sem')).not.toHaveProperty('rounds');
+  });
 });
 
 describe('sessão em andamento', () => {

@@ -33,6 +33,10 @@ export interface Session {
   adjusted: boolean;
   /** Houve salto pela lista (P3): o treino vale, mas não seguiu a ordem. */
   jumped?: boolean | undefined;
+  /** EMOM: a etapa em que a pessoa tocou "Terminei"; o resto dela é descanso. */
+  early?: { segment: number } | undefined;
+  /** AMRAP: rodadas que a pessoa registrou. */
+  tally?: number | undefined;
 }
 
 export interface Snapshot {
@@ -223,6 +227,29 @@ export function jumpTo(
   if (marked.status !== 'running' && marked.status !== 'paused') return marked;
   if (target < 0 || target >= timeline.length) return marked;
   return { ...jump(marked, timeline, now, target), jumped: true };
+}
+
+/**
+ * EMOM: "Terminei" antes do fim. O tempo não muda (a próxima rodada começa na virada do minuto);
+ * só o resto da etapa passa a ser descanso. Fora de etapa EMOM, ou repetido, não faz nada.
+ */
+export function finishEarly(session: Session, timeline: readonly Segment[], now: Instant): Session {
+  if (session.status !== 'running' && session.status !== 'paused') return session;
+  const snap = snapshot(session, timeline, now);
+  if (snap.finished || !timeline[snap.segment]?.early) return session;
+  if (session.early?.segment === snap.segment) return session;
+  return { ...checkpoint(session, timeline, now), early: { segment: snap.segment } };
+}
+
+/** Descansando o resto de uma etapa EMOM terminada antes. */
+export function restingEarly(session: Session, snap: Snapshot): boolean {
+  return !snap.finished && session.early?.segment === snap.segment;
+}
+
+/** AMRAP: +1 ou -1 rodada registrada (nunca abaixo de zero). */
+export function logRound(session: Session, delta: 1 | -1): Session {
+  if (session.status !== 'running' && session.status !== 'paused') return session;
+  return { ...session, tally: Math.max(0, (session.tally ?? 0) + delta) };
 }
 
 /** "Concluí" em etapa por repetições. Em etapa com tempo não faz nada. */

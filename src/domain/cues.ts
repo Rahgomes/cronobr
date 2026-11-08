@@ -107,6 +107,15 @@ export function phasePhrase(timeline: readonly Segment[], segment: Segment): str
 }
 
 export const COMPLETED_PHRASE = 'Treino concluído';
+
+/** EMOM: "Terminei" antes do fim. Som e frase de descanso, pela mesma regra dos canais. */
+export function earlyRestCues(prefs: CuePrefs): Cues {
+  return {
+    sound: prefs.sound ? prefs.sounds.rest : null,
+    speech: prefs.voice ? PHASE_LABEL.rest : null,
+    haptic: prefs.vibration ? 'phase' : null,
+  };
+}
 const HALFWAY_PHRASE = 'Metade';
 
 /** Ordem de importância dentro de uma mesma leitura. */

@@ -8,7 +8,7 @@ cada um com testes de unidade, tela e E2E antes de seguir.
 | A | Três entradas da Início: cronômetro com voltas, temporizador (nome opcional, repetir ao concluir), intervalado rápido | Entregue 08/11 |
 | B | Editor de rotinas (C02): nomear, salvar, duplicar, editar, excluir, reordenar, inserir etapa, desabilitar, blocos e descanso entre blocos, rascunho, prévia com total estimado. Modelos editáveis por modalidade. Favoritos | Entregue 08/11 |
 | C | Sessão: visualizações Foco, Anel e Lista (P1), trava contra toque (P2), salto pela lista (P3), progresso com etapas manuais | Entregue 08/11 |
-| D | Modalidades com comportamento próprio: EMOM em fronteira de minuto e conclusão antecipada, AMRAP com registro de rodadas, corrida/caminhada, mobilidade com lados | |
+| D | Modalidades com comportamento próprio: EMOM em fronteira de minuto e conclusão antecipada, AMRAP com registro de rodadas, corrida/caminhada, mobilidade com lados | Entregue 08/11 |
 | E | Histórico: calendário simples, nota opcional, repetir a configuração registrada | |
 
 ## Lote A
@@ -78,3 +78,34 @@ nas três visualizações e o toque longo pelo relógio do Playwright.
 
 Pendente de aparelho: o toque longo e a trava com a mão suada e com luva (roteiro da E03).
 
+
+## Lote D
+
+| Arquivo | O que faz |
+| --- | --- |
+| `src/domain/engine.ts` (`finishEarly`, `restingEarly`, `logRound`) | "Terminei" no EMOM vira descanso até a virada; contador de rodadas do AMRAP na sessão |
+| `src/domain/timeline.ts` | Etapa com `sides` vira duas: "lado esquerdo" e "lado direito"; `early` só em exercício com tempo |
+| `src/domain/presets.ts` | EMOM e AMRAP renomeados pelo que duram; corrida (2 modelos) e mobilidade (2 modelos, troca de 5 s entre movimentos) |
+| `src/domain/cues.ts` (`earlyRestCues`) | Apito, voz "Descanso" e vibração de fase ao terminar antes |
+| `src/data/migrations.ts` (V4) | `history.rounds_logged`: rodadas do AMRAP registradas, nula nas outras modalidades |
+| `src/features/session/session-controls.tsx` (`RoundCounter`) | "+1 rodada" grande e "-1" pequeno, com o número lido pelo leitor de tela |
+| `src/features/editor/step-sheet.tsx` | Chaves "Os dois lados" e "Pode terminar antes" na etapa |
+| `assets/images/modalidades/corrida.jpg`, `mobilidade.jpg` | Fotos que faltavam no catálogo |
+
+| # | Decisão | Por quê |
+| --- | --- | --- |
+| D42 | **EMOM: "Terminei" troca o resto do minuto por descanso; o relógio não muda** e a rodada seguinte começa na virada | A fronteira do minuto é o EMOM; recalcular o tempo quebraria a conta |
+| D43 | **"Terminei" é uma marca por etapa na sessão** (`early.segment`), não um segmento novo na linha do tempo | Linha do tempo continua fixa: total, lista e histórico não mudam |
+| D44 | **AMRAP conta rodadas à mão: "+1" funciona travado, "-1" só destravado** | Contar no meio do esforço com um toque; desfazer é raro e não pode ser esbarrão |
+| D45 | **Rodadas numa coluna própria (V4, nula)**, não no JSON da rotina | Fica consultável no histórico (lote E) sem ler a cópia da rotina |
+| D46 | **Corrida e caminhada com nome próprio** na etapa (`workName`/`restName`) | "Corrida" e "Caminhada" na tela em vez de "Exercício" e "Descanso" |
+| D47 | **Lados expandidos na linha do tempo**, esquerdo antes do direito | Total, prévia e lista mostram o tempo real sem lógica extra na sessão |
+| D48 | **Ids dos modelos EMOM e AMRAP mantidos, só os nomes trocados** | Histórico e favoritas antigos continuam apontando para o modelo |
+
+Bug achado: o schema de limites (`limits.ts`) descartava `sides` e `early` ao salvar, então o
+editor gravava e a rotina voltava sem eles. Coberto no teste do editor.
+
+Testes: domínio 100% (terminar antes, contador, avisos, lados, modelos); tela com banco real
+(EMOM solto e travado, AMRAP com +1/-1 e registro no histórico, lados da mobilidade, corrida com
+nome); E2E com axe no EMOM e no AMRAP (10 minutos simulados pelo relógio do Playwright).
+Total: 397 testes Jest, 30 E2E.

@@ -34,7 +34,7 @@ describe('Modalidade', () => {
     expect(router.back).toHaveBeenCalledTimes(1);
   });
 
-  it.each(['nao-existe', undefined, 'corrida'])(
+  it.each(['nao-existe', undefined, 'personalizada'])(
     'modalidade inválida ou sem modelos (%s): explica e volta',
     async (id) => {
       const { repos } = await appRepos();
@@ -94,7 +94,7 @@ describe('Modalidades (ver todas)', () => {
     await render(<ModalitiesScreen />);
     expect(screen.getByRole('header', { name: 'Modalidades' })).toBeOnTheScreen();
     const cards = screen.getAllByRole('button', { name: / modelos?$/ });
-    expect(cards).toHaveLength(6);
+    expect(cards).toHaveLength(8);
     await fireEvent.press(screen.getByRole('button', { name: /^Boxe: / }));
     expect(router.push).toHaveBeenCalledWith({
       pathname: '/modalidade/[id]',

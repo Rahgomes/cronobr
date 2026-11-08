@@ -9,7 +9,9 @@ import {
   advanceManual,
   back,
   checkpoint,
+  finishEarly,
   jumpTo,
+  logRound,
   pause,
   resume,
   resync,
@@ -49,6 +51,10 @@ export interface Runner {
   advanceManual: () => void;
   /** Salto pela lista (P3). */
   jumpTo: (segment: number) => void;
+  /** EMOM: "Terminei"; o resto da etapa vira descanso. */
+  finishEarly: () => void;
+  /** AMRAP: +1 ou -1 rodada. */
+  logRound: (delta: 1 | -1) => void;
   retrySave: () => void;
 }
 
@@ -203,6 +209,12 @@ export function useSessionRunner({
     },
     jumpTo: (segment: number) => {
       act((s, now) => jumpTo(s, timeline, now, segment));
+    },
+    finishEarly: () => {
+      act((s, now) => finishEarly(s, timeline, now));
+    },
+    logRound: (delta: 1 | -1) => {
+      act((s) => logRound(s, delta));
     },
     retrySave: () => {
       finalize(sessionRef.current);

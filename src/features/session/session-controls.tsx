@@ -219,3 +219,80 @@ const makeWideStyles = (colors: Colors) =>
     },
     pressed: { backgroundColor: colors.primaryPressed },
   });
+
+/**
+ * AMRAP: contador de rodadas. "+1" vale mesmo travado (é o toque do treino e se desfaz);
+ * "-1" só destravado.
+ */
+export function RoundCounter({
+  count,
+  locked,
+  onAdd,
+  onUndo,
+}: {
+  count: number;
+  locked: boolean;
+  onAdd: () => void;
+  onUndo: () => void;
+}) {
+  const colors = useColors();
+  const styles = useThemedStyles(makeCounterStyles);
+  return (
+    <View style={styles.box}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Tirar uma rodada"
+        disabled={locked || count === 0}
+        // Escondido (travado ou zero): fora do leitor de tela também, mas guardando o lugar.
+        accessibilityElementsHidden={locked || count === 0}
+        importantForAccessibility={locked || count === 0 ? 'no-hide-descendants' : 'auto'}
+        onPress={onUndo}
+        style={[styles.minus, (locked || count === 0) && styles.hidden]}
+      >
+        <MaterialCommunityIcons name="minus" size={space.xl} color={colors.text} />
+      </Pressable>
+      <View style={styles.count} accessibilityLiveRegion="polite">
+        <Text variant="display" tabular accessibilityLabel={`${String(count)} rodadas`}>
+          {String(count)}
+        </Text>
+        <Text variant="caption" color="textMuted">
+          rodadas
+        </Text>
+      </View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Mais uma rodada"
+        onPress={onAdd}
+        style={({ pressed }) => [styles.plus, pressed && styles.pressed]}
+      >
+        <Text variant="label" style={{ color: colors.onPrimary }}>
+          +1 rodada
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+const makeCounterStyles = (colors: Colors) =>
+  StyleSheet.create({
+    box: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+    minus: {
+      width: touch.minTarget,
+      height: touch.minTarget,
+      borderRadius: radius.pill,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.iconButton,
+    },
+    hidden: { opacity: 0 },
+    count: { alignItems: 'center', minWidth: 64 },
+    plus: {
+      flex: 1,
+      minHeight: touch.button,
+      borderRadius: radius.pill,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.primary,
+    },
+    pressed: { backgroundColor: colors.primaryPressed },
+  });
