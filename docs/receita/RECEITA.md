@@ -229,3 +229,7 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   liga serviço em primeiro plano e áudio em segundo plano por padrão: desligar se não for usar.
 - **09/11 — `expo export` antes do E2E:** o Playwright serve o `dist`; tela nova não aparece até
   exportar de novo. Sintoma: "botão não encontrado" na Início.
+- **09/11 — Recarregar mata a escrita em andamento:** tela que mostra na hora e grava logo depois
+  perde a última escrita se a página recarregar no meio; recarregar de novo não traz de volta.
+  No E2E, antes de recarregar, sair e voltar à tela: a leitura entra na mesma fila serial depois
+  da escrita, então ver o valor ali prova que ele está gravado. Local passava; o CI, mais lento, não.

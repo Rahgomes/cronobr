@@ -85,16 +85,13 @@ test('prévia de 4 batidas; ritmo e atraso do fone ficam gravados', async ({ pag
   await expect(page.getByText('20 ms')).toBeVisible();
   await page.getByRole('button', { name: 'Aumentar Atraso do fone' }).click();
   await expect(page.getByText('40 ms')).toBeVisible();
-  // A tela mostra na hora e grava logo depois: recarrega até a gravação ter chegado (no CI,
-  // recarregar de imediato às vezes vinha antes da última escrita).
-  await expect
-    .poll(async () => {
-      await page.reload();
-      await expect(page.getByRole('heading', { name: 'Metrônomo' })).toBeVisible();
-      await expect(page.getByText(/^\d+ ms$/)).toBeVisible();
-      return page.getByText(/^\d+ ms$/).textContent();
-    })
-    .toBe('40 ms');
+  // A tela mostra na hora e grava logo depois; recarregar no meio mata a escrita. Sair e voltar
+  // relê do banco, e a leitura entra na mesma fila depois da escrita: ver 40 aqui = gravado.
+  await page.getByRole('button', { name: 'Voltar' }).click();
+  await page.getByRole('button', { name: 'Metrônomo' }).click();
+  await expect(page.getByText('40 ms')).toBeVisible();
+  await page.reload();
+  await expect(page.getByText('40 ms')).toBeVisible();
   await expect(page.getByLabel('89 batidas por minuto')).toBeVisible();
   await expectNoAxeViolations(page);
 });
