@@ -97,6 +97,8 @@ test.describe('paisagem', () => {
     await expect(page.getByRole('button', { name: 'Encerrar treino' })).toBeInViewport({
       ratio: 1,
     });
+    // O cartão "Próxima" (E06 D) também cabe sem rolar.
+    await expect(page.getByLabel(/^Depois: /)).toBeInViewport({ ratio: 1 });
     const clock = await timer.boundingBox();
     const pause = await page.getByRole('button', { name: 'Pausar' }).boundingBox();
     expect(clock && pause && pause.x > clock.x + clock.width).toBe(true);

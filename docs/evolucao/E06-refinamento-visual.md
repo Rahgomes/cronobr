@@ -11,7 +11,7 @@ reais do app e troca os conceitos por capturas das telas de verdade.
 | B | Todos os textos nas 4 línguas: telas, motivos de recusa do arquivo, rótulos de fase, som e modalidade, datas, voz no idioma escolhido, modelos prontos traduzidos (nome escrito pela pessoa nunca muda) | Entregue 08/11 |
 | C | Acessibilidade e layout: texto grande sem corte, contador com teto de escala, anúncio só em troca de fase, alvos de toque, alternativa a arrastar, movimento reduzido, paisagem na sessão, tablet e áreas seguras | Entregue 09/11 |
 | D | Refinamento pelas imagens-conceito: Início (última rotina e favoritas, começar em poucos toques), editor (avançado aos poucos), sessão (contador em destaque; preparar, executar, descansar e concluir por texto, som e cor; descanso entre etapas e entre blocos), estados de salvar, erro, vazio e importado; menos cartão e ícone decorativo | Entregue 09/11 |
-| E | Capturas reais por tela, tamanho, tema e língua, com dispositivos e dimensões anotados; conferência de que fluxos e dados das etapas anteriores seguem iguais | A fazer |
+| E | Capturas reais por tela, tamanho, tema e língua, com dispositivos e dimensões anotados; conferência de que fluxos e dados das etapas anteriores seguem iguais | Entregue 09/11 |
 
 ## 1. Lote A: o que entrou
 
@@ -155,3 +155,66 @@ erro, telas vazias, resumo da importação); a revisão pelas capturas não acho
 | Tela | `editor-screen.test.tsx` | Sequência recolhida, abre e fecha |
 | Tela | `session-screen.test.tsx`, `room.test.ts` | Restante no treino pelo rótulo acessível; anel pela altura em 664 e 520 |
 | E2E + axe | `backup.spec.ts`, `ajustes.spec.ts`, `sessao.spec.ts` | Backup pelos Ajustes; cabeçalho e progresso novos da sessão |
+
+## 7. Lote E: capturas e conferência
+
+### Capturas
+
+Índice com aparelho, dimensões, tema e língua de cada arquivo: `docs/imagens/capturas/README.md`.
+Ao todo 65 capturas: 19 telas em cada tema, 5 telas em cada uma das 3 outras línguas e 4 telas
+em 3 tamanhos (320 x 568, tablet 1024 x 1366, paisagem 915 x 412). Scripts:
+`capturas/telas.spec.ts` (telas, dois temas) e `capturas/matriz.spec.ts` (línguas e tamanhos).
+
+A revisão das capturas achou um corte: na paisagem, o cartão "Próxima" (novo no lote D) passava
+da altura. A conta do anel deitado passou a reservar 250 em vez de 190, e o E2E de paisagem
+agora exige o cartão inteiro à vista.
+
+### Dados de antes
+
+`src/test/fixtures/backup-e05.cronobr` foi gravado **pelo código da E05** (commit `fbb30cf`, numa
+cópia separada do repositório): rotina própria com emoji no nome, histórico com nota, treino
+interrompido com rodadas, favoritas e preferências de sessão e de avisos, sem a chave `aparencia`.
+`src/features/transfer/compat-e05.test.ts` prova que o app de agora lê esse arquivo, restaura
+tudo igual (tema e idioma ficam no do aparelho) e, ao gravar de novo, sai o mesmo conteúdo.
+
+O banco local não mudou na E06: nenhuma migração nova desde a E05 (`src/data/migrations.ts`
+igual). Tema e idioma entram como mais uma preferência (`aparencia`).
+
+### Fluxos das etapas anteriores
+
+| Etapa | Fluxo | Onde se prova (E2E, dois temas) |
+| --- | --- | --- |
+| E02 | Treino completo pelo relógio, conclusão e histórico | `sessao.spec.ts` (treino completo) |
+| E02 | Recarregar no meio retoma de onde o relógio está | `sessao.spec.ts` (recarregar) |
+| E03 | Som e avisos: canais, prévia, gravado | `avisos.spec.ts` |
+| E03 | Trava de toques, segurar para pausar, X com confirmação | `sessao.spec.ts` (travada) |
+| E04 | Visualizações Lista, Foco e Anel; salto pela lista | `sessao.spec.ts` (visualizações) |
+| E04 | Editor: copiar modelo, salvar, favoritar; rascunho | `editor.spec.ts` |
+| E04 | EMOM "Terminei", AMRAP contador | `modalidades.spec.ts` |
+| E04 | Cronômetro, temporizador, intervalado | `rapido.spec.ts` |
+| E04 | Histórico: nota, calendário, repetir | `historico.spec.ts` |
+| E05 | Importar rotina; exportar, restaurar e desfazer; recusar arquivo estranho | `backup.spec.ts` |
+| E06 | Tema e idioma; 4 línguas; layout e alvos de toque | `ajustes.spec.ts`, `idiomas.spec.ts`, `layout.spec.ts` |
+
+Rodada completa no fim do lote: ver o commit do lote E (Jest com cobertura e todos os E2E).
+
+### Teste instável que era defeito
+
+`editor.spec.ts` (sair sem salvar guarda rascunho) falhou uma vez no lote B e outra na rodada
+deste lote, sempre passando sozinho. O rastro do Playwright mostrou a causa: a fonte dos ícones
+chega depois da primeira pintura; até lá os atalhos da Início ficam sem ícone e mais baixos, e
+quando ela chega tudo abaixo desce 30 px. O toque em "Nova rotina" caía no espaço onde o botão
+estava um instante antes. Na primeira abertura do app, uma pessoa sofreria o mesmo.
+Correção: `src/ui/icon.tsx` reserva a caixa do ícone. Prova: `inicio.spec.ts` atrasa a fonte em
+1,5 s e exige o botão no mesmo lugar antes e depois (sem a correção: 518 contra 548).
+
+### Decisões do lote E
+
+| # | Decisão | Por quê |
+| --- | --- | --- |
+| D91 | **Backup de compatibilidade gerado pelo código antigo**, não escrito à mão | Um arquivo escrito à mão prova o que se acha que a E05 gravava; o gerado prova o que ela gravava de fato |
+| D93 | **Teste que falha "às vezes" é investigado pelo rastro antes de virar instável** | Duas falhas em rodadas cheias e nenhuma isolada pareciam carga; eram um deslocamento de layout real |
+| D92 | **Matriz de capturas reduzida**: pt em tudo; outras línguas e tamanhos só nas telas principais e no tema escuro | O claro já tem as 19 telas em pt; repetir tudo em 4 línguas x 2 temas x 4 tamanhos dava 600 imagens para conferir a mesma coisa |
+
+Pendente de aparelho real (vai com o APK único): letra no máximo do sistema, TalkBack e
+VoiceOver na sessão, giro com recorte de câmera, voz em cada língua.

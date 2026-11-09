@@ -4,17 +4,18 @@ import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useT } from '@/i18n/i18n-context';
+import { Icon } from '@/ui/icon';
 import { Text } from '@/ui/text';
 import type { Colors } from '@/ui/theme';
 import { useColors, useThemedStyles } from '@/ui/theme-context';
 import { radius, space } from '@/ui/tokens';
 
-type Icon = ComponentProps<typeof MaterialCommunityIcons>['name'];
+type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 /** As três entradas da Início (C01b): resolvem a maior parte dos treinos em dois toques. */
 export function QuickTiles() {
   const t = useT();
-  const tiles: { label: string; hint: string; icon: Icon; href: Href }[] = [
+  const tiles: { label: string; hint: string; icon: IconName; href: Href }[] = [
     {
       label: t.home.stopwatch,
       hint: t.home.stopwatchHint,
@@ -44,7 +45,7 @@ export function QuickTiles() {
           }}
           style={({ pressed }) => [styles.tile, pressed && styles.pressed]}
         >
-          <MaterialCommunityIcons name={tile.icon} size={30} color={colors.primary} />
+          <Icon name={tile.icon} size={30} color={colors.primary} />
           <Text variant="label" style={styles.label} numberOfLines={1} adjustsFontSizeToFit>
             {tile.label}
           </Text>

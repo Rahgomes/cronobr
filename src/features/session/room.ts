@@ -15,8 +15,8 @@ export interface Room {
 
 const RING_MAX = 260;
 const RING_MIN = 140;
-/** Título, rodada, próxima etapa, barra e total em volta do anel. */
-const AROUND_RING = 190;
+/** Selo da fase, rodada, barra com o total e o cartão "Próxima" em volta do anel (E06 D). */
+const AROUND_RING = 250;
 /** Em pé somam ainda o topo e os controles do rodapé. */
 const AROUND_RING_PORTRAIT = 470;
 

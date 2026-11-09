@@ -31,3 +31,23 @@ test('rota desconhecida mostra a página de não encontrado com saída', async (
   await page.getByRole('button', { name: 'Voltar ao início' }).click();
   await expect(page.getByRole('heading', { name: 'Modalidades' })).toBeVisible();
 });
+
+test('nada pula de lugar quando a fonte dos ícones chega', async ({ page }) => {
+  // A fonte dos ícones chega depois da primeira pintura. Sem espaço reservado, a Início descia
+  // 28 px e um toque nesse instante caía no vazio (E06 E).
+  await page.route('**/*.ttf', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await route.continue();
+  });
+  await page.goto('/');
+  const button = page.getByRole('button', { name: 'Nova rotina' });
+  await expect(button).toBeVisible();
+  const before = await button.boundingBox();
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+  });
+  await expect(page.getByRole('button', { name: 'Ajustes' })).toBeVisible();
+  await page.waitForTimeout(1700);
+  const after = await button.boundingBox();
+  expect(after?.y).toBe(before?.y);
+});

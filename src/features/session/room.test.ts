@@ -20,7 +20,7 @@ it('tablet em pé: largura do conteúdo limitada', () => {
 it('paisagem: duas colunas, anel pela altura', () => {
   const room = sessionRoom(915, 412);
   expect(room.wide).toBe(true);
-  expect(room.ring).toBe(222);
+  expect(room.ring).toBe(162);
   expect(room.text).toBe(915 - 48 - CONTROLS_WIDTH);
 });
 

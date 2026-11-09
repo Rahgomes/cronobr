@@ -197,3 +197,14 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   invisível no tema escuro, conteúdo da sessão escondido sob o rodapé em 664 px e, numa captura
   com janela alta, chips do editor esticados (ScrollView do RN-web cresce por padrão). Cor de fase
   precisa de duas versões: fundo para texto branco e traço sobre o fundo do tema.
+- **09/11 — E06 E, compatibilidade com dado gerado pelo código antigo:** `git worktree` no
+  commit da etapa anterior, `node_modules` por symlink, um teste descartável que grava o backup
+  no fixture do repo atual. O teste de agora lê, restaura e grava de novo igual. Mais forte que
+  fixture escrito à mão.
+- **09/11 — Capturas por matriz:** spec separado para línguas e tamanhos (só tema escuro); em
+  Playwright, `test.beforeEach` exige desestruturar o primeiro argumento, então o "só no escuro"
+  virou `test.skip(test.info().project.name !== ...)` dentro do teste.
+- **09/11 — "Instável sob carga" era layout pulando:** o rastro do Playwright (frames do
+  screencast + log do clique) mostrou o toque no lugar antigo do botão, porque a fonte dos ícones
+  chega depois. Ícone sempre numa caixa do tamanho dele. Teste: `page.route('**/*.ttf')` com
+  atraso e comparar a posição do botão antes e depois.
