@@ -294,4 +294,13 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
 - **09/11 — Aviso clicável esconde o texto do leitor de tela:** um `Pressable` com rótulo vira um
   botão só com o rótulo; a explicação dentro dele some para o TalkBack. Explicação e botão
   separados.
+- **09/11 — E08 B, medir memória só depois de coletar o lixo:** `performance.memory` logo depois
+  de uma importação grande deu 273 MB; com `HeapProfiler.collectGarbage` pelo CDP antes de
+  `Performance.getMetrics`, 12,9 MB. Sem forçar a coleta, o número mede o lixo, não o app.
+- **09/11 — Gerar o volume pelo próprio formato:** o backup máximo (1.000 rotinas, 20.000
+  registros) é montado no teste e entra pela tela de importação, o mesmo caminho da pessoa. Foi
+  assim que apareceu a Início desenhando 1.000 linhas de uma vez.
+- **09/11 — Precisão das trocas em tempo real:** `MutationObserver` dentro da página anotando
+  `performance.now()` quando o título da fase muda; sem `page.clock`, porque é o relógio de verdade
+  que se quer medir.
 

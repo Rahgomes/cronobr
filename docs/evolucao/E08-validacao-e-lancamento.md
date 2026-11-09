@@ -7,7 +7,7 @@ APK único).
 | Lote | Conteúdo | Situação |
 | --- | --- | --- |
 | A | Qualidade e fluxos críticos: mapa de cada exigência do PRD para o teste que a prova; lacunas cobertas (primeira abertura sem rede, permissão recusada, texto ampliado, arquivo vindo de outro sistema); fixtures de versões anteriores conferidas | Feito |
-| B | Performance: o que dá para medir sem aparelho (abertura do pacote web, resposta dos controles, precisão das transições, biblioteca e histórico volumosos) com limite em teste; roteiro de medição no aparelho (abertura, memória e bateria em sessão longa) | A fazer |
+| B | Performance: o que dá para medir sem aparelho (abertura do pacote web, resposta dos controles, precisão das transições, biblioteca e histórico volumosos) com limite em teste; roteiro de medição no aparelho (abertura, memória e bateria em sessão longa) | Feito |
 | C | Monetização: banner discreto só com IDs de teste, longe dos controles de treino, sem intersticial; uso normal sem anúncio (falha, offline, sem preenchimento); consentimento e declarações pela documentação oficial atual | A fazer |
 | D | Lojas: textos nas 4 línguas (título candidato, descrição curta e completa) dentro dos limites atuais de cada loja; lista de capturas; privacidade igual ao comportamento real; instruções de backup e importação; nada de "funciona ilimitado em segundo plano" | A fazer |
 | E | Relatório final: matriz Android/iOS de cada requisito (aprovado, reprovado, não testado), evidências, defeitos que impedem lançamento, limitações, o que depende de aparelho ou conta, próximos passos | A fazer |
@@ -59,3 +59,43 @@ APK único).
 | --- | --- | --- |
 | D126 | **Arquivo com BOM no começo abre** (o BOM é ignorado) | Editor de texto e alguns apps de mensagem regravam o arquivo com BOM; antes ele era recusado como "incompleto ou não é do CronôBR". Quebra CRLF e indentação já abriam; agora há teste |
 | D127 | **Notificação recusada vira aviso com explicação e botão**, na prévia do treino e em Avisos, nunca no meio do treino; confere de novo ao voltar para o app | O app funciona igual com a tela à vista; o que muda é a tela bloqueada, e a pessoa precisa saber disso antes de começar. Aviso e botão separados porque, num aviso clicável, o leitor de tela só leria o rótulo do botão. Na web não há notificação agendada: o aviso não aparece |
+
+## Lote B · Performance
+
+Medido no Chromium (Pixel 7 emulado, servidor local, num tema só) por `e2e/desempenho.spec.ts`.
+Cada número abaixo é também um limite no teste, com folga para máquina lenta: se piorar além
+dele, o CI falha. A medição no aparelho é o roteiro no fim da seção.
+
+| Medida | Resultado | Limite no teste |
+| --- | --- | --- |
+| Abertura até a Início pronta | 2,3 s (página carregada em 0,7 s; o resto é abrir o banco e montar as telas) | 5 s |
+| JavaScript baixado na web | 3,7 MB, sem módulo repetido entre os pacotes | 6 MB |
+| Resposta dos toques no treino (Pausar, Retomar, Pular, 5 vezes cada) | pior toque 64 ms (Event Timing, a base do INP) | 200 ms ("bom" para INP) |
+| Precisão das trocas de fase, em tempo real | 5.034, 4.968 e 5.001 ms para fases de 5 s: erro máximo de 34 ms | 400 ms (a tela lê o relógio a cada 250 ms) |
+| Backup no máximo do formato (1.000 rotinas, 20.000 registros, 11,9 MB) | prévia em 3,3 s; restaurar em 24 s (botão em "carregando" o tempo todo) | 20 s e 60 s |
+| Início com 1.000 rotinas | **antes: 4,4 s e 34 MB a mais de memória; depois: 1,6 s e 1,5 MB** | 5 s e 10 MB a mais que o app vazio |
+| Histórico com 20.000 registros | 1,4 s para abrir; rolar e carregar mais páginas em 0,2 s; memória igual à do app vazio | 5 s e 10 MB |
+
+A memória é medida depois de forçar a coleta de lixo (CDP). Sem isso, o mesmo histórico
+mostrava 273 MB, quase tudo lixo ainda não recolhido da importação.
+
+### Roteiro de medição no aparelho
+
+Junta-se aos roteiros da E03 e da E07 na rodada do APK. Anotar aparelho, sistema e versão.
+
+| # | Medida | Como | Aprovado se |
+| --- | --- | --- | --- |
+| P1 | Abertura a frio | Fechar pelo multitarefa e abrir; cronometrar até a Início responder ao toque (3 vezes, mediana) | Até 2 s num aparelho intermediário |
+| P2 | Abertura com dados | Restaurar o backup grande (`desempenho.spec.ts` gera o arquivo) e repetir P1 | Até 3 s |
+| P3 | Resposta dos controles | Pausar, retomar e pular 10 vezes cada durante o treino | Nenhum toque que pareça atrasado; nenhum toque perdido |
+| P4 | Precisão das transições | Gravar a tela com som num Tabata e medir no vídeo o apito contra o relógio da tela | Até 0,3 s entre o previsto e o ouvido |
+| P5 | Memória em sessão longa | Treino de 30 min com cadência; `adb shell dumpsys meminfo` no começo, no meio e no fim (Android) ou Xcode Instruments (iPhone) | Sem subir sem parar |
+| P6 | Bateria em sessão longa | Mesmo treino, tela acesa, brilho fixo; % de bateria no começo e no fim | Anotar; comparar com o metrônomo da E07 (E8) |
+| P7 | Biblioteca e histórico volumosos | Com o backup grande: abrir Início, Histórico, calendário, rolar | Sem travar; rolar sem engasgo visível |
+
+### Decisões do lote B
+
+| # | Decisão | Por quê |
+| --- | --- | --- |
+| D128 | **Listas de rotinas mostram 20 e um "Mostrar mais 50 (faltam N)"**, na Início e na modalidade | A medição achou a Início desenhando as 1.000 rotinas de uma vez, cada uma calculando a duração: 4,4 s e 34 MB. Lista virtual mudaria o desenho da Início inteira; mostrar em partes resolve com uma mudança pequena e o leitor de tela sabe quantas faltam |
+| D129 | **Desempenho vira teste com limite**, num tema só, com os números anexados ao relatório do Playwright | Mesmo motivo do D121: medir uma vez não pega regressão. O limite tem folga para o CI, mais lento que a máquina local |

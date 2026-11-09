@@ -238,6 +238,7 @@ export const pt = {
     body: 'Seus treinos estão guardados. Tente de novo.',
   },
   home: {
+    showMore: (n: number, rest: number) => `Mostrar mais ${String(n)} (faltam ${String(rest)})`,
     continueWorkout: 'Continuar treino',
     lastRoutine: 'Última rotina',
     repeat: 'Repetir',

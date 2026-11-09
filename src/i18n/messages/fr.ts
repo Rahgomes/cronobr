@@ -239,6 +239,8 @@ export const fr: Messages = {
     body: 'Vos entraînements sont en sécurité. Réessayez.',
   },
   home: {
+    showMore: (n: number, rest: number) =>
+      `Afficher ${String(n)} de plus (${String(rest)} restantes)`,
     continueWorkout: 'Continuer l’entraînement',
     lastRoutine: 'Dernière séance',
     repeat: 'Refaire',

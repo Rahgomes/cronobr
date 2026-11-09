@@ -5,8 +5,9 @@ import type { HistoryEntry } from '@/domain/history';
 import { PRESETS, presetById } from '@/domain/presets';
 import { intervalRoutine, type Routine } from '@/domain/routine';
 import { buildTimeline } from '@/domain/timeline';
+import { SHOW_FIRST, SHOW_STEP } from '@/features/routines/use-show-more';
 import { appRepos, renderApp } from '@/test/app';
-import { clockAt, must } from '@/test/domain';
+import { clockAt, must, routine } from '@/test/domain';
 import { router } from '@/test/expo-router-mock';
 
 import { HomeScreen } from './home-screen';
@@ -128,5 +129,28 @@ describe('Início', () => {
       pathname: '/sessao',
       params: { rotina: 'legacy-p-1' },
     });
+  });
+});
+
+describe('Início com muitas rotinas (E08 B)', () => {
+  it(`mostra as primeiras ${String(SHOW_FIRST)} e traz mais ${String(SHOW_STEP)} por toque`, async () => {
+    const { repos } = await appRepos();
+    const total = SHOW_FIRST + SHOW_STEP + 5;
+    for (let i = 0; i < total; i += 1) {
+      await repos.routines.save(routine({ id: `m${String(i)}`, name: `Minha ${String(i)}` }));
+    }
+    await renderApp(<HomeScreen />, repos);
+    expect(await screen.findAllByRole('button', { name: /^Minha \d+, / })).toHaveLength(SHOW_FIRST);
+    await fireEvent.press(
+      screen.getByRole('button', {
+        name: `Mostrar mais 50 (faltam ${String(total - SHOW_FIRST)})`,
+      }),
+    );
+    expect(screen.getAllByRole('button', { name: /^Minha \d+, / })).toHaveLength(
+      SHOW_FIRST + SHOW_STEP,
+    );
+    await fireEvent.press(screen.getByRole('button', { name: 'Mostrar mais 5 (faltam 5)' }));
+    expect(screen.getAllByRole('button', { name: /^Minha \d+, / })).toHaveLength(total);
+    expect(screen.queryByRole('button', { name: /^Mostrar mais/ })).toBeNull();
   });
 });

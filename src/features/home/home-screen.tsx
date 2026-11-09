@@ -14,6 +14,7 @@ import { MODALITY } from '@/features/modality/catalog';
 import { useFavorites } from '@/features/routines/favorites';
 import { usePresets } from '@/features/routines/presets';
 import { RoutineOptions, type RoutineOptionActions } from '@/features/routines/routine-options';
+import { useShowMore } from '@/features/routines/use-show-more';
 import { useT } from '@/i18n/i18n-context';
 import { BrandMark } from '@/ui/brand-mark';
 import { Button } from '@/ui/button';
@@ -86,6 +87,7 @@ export function HomeScreen() {
   };
 
   const mine = data?.mine ?? [];
+  const mineShown = useShowMore(mine);
   const byId = new Map([...presets.all, ...mine].map((r) => [r.id, r]));
   const favoriteRoutines = favorites.ids.flatMap((id) => byId.get(id) ?? []);
   const open = (routine: Routine) => {
@@ -234,7 +236,7 @@ export function HomeScreen() {
 
       <View style={styles.list}>
         {mine.length > 0 ? <SectionTitle>{t.home.yourRoutines}</SectionTitle> : null}
-        {mine.map((routine) => (
+        {mineShown.visible.map((routine) => (
           <RoutineRow
             key={routine.id}
             routine={routine}
@@ -247,6 +249,7 @@ export function HomeScreen() {
             }}
           />
         ))}
+        {mineShown.more}
         <Button
           label={t.home.newRoutine}
           kind="primary"

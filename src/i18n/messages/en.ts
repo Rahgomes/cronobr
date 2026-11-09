@@ -234,6 +234,7 @@ export const en: Messages = {
     body: 'Your workouts are safe. Try again.',
   },
   home: {
+    showMore: (n: number, rest: number) => `Show ${String(n)} more (${String(rest)} left)`,
     continueWorkout: 'Continue workout',
     lastRoutine: 'Last workout',
     repeat: 'Repeat',

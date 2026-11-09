@@ -8,6 +8,7 @@ import { RoutineRow } from '@/features/home/routine-row';
 import { useFavorites } from '@/features/routines/favorites';
 import { usePresets } from '@/features/routines/presets';
 import { RoutineOptions } from '@/features/routines/routine-options';
+import { useShowMore } from '@/features/routines/use-show-more';
 import { useT } from '@/i18n/i18n-context';
 import { Button } from '@/ui/button';
 import { PhotoFade, PhotoFill } from '@/ui/photo-card';
@@ -34,6 +35,7 @@ export function ModalityScreen({ id }: { id: string | undefined }) {
   const favorites = useFavorites();
   const [mine, setMine] = useState<Routine[]>([]);
   const [options, setOptions] = useState<Routine | null>(null);
+  const mineShown = useShowMore(mine);
   useFocusEffect(
     useCallback(() => {
       let active = true;
@@ -113,7 +115,8 @@ export function ModalityScreen({ id }: { id: string | undefined }) {
       {mine.length > 0 ? (
         <View style={styles.list}>
           <SectionTitle>{t.modality.yourRoutines(text.label)}</SectionTitle>
-          {mine.map((routine) => row(routine))}
+          {mineShown.visible.map((routine) => row(routine))}
+          {mineShown.more}
         </View>
       ) : null}
       {id === 'profissional' ? (

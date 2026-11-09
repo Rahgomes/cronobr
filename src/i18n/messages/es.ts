@@ -235,6 +235,7 @@ export const es: Messages = {
     body: 'Tus entrenamientos están guardados. Inténtalo de nuevo.',
   },
   home: {
+    showMore: (n: number, rest: number) => `Mostrar ${String(n)} más (faltan ${String(rest)})`,
     continueWorkout: 'Continuar entrenamiento',
     lastRoutine: 'Último entrenamiento',
     repeat: 'Repetir',
