@@ -26,6 +26,7 @@ import { space } from '@/ui/tokens';
 import { RoundAction } from '@/ui/top-bar';
 
 import { LastRoutine } from './last-routine';
+import { MetronomeLink } from './metronome-link';
 import { QuickTiles } from './quick-tiles';
 import { RoutineRow } from './routine-row';
 import { TimersSummary } from './timers-summary';
@@ -162,6 +163,7 @@ export function HomeScreen() {
 
       <QuickTiles />
       <TimersSummary />
+      <MetronomeLink />
 
       {data?.active ? (
         <Notice

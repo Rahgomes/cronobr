@@ -26,3 +26,9 @@ jest.mock('expo-sqlite', () => ({ openDatabaseAsync: jest.fn() }));
 
 // Língua do aparelho nos testes: português (o expo-localization nativo não existe no Jest).
 jest.mock('@/i18n/device', () => ({ deviceLanguageTags: () => ['pt-BR'] }));
+
+// Relógio de áudio do metrônomo: o mock oficial da lib (os testes de tela injetam um relógio
+// falso; este só garante que importar a lib não quebra).
+jest.mock('react-native-audio-api', () =>
+  jest.requireActual<object>('react-native-audio-api/mock'),
+);

@@ -8,7 +8,7 @@ backup gravado pela E05 lido e restaurado igual (`compat-e05.test.ts`).
 | Lote | Conteúdo | Situação |
 | --- | --- | --- |
 | A | Vários temporizadores: criar com nome, iniciar, pausar, repetir e encerrar cada um; visão compacta dos ativos; estado preservado ao navegar e reabrir; limite de 10; um relógio só para todos; conclusão de cada um com nome; avisos agrupados por dono (o treino não apaga os dos temporizadores) e política de colisão; convivência com um treino ativo | Feito |
-| B | Metrônomo: BPM de 30 a 240, pulso visual e sonoro, prévia, offline; agendamento pelo relógio de áudio (não por `setInterval`); variação entre batidas medida; ajuste de atraso para fone Bluetooth | A fazer |
+| B | Metrônomo: BPM de 30 a 240, pulso visual e sonoro, prévia, offline; agendamento pelo relógio de áudio (não por `setInterval`); variação entre batidas medida; ajuste de atraso para fone Bluetooth | Feito |
 | C | Cadência na etapa do treino: BPM opcional por etapa no editor; prioridade entre pulso, voz e aviso de troca de etapa; formato `.cronobr` aceita o campo novo sem quebrar o app antigo | A fazer |
 | D | Modelos adicionais: estudo e foco, tarefas pessoais, "sequência do profissional" (nomes e tempos recebidos), todos editáveis e nas 4 línguas | A fazer |
 | E | Testes de resistência: temporizadores terminando juntos, treino com cadência, troca de saída de áudio, tela bloqueada, consumo; roteiro de aparelho para o APK | A fazer |
@@ -47,3 +47,41 @@ e `/temporizadores` na varredura de alvos de toque. Capturas `17` a `20`.
 | D99 | **Conclusão no diálogo do app**, não numa faixa fixa no topo | A faixa ficava por cima do "Voltar" e o axe reprovou (alvo de toque sobreposto). O diálogo é o mesmo das confirmações, já passa no axe e dá lugar para "Repetir" |
 | D100 | **Fim percebido mais de 5 s depois não toca nem abre diálogo** | Ao reabrir o app horas depois, a notificação já avisou; tocar de novo seria um alarme falso. O temporizador aparece como "Terminou" na lista |
 | D101 | **Com treino rodando, o temporizador não fala** | A voz do app é uma só: a frase nova cortaria a contagem do treino. Som, vibração e o aviso escrito bastam. A prioridade completa entre pulso, voz e troca de etapa é do lote C |
+
+## Lote B · Metrônomo
+
+| Item | Onde |
+| --- | --- |
+| Parte pura: BPM de 30 a 240, fila de batidas no relógio de áudio, laço atrasado pula no mesmo passo (sem batida vencida nem rajada), troca de BPM andando, prévia com limite, medição da variação | `src/domain/metronome.ts` (7 testes, 100% de ramos) |
+| Motor: reabastece a fila, desmarca o que não tocou ao parar ou trocar o BPM, pulso na tela atrasado pelo fone | `src/features/metronome/engine.ts` (6 testes, com laço travado 1 s e 3 s) |
+| Relógio de áudio: `react-native-audio-api` no aparelho (carga tardia), Web Audio do navegador na web; clique sintetizado, sem arquivo | `audio-clock.ts`, `audio-clock.web.ts`, `click.ts` |
+| Tela `/metronomo`: BPM grande, − e +, ritmos comuns (60 a 180), prévia de 4 batidas, Começar/Parar, atraso do fone de 0 a 400 ms; tudo gravado | `metronome-screen.tsx` (5 testes) |
+| Entrada na Início, abaixo dos temporizadores | `src/features/home/metronome-link.tsx` |
+| Textos nas 4 línguas | `metronome` em `src/i18n/messages/*` |
+| Plugin nativo sem serviço em primeiro plano, sem permissão extra e sem áudio em segundo plano | `app.config.ts` |
+
+### Variação medida
+
+| Onde | Resultado |
+| --- | --- |
+| Jest, 10 s a 240 BPM com o relógio falso | Intervalos marcados: desvio 0 ms; nenhuma batida marcada atrasada; nenhuma pulada |
+| Jest, laço de JS travado 1 s | A fila de 1,5 s cobre: nenhuma batida pulada |
+| Jest, laço travado 3 s | Pula as vencidas no mesmo passo; nenhuma marcada atrasada, nenhuma rajada |
+| Chromium real (E2E), 4 s a 180 BPM, `start(quando)` da Web Audio registrado de fora do app | 22 a 23 batidas; maior desvio entre intervalos 2,8 x 10⁻¹³ ms (arredondamento de ponto flutuante); menor folga entre marcar e tocar 60 ms |
+
+O que isso prova: a hora de cada batida é do relógio de áudio e a fila nunca secou. O que fica
+para o aparelho (roteiro do APK, lote E): a saída real no alto-falante e no fone Bluetooth, e a
+convivência com a voz e os sons do `expo-audio`.
+
+Testes: domínio (7), motor (6), tela (5), E2E `metronomo.spec.ts` (2 casos x 2 temas, com axe)
+e `/metronomo` na varredura de alvos de toque. Captura `21`.
+
+### Decisões do lote B
+
+| # | Decisão | Por quê |
+| --- | --- | --- |
+| D102 | **Fila longa e laço lento**: 1,5 s de batidas marcadas, laço a cada 250 ms; parar ou trocar o BPM desmarca o que não tocou | O navegador em segundo plano segura o setTimeout em até 1 s e o celular às vezes trava o JS por centenas de ms; com 1,5 s na fila nada se perde. Desmarcar é o que deixa a fila longa sem atrasar a resposta ao toque |
+| D103 | **Pulso em 4 pontos pequenos**, não a tela piscando; escondido do leitor de tela, que ouve o som e só ouve "tocando" e "parado" | A 240 BPM a tela piscaria 4 vezes por segundo, acima do limite de 3 da WCAG 2.3.1. Anunciar cada batida taparia o leitor |
+| D104 | **Toca só com a tela aberta**: ao sair da tela ou mandar o app para o fundo, para; enquanto toca, a tela fica acesa | Tocar em segundo plano exigiria serviço em primeiro plano no Android (declaração na loja) e modo de áudio no iPhone. O plugin ligava tudo isso por padrão; desligamos. Se o lote C pedir cadência com a tela apagada, decide-se lá |
+| D105 | **Atraso do fone só no pulso da tela** (manual, 0 a 400 ms em passos de 20, mais a latência que o aparelho informar) | O som não dá para adiantar; o que se acerta é a tela esperar o som chegar. Medir o atraso do Bluetooth sozinho exige microfone, e o app não pede microfone |
+| D106 | **Lib nativa carregada na hora de usar**; sem ela, o metrônomo explica que está indisponível e o resto do app segue | Importar no topo num binário sem o módulo derrubaria o app inteiro. A versão 2.0.0 ainda não tem binário: o APK único já sai com a lib (`runtimeVersion` = versão do app, então correção pelo ar não chega a binário antigo) |

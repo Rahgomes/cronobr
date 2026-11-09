@@ -50,6 +50,7 @@ altura, para mostrar a tela toda de uma vez.
 | `18-temporizadores` | Temporizadores | Três: rodando, pausado, rodando |
 | `19-temporizador-terminou` | Temporizadores | Diálogo "Ovo terminou" |
 | `20-inicio-temporizadores` | Início | Visão compacta dos ativos |
+| `21-metronomo` | Metrônomo (E07) | Tocando a 120 BPM, pulso aceso |
 
 ## Línguas (idiomas/)
 

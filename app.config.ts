@@ -77,6 +77,16 @@ const config: ExpoConfig = {
     // Idiomas do app: o aparelho oferece a troca por app (Android 13+, iOS) entre estes.
     ['expo-localization', { supportedLocales: ['pt-BR', 'en', 'es', 'fr'] }],
     ['expo-audio', { microphonePermission: false }],
+    // Metrônomo pelo relógio de áudio (E07 B). Só com o app à vista: sem serviço em primeiro
+    // plano, sem permissão extra e sem áudio em segundo plano (os padrões do plugin ligam tudo).
+    [
+      'react-native-audio-api',
+      {
+        iosBackgroundMode: false,
+        androidForegroundService: false,
+        androidPermissions: [],
+      },
+    ],
     [
       'expo-notifications',
       {

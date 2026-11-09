@@ -117,3 +117,15 @@ test('temporizadores (E07 A)', async ({ page }) => {
   await expect(page.getByRole('button', { name: /^Temporizadores, / })).toBeVisible();
   await shot(page, '20-inicio-temporizadores');
 });
+
+test('metrônomo (E07 B)', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Metrônomo' }).click();
+  await expect(page.getByRole('heading', { name: 'Metrônomo' })).toBeVisible();
+  await page.getByRole('button', { name: '120 BPM' }).click();
+  await page.getByRole('button', { name: 'Começar' }).click();
+  await expect(page.getByRole('button', { name: 'Parar' })).toBeVisible();
+  await page.waitForTimeout(700);
+  await shot(page, '21-metronomo');
+  await page.getByRole('button', { name: 'Parar' }).click();
+});

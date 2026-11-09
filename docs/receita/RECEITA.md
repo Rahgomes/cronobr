@@ -218,3 +218,14 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   o app já tem. E no Playwright, o axe usa os timers da página: com `page.clock` parado ele não
   termina, então soltar o relógio só durante a medição.
 
+- **09/11 — E07 B, medir áudio no navegador sem gancho no app:** `page.addInitScript` troca
+  `AudioScheduledSourceNode.prototype.start` por uma versão que registra `quando` e o
+  `currentTime` da hora de marcar. Dá a variação entre batidas e a folga da fila no Chromium real,
+  sem nada de teste no código do app. O Chromium headless anda o relógio de áudio normalmente.
+- **09/11 — Metrônomo, fila longa com desmarcar:** a receita clássica (fila de 100 ms, laço de
+  25 ms) seca quando o navegador vai para o fundo (setTimeout segurado em 1 s). Fila de 1,5 s e
+  laço de 250 ms, guardando como desmarcar cada som (desligar o ganho da saída; chamar `stop()`
+  de novo lança erro): parar e trocar o BPM continuam imediatos. Plugin do `react-native-audio-api`
+  liga serviço em primeiro plano e áudio em segundo plano por padrão: desligar se não for usar.
+- **09/11 — `expo export` antes do E2E:** o Playwright serve o `dist`; tela nova não aparece até
+  exportar de novo. Sintoma: "botão não encontrado" na Início.
