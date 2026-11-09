@@ -88,6 +88,9 @@ async function createTimer(page: Page, name: string) {
   await page.getByRole('button', { name: 'Novo temporizador' }).click();
   await page.getByLabel('Nome').fill(name);
   await page.getByRole('button', { name: 'Iniciar 5:00' }).click();
+  // O formulário fecha deslizando: o próximo só abre depois que este sumiu.
+  await expect(page.getByText(name, { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Nome')).toHaveCount(0);
 }
 
 test('10 temporizadores + treino com cadência + tela bloqueada: nada acumula', async ({
@@ -127,7 +130,14 @@ test('10 temporizadores + treino com cadência + tela bloqueada: nada acumula', 
   await expect(page.getByRole('timer', { name: /Rodando$/ })).toHaveCount(10);
   await page.getByRole('button', { name: 'Voltar' }).click();
   await page.getByRole('button', { name: /^Tabata: / }).click();
-  await page.getByRole('button', { name: /^Tabata ritmado, / }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Tabata', exact: true }).filter({ visible: true }),
+  ).toHaveCount(1);
+  // Telas anteriores seguem montadas embaixo da pilha: só o botão à vista.
+  await page
+    .getByRole('button', { name: /^Tabata ritmado, / })
+    .filter({ visible: true })
+    .click();
   await page.getByRole('switch', { name: 'Travar a tela ao começar' }).click();
   await page.getByRole('button', { name: 'Começar', exact: true }).click();
   await expect(page.getByLabel('Cadência 90 BPM')).toBeVisible({ timeout: 15_000 });

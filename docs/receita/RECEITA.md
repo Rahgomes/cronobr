@@ -279,4 +279,9 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   para testar fins a 400 ms, variar a hora de começo, não a duração.
 - **09/11 — `page.goto` no meio do E2E recarrega:** a gravação recém-feita pode morrer. Navegar
   pelos botões do app e esperar a linha nova aparecer antes de sair da tela.
+- **09/11 — E2E longo de consumo instável no CI:** dois motivos, nenhum do app. (1) Telas
+  anteriores ficam montadas embaixo da pilha: o mesmo botão existe escondido; usar
+  `.filter({ visible: true })`. (2) Criar 10 itens seguidos por um formulário que fecha deslizando:
+  o clique seguinte pega o formulário antigo. Esperar o item novo aparecer e o campo sumir antes do
+  próximo. Rodar 4 vezes seguidas antes de confiar.
 
