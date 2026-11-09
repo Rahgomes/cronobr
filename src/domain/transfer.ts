@@ -67,7 +67,8 @@ const blockFile = z.object({
 const routineFile = z.object({
   id: shortText(100),
   name: z.string().max(200),
-  modality: z.enum(MODALITIES),
+  // Modalidade que este app ainda não conhece (versão nova) abre como personalizada.
+  modality: z.enum(MODALITIES).catch('personalizada'),
   version: z.number().int().min(1),
   prepSeconds: count,
   cooldownSeconds: count,

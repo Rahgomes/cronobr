@@ -153,3 +153,40 @@ test('cadência na etapa (E07 C)', async ({ page }) => {
   await page.waitForTimeout(3_200);
   await shot(page, '23-sessao-cadencia');
 });
+
+test('estudo, tarefas e sequência do profissional (E07 D)', async ({ page }) => {
+  await page.clock.install({ time: T0 });
+  await page.goto('/modalidades');
+  await expect(page.getByRole('heading', { name: 'Modalidades' })).toBeVisible();
+  await shot(page, '24-modalidades-novas', true);
+  await page.getByRole('button', { name: /^Estudo e foco: / }).click();
+  await expect(page.getByRole('heading', { name: 'Estudo e foco' })).toBeVisible();
+  await shot(page, '25-modalidade-foco');
+  await page.getByRole('button', { name: /^Pomodoro 25\/5, / }).click();
+  await page.getByRole('switch', { name: 'Travar a tela ao começar' }).click();
+  await page.getByRole('button', { name: 'Começar', exact: true }).click();
+  await page.clock.runFor(12_000);
+  await expect(page.getByRole('heading', { name: 'Foco' })).toBeVisible();
+  await shot(page, '26-sessao-foco');
+
+  await page.goto('/modalidade/profissional');
+  await expect(page.getByRole('heading', { name: 'Do profissional' })).toBeVisible();
+  await shot(page, '27-modalidade-profissional');
+  await page.getByRole('button', { name: 'Cadastrar sequência recebida' }).click();
+  await page.getByLabel('Nome da rotina').fill('Fisioterapia do joelho');
+  await page
+    .getByLabel('Sequência', { exact: true })
+    .fill(
+      'Ponte de glúteo 30s\nAgachamento 3x12\nConcha 12 reps cada lado\nPrancha 20 seg\nAlongar panturrilha',
+    );
+  await expect(page.getByText('3 séries · 12 reps')).toBeVisible();
+  await shot(page, '28-sequencia', true);
+  await page
+    .getByLabel('Sequência', { exact: true })
+    .fill(
+      'Ponte de glúteo 30s\nAgachamento 3x12\nConcha 12 reps cada lado\nPrancha 20 seg\nAlongar panturrilha 30s',
+    );
+  await page.getByRole('button', { name: 'Criar e revisar' }).click();
+  await expect(page.getByRole('heading', { name: 'Editar rotina' })).toBeVisible();
+  await shot(page, '29-sequencia-no-editor');
+});

@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
 
 import type { Language } from '@/domain/appearance';
+import type { Modality } from '@/domain/routine';
 
 import { en } from './messages/en';
 import { es } from './messages/es';
@@ -44,4 +45,39 @@ export function useT(): Messages {
 
 export function useLanguage(): Language {
   return useContext(I18nContext).language;
+}
+
+/**
+ * Estudo e tarefas não são treino: a sessão fala "Foco", "Pausa" e "Sessão concluída".
+ * Só troca as palavras da sessão; o resto da tela segue igual.
+ */
+export function withMode(t: Messages, modality: Modality): Messages {
+  if (modality !== 'foco' && modality !== 'tarefas') return t;
+  const mode = t.modes[modality];
+  return {
+    ...t,
+    words: {
+      ...t.words,
+      phase: { ...t.words.phase, ...mode.phase },
+      completed: mode.completed,
+    },
+    session: {
+      ...t.session,
+      completed: mode.completed,
+      interrupted: mode.interrupted,
+      stopTitle: mode.stopTitle,
+      continueWorkout: mode.continueWorkout,
+      stopWorkout: mode.stopWorkout,
+    },
+  };
+}
+
+/** Palavras da sessão conforme a modalidade da rotina (ver withMode). */
+export function ModeProvider({ modality, children }: { modality: Modality; children: ReactNode }) {
+  const parent = useContext(I18nContext);
+  const value = useMemo(
+    () => ({ language: parent.language, t: withMode(parent.t, modality) }),
+    [parent, modality],
+  );
+  return <I18nContext value={value}>{children}</I18nContext>;
 }

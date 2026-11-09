@@ -116,7 +116,10 @@ describe('tempo derivado do relógio', () => {
   });
 
   it('prévia e execução têm a mesma duração total [PRD 7]', () => {
-    for (const preset of PRESETS) {
+    // Modelo com etapa por repetições espera o toque: não tem duração total para comparar.
+    const timed = PRESETS.filter((preset) => summarize(buildTimeline(preset)).manualCount === 0);
+    expect(timed.length).toBe(PRESETS.length - 1);
+    for (const preset of timed) {
       const timeline = buildTimeline(preset);
       const total = summarize(timeline).knownMs;
       const s = start(createSession(preset.id, preset), timeline, t(0));

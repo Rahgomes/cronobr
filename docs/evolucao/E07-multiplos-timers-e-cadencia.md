@@ -10,7 +10,7 @@ backup gravado pela E05 lido e restaurado igual (`compat-e05.test.ts`).
 | A | Vários temporizadores: criar com nome, iniciar, pausar, repetir e encerrar cada um; visão compacta dos ativos; estado preservado ao navegar e reabrir; limite de 10; um relógio só para todos; conclusão de cada um com nome; avisos agrupados por dono (o treino não apaga os dos temporizadores) e política de colisão; convivência com um treino ativo | Feito |
 | B | Metrônomo: BPM de 30 a 240, pulso visual e sonoro, prévia, offline; agendamento pelo relógio de áudio (não por `setInterval`); variação entre batidas medida; ajuste de atraso para fone Bluetooth | Feito |
 | C | Cadência na etapa do treino: BPM opcional por etapa no editor; prioridade entre pulso, voz e aviso de troca de etapa; formato `.cronobr` aceita o campo novo sem quebrar o app antigo | Feito |
-| D | Modelos adicionais: estudo e foco, tarefas pessoais, "sequência do profissional" (nomes e tempos recebidos), todos editáveis e nas 4 línguas | A fazer |
+| D | Modelos adicionais: estudo e foco, tarefas pessoais, "sequência do profissional" (nomes e tempos recebidos), todos editáveis e nas 4 línguas | Feito |
 | E | Testes de resistência: temporizadores terminando juntos, treino com cadência, troca de saída de áudio, tela bloqueada, consumo; roteiro de aparelho para o APK | A fazer |
 
 ## Decisões de partida
@@ -137,3 +137,34 @@ volta), motor (1), sessão (5), editor (3), Avisos (2), compatibilidade (1), E2E
 | D110 | **Campo novo não sobe a `schemaVersion`** | A versão anterior descarta campo desconhecido e abre a rotina; subir a versão faria a anterior recusar o arquivo inteiro ("atualize o app") por causa de um extra |
 | D111 | **"Pulso da cadência" nos Avisos**, ligado por padrão; o atraso do fone do metrônomo vale também para o pulso do treino | Quem não quer o clique desliga num lugar só, sem editar cada rotina. O fone é o mesmo nas duas telas |
 | D112 | **Selo da cadência no topo da sessão**, embaixo do nome da rotina | Na primeira versão ficou abaixo do cartão "Próxima", fora da tela num celular de 390 x 844 (a captura mostrou). No topo aparece nas três visualizações sem empurrar o tempo |
+
+## Lote D · Modelos adicionais
+
+| Item | Onde |
+| --- | --- |
+| Três modalidades novas com foto: Estudo e foco, Tarefas, Do profissional | `src/domain/routine.ts`, `features/modality/catalog.ts`, `assets/images/modalidades/` |
+| 7 modelos prontos: Pomodoro 25/5, Estudo 50/10, Revisão rápida, Arrumação em 15 minutos, Tarefas em blocos de 10, Rotina da manhã e um exemplo de fortalecimento do profissional | `src/domain/presets.ts`, nomes nas 4 línguas em `src/i18n/presets.ts` |
+| Sessão de estudo e de tarefas fala "Foco", "Tarefa", "Pausa", "Sessão concluída" e "Encerrar sessão" (tela, voz e notificação); a do profissional segue com as palavras de treino | `withMode` e `ModeProvider` em `src/i18n/i18n-context.tsx`, `session-screen.tsx` (4 testes) |
+| Cadastrar sequência recebida: cola a lista como veio (um exercício por linha), vê como o app entendeu cada linha, escolhe voltas e descanso entre exercícios, cria e revisa no editor de sempre | `src/domain/sequence.ts` (35 testes, 100%), `src/features/sequence/sequence-screen.tsx` (6 testes), rota `/sequencia`, atalho na modalidade Do profissional |
+| Modalidade desconhecida no arquivo ou no banco abre como personalizada | `transfer.ts`, `codecs.ts`, `docs/spec/formato-cronobr.md` |
+
+O leitor da sequência aceita, nas 4 línguas: `30s`, `45 seg`, `20"`, `2 min`, `1min30s`, `1:30`,
+`12 reps`, `x12`, `3x12`, `3x30s`, `4x1min`, marcadores de lista (`-`, `•`, `1.`, `2)`), "cada
+lado" (por lado, each side, chaque côté) em qualquer ponto da linha e linhas de descanso (descanso,
+pausa, rest, repos...). Linha que não entende volta com o número dela e o texto, e o botão de criar
+espera a correção. Linha com mais de 200 letras não passa pelas regex.
+
+E2E `e2e/sequencia.spec.ts` (2 casos x 2 temas, com axe): sequência colada, aviso da linha sem
+tempo, criação e revisão no editor; sessão de estudo com "Foco" na tela. `/sequencia` e
+`/modalidade/profissional` entraram no teste de layout. Capturas `24` a `29`.
+
+### Decisões do lote D
+
+| # | Decisão | Por quê |
+| --- | --- | --- |
+| D113 | **Estudo e tarefas como modalidades**, com modelos prontos editáveis como os de treino | Reaproveita tudo (editor, histórico, avisos, backup) sem tela nova. O PRD pede "modelos adicionais", não outro tipo de cronômetro |
+| D114 | **Palavras da sessão pela modalidade** (sobreposição só do que a sessão fala), não um texto novo por tela | Estudar 25 minutos e ouvir "Treino concluído" soa errado. Trocar só fase, conclusão e encerrar mantém o resto idêntico e testado. A visualização "Foco" da sessão continua com o mesmo nome: é o nome do modo de ver, e a fase aparece na faixa colorida |
+| D115 | **Sequência por texto colado**, não formulário de etapa por etapa | O profissional manda a lista por mensagem; copiar e colar é o caminho mais curto. O editor já existe para o ajuste fino, então a tela só lê, mostra a prévia e cria |
+| D116 | **Leitor tolerante e explícito**: aceita o jeito comum de escrever, e o que não entende é apontado pela linha, nunca adivinhado | Errar o tempo de um exercício de fisioterapia em silêncio é pior que pedir para corrigir uma linha. Séries viram etapas numeradas ("série 1 de 3") para a pessoa saber onde está |
+| D117 | **Descanso entre exercícios automático** (padrão 15 s, ajustável de 0 a 2 min), pulado quando a linha seguinte já é um descanso | A maioria das listas recebidas não escreve o descanso; quando escreve, vale o que o profissional mandou |
+| D118 | **Modalidade desconhecida abre como personalizada** (banco e arquivo) | Modalidade nova é o tipo de mudança que mais vai acontecer; recusar o arquivo inteiro por ela seria o mesmo problema que D110 evitou para campos. Nenhum binário com a lista antiga foi distribuído |

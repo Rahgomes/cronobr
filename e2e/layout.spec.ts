@@ -58,6 +58,8 @@ const ROUTES = [
   '/cronometro',
   '/temporizadores',
   '/metronomo',
+  '/sequencia',
+  '/modalidade/profissional',
   '/modalidade/tabata',
   '/rotina/nova?modalidade=circuito',
 ];

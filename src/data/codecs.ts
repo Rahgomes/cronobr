@@ -24,7 +24,8 @@ const stepShape = z.object({
 export const routineShape: z.ZodType<Routine> = z.object({
   id: z.string(),
   name: z.string(),
-  modality: z.enum(MODALITIES),
+  // Modalidade que este app ainda não conhece (versão nova) abre como personalizada.
+  modality: z.enum(MODALITIES).catch('personalizada'),
   version: int,
   origin: z.enum(['preset', 'custom', 'legacy']),
   prepSeconds: int,

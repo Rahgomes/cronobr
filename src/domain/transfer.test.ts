@@ -256,12 +256,22 @@ describe('arquivos recusados antes de mexer em qualquer dado', () => {
     expect(twice).toMatchObject({ ok: false, message: 'O backup tem rotinas repetidas.' });
   });
 
-  it('modalidade desconhecida e data que não é data', () => {
-    expect(read(good.replace('"modality":"circuito"', '"modality":"natacao"'))).toMatchObject({
-      ok: false,
-    });
+  it('data que não é data', () => {
     const text = backupFileText({ routines: [rich], prefs: {}, history: null }, '2.0.0', NOW);
     expect(read(text.replace('2026-10-01T10:00:00.000Z', 'ontem'))).toMatchObject({ ok: false });
+  });
+});
+
+describe('modalidade de uma versão mais nova do app', () => {
+  it('abre como personalizada, com o resto igual (E07 D)', () => {
+    const text = routineFileText(rich, '2.0.0', NOW).replace(
+      '"modality":"circuito"',
+      '"modality":"natacao"',
+    );
+    const file = ok(text);
+    if (file.kind !== 'routine') throw new Error(file.kind);
+    expect(file.routine.modality).toBe('personalizada');
+    expect(file.routine.name).toBe(rich.name);
   });
 });
 

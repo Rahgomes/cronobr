@@ -116,6 +116,14 @@ export function ModalityScreen({ id }: { id: string | undefined }) {
           {mine.map((routine) => row(routine))}
         </View>
       ) : null}
+      {id === 'profissional' ? (
+        <Button
+          label={t.sequence.action}
+          onPress={() => {
+            router.push('/sequencia');
+          }}
+        />
+      ) : null}
       <Button
         label={t.modality.createRoutine(text.label)}
         kind="secondary"

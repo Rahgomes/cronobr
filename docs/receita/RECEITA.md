@@ -246,3 +246,19 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   primeira batida audível aparece marcada por um reabastecimento posterior, não no começo. Para
   medir "quanto depois do começo", usar o relógio do próprio contexto de áudio, que nasce junto
   com a etapa.
+- **09/11 — E07 D, leitor de texto livre com lint de segurança:** `security/detect-unsafe-regex`
+  marca regex com quantificador opcional aninhado. Em vez de reescrever até o lint calar, limitar o
+  tamanho da linha antes (200 letras) e justificar o `disable` na própria linha. E um teste de
+  tempo com entrada hostil (100 mil caracteres) prova que não trava.
+- **09/11 — `react-hooks/purity` e `Date.now()`:** o React Compiler recusa `Date.now()` até em
+  handler de toque declarado no corpo do componente. Saída limpa: receber `now = Date.now` como
+  prop (referência, não chamada), o que também deixa o teste fixar a data.
+- **09/11 — Prévia e gravação pelo mesmo caminho:** a lista da prévia e a rotina gravada usam a
+  mesma função de nomes (`withNames`); com duas contas separadas, a prévia dizia "Exercício 3" e a
+  rotina "Exercício 1". Também tirou um ramo `?? ''` impossível que travava os 100% de cobertura.
+- **09/11 — axe e `role="list"`:** lista sem `listitem` filho é violação crítica
+  (`aria-required-children`). Na prévia simples, sem o papel de lista.
+- **09/11 — Teste que percorre todos os modelos:** "prévia e execução têm a mesma duração" quebrou
+  com o primeiro modelo com etapa por repetições (espera toque, não tem duração). Filtrar pela
+  propriedade (`manualCount === 0`) e afirmar quantos ficaram de fora, para o próximo modelo assim
+  não sumir do teste sem aviso.

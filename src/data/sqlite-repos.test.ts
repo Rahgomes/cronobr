@@ -46,6 +46,15 @@ describe('rotinas', () => {
     expect((await repos.routines.list()).map((r) => r.id)).toEqual(['ok']);
     expect(await repos.routines.get('ruim')).toBeNull();
   });
+
+  it('modalidade que esta versão não conhece abre como personalizada', async () => {
+    const { db, repos } = await setup();
+    const data = JSON.stringify({ ...routine({ id: 'nova' }), modality: 'natacao' });
+    await db.run(
+      `INSERT INTO routines (id, name, modality, version, origin, data, created_at, updated_at) VALUES ('nova', 'x', 'natacao', 1, 'custom', '${data}', 0, 0)`,
+    );
+    expect(await repos.routines.get('nova')).toMatchObject({ modality: 'personalizada' });
+  });
 });
 
 describe('rotinas: ordem e exclusão', () => {

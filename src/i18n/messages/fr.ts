@@ -568,6 +568,63 @@ export const fr: Messages = {
     screenOnly: "Joue tant que cet écran est ouvert ; le quitter l'arrête.",
     unavailable: "L'audio du métronome n'est pas disponible sur cet appareil.",
   },
+  modes: {
+    foco: {
+      phase: { work: 'Concentration', rest: 'Pause', blockRest: 'Longue pause' },
+      completed: 'Session terminée',
+      interrupted: 'Session arrêtée',
+      stopTitle: 'Arrêter la session ?',
+      continueWorkout: 'Continuer',
+      stopWorkout: 'Arrêter la session',
+    },
+    tarefas: {
+      phase: { work: 'Tâche', rest: 'Pause', blockRest: 'Longue pause' },
+      completed: 'Tout est fait',
+      interrupted: 'Session arrêtée',
+      stopTitle: 'Arrêter la session ?',
+      continueWorkout: 'Continuer',
+      stopWorkout: 'Arrêter la session',
+    },
+  },
+  sequence: {
+    title: 'Ajouter une séquence',
+    action: 'Ajouter la séquence reçue',
+    intro:
+      'Collez ou tapez la séquence telle que reçue : un exercice par ligne, avec le temps ou les répétitions à la fin.',
+    name: 'Nom de la routine',
+    namePlaceholder: 'Ex. : Kiné du genou',
+    defaultName: 'Ma séquence',
+    text: 'Séquence',
+    example:
+      'Pont fessier 30s\nGainage 20 sec\nSquat 3x12\nClamshell 12 reps chaque côté\nRepos 30s',
+    exampleHint:
+      'Comprend 30s, 1min, 1:30, 12 reps, 3x12, 3x30s, « chaque côté » et les lignes de repos.',
+    rounds: 'Tours',
+    restBetween: 'Repos entre les exercices',
+    preview: 'Aperçu',
+    empty: 'Rien de lu pour le moment.',
+    reps: (n: number) => `${String(n)} rép.`,
+    sets: (n: number) => `${String(n)} séries`,
+    sides: 'chaque côté',
+    rest: 'repos',
+    issue: {
+      noAmount: (line: number) =>
+        `Ligne ${String(line)} : il manque le temps ou les répétitions à la fin.`,
+      restNeedsTime: (line: number) =>
+        `Ligne ${String(line)} : le repos a besoin d'un temps (ex. : 30s).`,
+      tooManySets: (line: number) => `Ligne ${String(line)} : 20 séries au maximum.`,
+      tooLong: (line: number) => `Ligne ${String(line)} : trop longue.`,
+    },
+    save: 'Créer et vérifier',
+    saveFailed: "Impossible d'enregistrer la routine. Réessayez.",
+    words: {
+      workName: (n: number) => `Exercice ${String(n)}`,
+      restName: 'Repos',
+      setName: (name: string, set: number, sets: number) =>
+        `${name} (série ${String(set)} sur ${String(sets)})`,
+      blockName: 'Séquence',
+    },
+  },
   modality: {
     title: 'Disciplines',
     backHome: 'Retour à l’accueil',
@@ -592,6 +649,9 @@ export const fr: Messages = {
     mobilidade: { label: 'Mobilité', tagline: 'Étirez et relâchez, un côté puis l’autre' },
     personalizada: { label: 'Personnalisée', tagline: 'À votre façon' },
     temporizador: { label: 'Minuteur', tagline: 'Compte à rebours' },
+    foco: { label: 'Études et concentration', tagline: 'Blocs de concentration avec pause' },
+    tarefas: { label: 'Tâches', tagline: "Maison et routine, à l'heure" },
+    profissional: { label: 'Du professionnel', tagline: 'La séquence que vous avez reçue' },
   },
   settings: {
     title: 'Réglages',

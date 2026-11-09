@@ -21,7 +21,7 @@ test('modalidade: foto, modelos prontos; "ver todas" abre a grade', async ({ pag
   await page.getByRole('button', { name: 'Voltar' }).click();
   await page.getByRole('button', { name: 'Ver todas' }).click();
   await expect(page.getByRole('heading', { name: 'Modalidades' })).toBeVisible();
-  await expect(page.getByRole('button', { name: / modelos?$/ })).toHaveCount(8);
+  await expect(page.getByRole('button', { name: / modelos?$/ })).toHaveCount(11);
   await expectNoAxeViolations(page);
 });
 

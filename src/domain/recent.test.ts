@@ -50,6 +50,9 @@ describe('modalidades com modelos', () => {
       'circuito',
       'corrida',
       'mobilidade',
+      'foco',
+      'tarefas',
+      'profissional',
     ]);
     expect(presetsOf('boxe').map((p) => p.id)).toEqual(['boxe-beginner', 'boxe-pro']);
     expect(presetsOf('personalizada')).toEqual([]);

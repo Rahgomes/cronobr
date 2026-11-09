@@ -31,6 +31,15 @@ export const MODALITY: Record<Modality, ModalityInfo> = {
   mobilidade: {
     photo: require('@assets/images/modalidades/mobilidade.jpg') as number,
   },
+  foco: {
+    photo: require('@assets/images/modalidades/foco.jpg') as number,
+  },
+  tarefas: {
+    photo: require('@assets/images/modalidades/tarefas.jpg') as number,
+  },
+  profissional: {
+    photo: require('@assets/images/modalidades/profissional.jpg') as number,
+  },
   personalizada: { photo: null },
   temporizador: { photo: null },
 };

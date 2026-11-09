@@ -63,7 +63,9 @@ importação faz).
 ```
 
 - `modality`: `tabata`, `hiit`, `emom`, `amrap`, `boxe`, `circuito`, `corrida`, `mobilidade`,
-  `personalizada`, `temporizador`.
+  `foco`, `tarefas`, `profissional` (desde a E07 D), `personalizada`, `temporizador`. Valor que a
+  versão do app não conhece abre como `personalizada` (desde a E07 D): modalidade nova numa versão
+  futura não faz o arquivo ser recusado.
 - Etapa: `seconds: null` com `reps` = etapa por repetições. Opcionais: `disabled` (fica fora da
   execução), `sides` (roda lado esquerdo e lado direito), `early` (EMOM: dá para terminar antes),
   `bpm` (cadência, desde a E07: inteiro de 30 a 240, pulso do metrônomo enquanto a etapa roda).

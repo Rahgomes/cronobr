@@ -94,7 +94,7 @@ describe('Modalidades (ver todas)', () => {
     await render(<ModalitiesScreen />);
     expect(screen.getByRole('header', { name: 'Modalidades' })).toBeOnTheScreen();
     const cards = screen.getAllByRole('button', { name: / modelos?$/ });
-    expect(cards).toHaveLength(8);
+    expect(cards).toHaveLength(11);
     await fireEvent.press(screen.getByRole('button', { name: /^Boxe: / }));
     expect(router.push).toHaveBeenCalledWith({
       pathname: '/modalidade/[id]',
@@ -108,5 +108,19 @@ describe('catálogo', () => {
     for (const [id, info] of Object.entries(MODALITY)) {
       if (presetsOf(id as keyof typeof MODALITY).length > 0) expect(info.photo).not.toBeNull();
     }
+  });
+});
+
+describe('Modalidade: do profissional (E07 D)', () => {
+  it('tem o atalho para cadastrar a sequência recebida; as outras não', async () => {
+    const { repos } = await appRepos();
+    const { unmount } = await renderApp(<ModalityScreen id="profissional" />, repos);
+    expect(await screen.findByRole('header', { name: 'Do profissional' })).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Cadastrar sequência recebida' }));
+    expect(router.push).toHaveBeenCalledWith('/sequencia');
+    await unmount();
+    await renderApp(<ModalityScreen id="foco" />, repos);
+    expect(await screen.findByRole('header', { name: 'Estudo e foco' })).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Cadastrar sequência recebida' })).toBeNull();
   });
 });

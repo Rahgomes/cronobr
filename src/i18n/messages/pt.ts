@@ -565,6 +565,61 @@ export const pt = {
     screenOnly: 'Toca com esta tela aberta; ao sair dela, para.',
     unavailable: 'O áudio do metrônomo não está disponível neste aparelho.',
   },
+  modes: {
+    foco: {
+      phase: { work: 'Foco', rest: 'Pausa', blockRest: 'Pausa longa' },
+      completed: 'Sessão concluída',
+      interrupted: 'Sessão encerrada',
+      stopTitle: 'Encerrar a sessão?',
+      continueWorkout: 'Continuar',
+      stopWorkout: 'Encerrar sessão',
+    },
+    tarefas: {
+      phase: { work: 'Tarefa', rest: 'Pausa', blockRest: 'Pausa longa' },
+      completed: 'Tudo feito',
+      interrupted: 'Sessão encerrada',
+      stopTitle: 'Encerrar a sessão?',
+      continueWorkout: 'Continuar',
+      stopWorkout: 'Encerrar sessão',
+    },
+  },
+  sequence: {
+    title: 'Cadastrar sequência',
+    action: 'Cadastrar sequência recebida',
+    intro:
+      'Cole ou escreva a sequência como recebeu: um exercício por linha, com o tempo ou as repetições no fim.',
+    name: 'Nome da rotina',
+    namePlaceholder: 'Ex.: Fisioterapia do joelho',
+    defaultName: 'Minha sequência',
+    text: 'Sequência',
+    example:
+      'Ponte de glúteo 30s\nPrancha 20 seg\nAgachamento 3x12\nConcha 12 reps cada lado\nDescanso 30s',
+    exampleHint: 'Aceita 30s, 1min, 1:30, 12 reps, 3x12, 3x30s, "cada lado" e linhas de descanso.',
+    rounds: 'Voltas',
+    restBetween: 'Descanso entre exercícios',
+    preview: 'Como vai ficar',
+    empty: 'Nada lido ainda.',
+    reps: (n: number) => `${String(n)} reps`,
+    sets: (n: number) => `${String(n)} séries`,
+    sides: 'cada lado',
+    rest: 'descanso',
+    issue: {
+      noAmount: (line: number) => `Linha ${String(line)}: faltou o tempo ou as repetições no fim.`,
+      restNeedsTime: (line: number) =>
+        `Linha ${String(line)}: descanso precisa de tempo (ex.: 30s).`,
+      tooManySets: (line: number) => `Linha ${String(line)}: no máximo 20 séries.`,
+      tooLong: (line: number) => `Linha ${String(line)}: longa demais.`,
+    },
+    save: 'Criar e revisar',
+    saveFailed: 'Não deu para gravar a rotina. Tente de novo.',
+    words: {
+      workName: (n: number) => `Exercício ${String(n)}`,
+      restName: 'Descanso',
+      setName: (name: string, set: number, sets: number) =>
+        `${name} (série ${String(set)} de ${String(sets)})`,
+      blockName: 'Sequência',
+    },
+  },
   modality: {
     title: 'Modalidades',
     backHome: 'Voltar ao início',
@@ -586,6 +641,9 @@ export const pt = {
     mobilidade: { label: 'Mobilidade', tagline: 'Alongar e soltar, lado a lado' },
     personalizada: { label: 'Personalizada', tagline: 'Do seu jeito' },
     temporizador: { label: 'Temporizador', tagline: 'Contagem regressiva' },
+    foco: { label: 'Estudo e foco', tagline: 'Blocos de foco com pausa' },
+    tarefas: { label: 'Tarefas', tagline: 'Casa e rotina no tempo certo' },
+    profissional: { label: 'Do profissional', tagline: 'A sequência que você recebeu' },
   },
   settings: {
     title: 'Ajustes',

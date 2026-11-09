@@ -8,7 +8,7 @@ import { quickRoutine, type QuickSetup } from '@/domain/quick';
 import type { Routine } from '@/domain/routine';
 import { buildTimeline } from '@/domain/timeline';
 import { usePresets } from '@/features/routines/presets';
-import { useT } from '@/i18n/i18n-context';
+import { ModeProvider, useT } from '@/i18n/i18n-context';
 import { Button } from '@/ui/button';
 import { Screen } from '@/ui/screen';
 import { Text } from '@/ui/text';
@@ -91,24 +91,26 @@ export function SessionScreen({
   if (load.status === 'ready') {
     const routine = load.session.routine;
     return (
-      <SessionView
-        // Sessão nova = runner novo (repetir ao concluir troca a sessão na mesma tela).
-        key={load.session.id}
-        initial={load.session}
-        clockSource={clockSource}
-        autoStart={load.autoStart}
-        again={
-          loop
-            ? () => {
-                setLoad({
-                  status: 'ready',
-                  session: createSession(newSessionId(), routine),
-                  autoStart: true,
-                });
-              }
-            : undefined
-        }
-      />
+      <ModeProvider modality={routine.modality}>
+        <SessionView
+          // Sessão nova = runner novo (repetir ao concluir troca a sessão na mesma tela).
+          key={load.session.id}
+          initial={load.session}
+          clockSource={clockSource}
+          autoStart={load.autoStart}
+          again={
+            loop
+              ? () => {
+                  setLoad({
+                    status: 'ready',
+                    session: createSession(newSessionId(), routine),
+                    autoStart: true,
+                  });
+                }
+              : undefined
+          }
+        />
+      </ModeProvider>
     );
   }
   if (load.status === 'missing' || load.status === 'failed') {

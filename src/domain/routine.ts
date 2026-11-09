@@ -12,6 +12,10 @@ export const MODALITIES = [
   'mobilidade',
   'personalizada',
   'temporizador',
+  // E07 D: rotinas do dia a dia e a sequência recebida de um profissional.
+  'foco',
+  'tarefas',
+  'profissional',
 ] as const;
 export type Modality = (typeof MODALITIES)[number];
 

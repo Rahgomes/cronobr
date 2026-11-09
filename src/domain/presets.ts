@@ -168,6 +168,119 @@ const MOBILITY: Routine[] = [
   ]),
 ];
 
+/** Etapa de modelo: nome, tipo e tempo (ou repetições), opcionalmente dos dois lados. */
+type Move = [
+  name: string,
+  kind: 'work' | 'rest',
+  seconds: number | null,
+  reps?: number,
+  sides?: boolean,
+];
+
+/** Modelo com etapas nomeadas num bloco só (E07 D: estudo, tarefas, sequência do profissional). */
+function named(
+  id: string,
+  name: string,
+  modality: Modality,
+  block: { name: string; repeat: number; moves: Move[] },
+): Routine {
+  const steps: Step[] = block.moves.map(([move, kind, seconds, reps, sides], i) => ({
+    id: `${id}-${String(i)}`,
+    name: move,
+    kind,
+    seconds,
+    reps: reps ?? null,
+    ...(sides ? { sides: true } : {}),
+  }));
+  return {
+    id,
+    name,
+    modality,
+    version: 1,
+    origin: 'preset',
+    prepSeconds: 10,
+    blocks: [
+      { id: `${id}-b1`, name: block.name, repeat: block.repeat, steps, restAfterSeconds: 0 },
+    ],
+    cooldownSeconds: 0,
+    createdAt: 0,
+    updatedAt: 0,
+  };
+}
+
+const MIN = 60;
+
+const EVERYDAY: Routine[] = [
+  named('foco-pomodoro', 'Pomodoro 25/5', 'foco', {
+    name: 'Ciclos',
+    repeat: 4,
+    moves: [
+      ['Foco', 'work', 25 * MIN],
+      ['Pausa', 'rest', 5 * MIN],
+    ],
+  }),
+  named('foco-50-10', 'Estudo 50/10', 'foco', {
+    name: 'Ciclos',
+    repeat: 3,
+    moves: [
+      ['Foco', 'work', 50 * MIN],
+      ['Pausa', 'rest', 10 * MIN],
+    ],
+  }),
+  named('foco-revisao', 'Revisão rápida', 'foco', {
+    name: 'Ciclos',
+    repeat: 3,
+    moves: [
+      ['Leitura', 'work', 10 * MIN],
+      ['Resumo', 'work', 5 * MIN],
+      ['Pausa', 'rest', 2 * MIN],
+    ],
+  }),
+  named('tarefas-arrumacao', 'Arrumação em 15 minutos', 'tarefas', {
+    name: 'Cômodos',
+    repeat: 1,
+    moves: [
+      ['Cozinha', 'work', 5 * MIN],
+      ['Sala', 'work', 5 * MIN],
+      ['Quarto', 'work', 5 * MIN],
+    ],
+  }),
+  named('tarefas-blocos', 'Tarefas em blocos de 10', 'tarefas', {
+    name: 'Blocos',
+    repeat: 3,
+    moves: [
+      ['Tarefa', 'work', 10 * MIN],
+      ['Pausa', 'rest', 2 * MIN],
+    ],
+  }),
+  named('tarefas-manha', 'Rotina da manhã', 'tarefas', {
+    name: 'Manhã',
+    repeat: 1,
+    moves: [
+      ['Arrumar a cama', 'work', 2 * MIN],
+      ['Alongar', 'work', 3 * MIN],
+      ['Café da manhã', 'work', 10 * MIN],
+      ['Planejar o dia', 'work', 5 * MIN],
+    ],
+  }),
+  // Exemplo do formato que um profissional costuma passar; o principal é cadastrar a própria.
+  named('profissional-exemplo', 'Exemplo: fortalecimento', 'profissional', {
+    name: 'Sequência',
+    repeat: 2,
+    moves: [
+      ['Ponte de glúteo', 'work', 30],
+      ['Descanso', 'rest', 15],
+      ['Prancha', 'work', 20],
+      ['Descanso', 'rest', 15],
+      ['Agachamento na parede', 'work', 30],
+      ['Descanso', 'rest', 15],
+      ['Elevação de panturrilha', 'work', null, 15],
+      ['Descanso', 'rest', 15],
+      ['Concha deitado', 'work', null, 12, true],
+    ],
+  }),
+];
+
 export const PRESETS: readonly Routine[] = [
   ...DEFS.map((def) =>
     intervalRoutine(
@@ -176,6 +289,7 @@ export const PRESETS: readonly Routine[] = [
     ),
   ),
   ...MOBILITY,
+  ...EVERYDAY,
 ];
 
 export function presetById(id: string): Routine | undefined {

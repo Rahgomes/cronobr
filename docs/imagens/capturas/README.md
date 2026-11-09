@@ -53,6 +53,12 @@ altura, para mostrar a tela toda de uma vez.
 | `21-metronomo` | Metrônomo (E07) | Tocando a 120 BPM, pulso aceso |
 | `22-etapa-cadencia` | Editor, folha da etapa | Metrônomo nesta etapa a 120 BPM, com prévia |
 | `23-sessao-cadencia` | Sessão | Exercício com cadência 120 BPM e pulso |
+| `24-modalidades-novas` | Modalidades (E07 D) | Grade com Estudo e foco, Tarefas e Do profissional |
+| `25-modalidade-foco` | Modalidade Estudo e foco | Modelos prontos |
+| `26-sessao-foco` | Sessão de estudo | Fase "Foco" do Pomodoro |
+| `27-modalidade-profissional` | Modalidade Do profissional | Exemplo e atalho para cadastrar sequência |
+| `28-sequencia` | Cadastrar sequência | Prévia lida e aviso da linha sem tempo |
+| `29-sequencia-no-editor` | Editor | Rotina criada da sequência, para revisar |
 
 ## Línguas (idiomas/)
 
