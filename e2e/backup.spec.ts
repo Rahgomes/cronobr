@@ -67,9 +67,15 @@ async function textOf(download: Download): Promise<string> {
   return Buffer.concat(chunks).toString('utf8');
 }
 
+/** Backup fica em Ajustes desde a E06 D (a Início ficou só com a engrenagem). */
+async function goToBackup(page: Page) {
+  await page.getByRole('button', { name: 'Ajustes' }).click();
+  await page.getByRole('button', { name: 'Backup e transferência' }).click();
+}
+
 async function openBackup(page: Page) {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Backup e transferência' }).click();
+  await goToBackup(page);
   await expect(page.getByRole('heading', { name: 'Exportar backup' })).toBeVisible();
 }
 
@@ -135,7 +141,7 @@ test('exportar backup, restaurar outro por cima e desfazer', async ({ page }) =>
   await page.reload();
   await expect(page.getByRole('button', { name: /^Braços do backup, / })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Backup e transferência' }).click();
+  await goToBackup(page);
   await page.getByRole('button', { name: 'Voltar ao estado anterior' }).click();
   await page.getByRole('button', { name: 'Desfazer', exact: true }).click();
   await expect(page.getByText(/tudo voltou a como estava antes/)).toBeVisible();

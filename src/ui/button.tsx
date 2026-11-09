@@ -80,7 +80,7 @@ export function Button({
               </Text>
             </View>
           ) : (
-            <Text variant="label" color={ink}>
+            <Text variant="label" color={ink} style={styles.label}>
               {label}
             </Text>
           )}
@@ -92,6 +92,8 @@ export function Button({
 
 const makeStyles = (colors: Colors) =>
   StyleSheet.create({
+    // Rótulo que quebra em duas linhas ("Salvar e começar" em tela estreita) fica centrado.
+    label: { textAlign: 'center' },
     base: {
       minHeight: touch.button,
       borderRadius: radius.pill,

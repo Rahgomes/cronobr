@@ -10,7 +10,7 @@ reais do app e troca os conceitos por capturas das telas de verdade.
 | A | Ajustes com tema (aparelho, claro, escuro) e idioma (aparelho, pt-BR, en, es, fr); base de textos em 4 línguas; aparência no backup; correções de passagem | Entregue 08/11 |
 | B | Todos os textos nas 4 línguas: telas, motivos de recusa do arquivo, rótulos de fase, som e modalidade, datas, voz no idioma escolhido, modelos prontos traduzidos (nome escrito pela pessoa nunca muda) | Entregue 08/11 |
 | C | Acessibilidade e layout: texto grande sem corte, contador com teto de escala, anúncio só em troca de fase, alvos de toque, alternativa a arrastar, movimento reduzido, paisagem na sessão, tablet e áreas seguras | Entregue 09/11 |
-| D | Refinamento pelas imagens-conceito: Início (última rotina e favoritas, começar em poucos toques), editor (avançado aos poucos), sessão (contador em destaque; preparar, executar, descansar e concluir por texto, som e cor; descanso entre etapas e entre blocos), estados de salvar, erro, vazio e importado; menos cartão e ícone decorativo | A fazer |
+| D | Refinamento pelas imagens-conceito: Início (última rotina e favoritas, começar em poucos toques), editor (avançado aos poucos), sessão (contador em destaque; preparar, executar, descansar e concluir por texto, som e cor; descanso entre etapas e entre blocos), estados de salvar, erro, vazio e importado; menos cartão e ícone decorativo | Entregue 09/11 |
 | E | Capturas reais por tela, tamanho, tema e língua, com dispositivos e dimensões anotados; conferência de que fluxos e dados das etapas anteriores seguem iguais | A fazer |
 
 ## 1. Lote A: o que entrou
@@ -118,3 +118,40 @@ traduções.
 
 Pendente de aparelho (vai no APK): letra no máximo do Android e do iPhone, TalkBack e VoiceOver na
 sessão, giro real com recorte de câmera.
+
+## 6. Lote D: refinamento pelas imagens-conceito
+
+Método: capturas reais (`capturas/telas.spec.ts`, iPhone 13 na web, 390 x 664, dois temas) lado a
+lado com C01b, C02 e C03. Capturas finais em `docs/imagens/capturas/{escuro,claro}/`.
+
+| Tela | Antes | Depois |
+| --- | --- | --- |
+| Sessão, Anel | Anel verde-escuro sumia no fundo escuro; fase só em texto; nome da rotina ausente; barra e "restante" escondidos sob o rodapé em 664 px | Selo da fase (cor e texto), nome da etapa, anel na cor clara da fase, "de 0:20" dentro do anel, rodada, barra com "0:13 / 4:00" e "−3:48", cartão "Próxima" com a cor da etapa seguinte, nome da rotina no topo. O anel cede à altura: tudo cabe sem rolar |
+| Sessão, Lista e Foco | Barras das linhas na cor escura da fase; X escuro sobre a cor da fase | Barras na cor clara; X translúcido como o cadeado |
+| Início | "Recentes" em cartões-foto de 184 px; histórico e backup como ícones no topo | "Última rotina" compacta, um toque repete; só a engrenagem no topo; histórico pelo link "Ver histórico"; "Nova rotina" em destaque |
+| Ajustes | Só Som e avisos | Som e avisos e Backup e transferência |
+| Editor | Etapas em laranja/cinza; sequência inteira sempre aberta; "Salvar e começar" quebrado à esquerda | Etapas nas cores da sessão; sequência atrás de "Ver a sequência (16 etapas)"; rótulo de botão centrado |
+| Kit | Faixas horizontais (carrossel, chips do editor) esticavam em tela alta na web | `flexGrow: 0` na faixa |
+
+Estados de salvar, erro, vazio e importado já existiam (botão com carregando/feito, `Notice` de
+erro, telas vazias, resumo da importação); a revisão pelas capturas não achou falta.
+
+### Decisões do lote D
+
+| # | Decisão | Por quê |
+| --- | --- | --- |
+| D86 | **Duas cores por fase**: fundo (texto branco por cima, Foco e selo) e traço (anel, barras, editor), claro no tema escuro | Uma cor só não serve aos dois usos: a que dá contraste ao texto branco some como traço no preto. Teste cobra 3:1 do traço nos dois temas |
+| D87 | **Seletor de visualização continua no rodapé** | Subir para o topo liberava altura, mas não cabia com o nome da rotina em 320 px nem nas outras línguas. O anel cede à altura no lugar |
+| D88 | **Última rotina, não carrossel de recentes** | Conceito C01b e PRD 06 ("começar em poucos toques"): um cartão, um toque. As outras ficam no histórico, com "Repetir este treino" |
+| D89 | **Backup sai da Início para Ajustes** | Uso raro; três ícones redondos no topo eram ruído. Ajustes já é o lugar do "um toque adiante" |
+| D90 | **Capturas reais como script versionado** (`playwright.capturas.config.ts`), JPEG 780 px no repositório | Comparar com o conceito vira rotina de cada lote; o lote E reaproveita |
+
+### Testes do lote D
+
+| Tipo | Arquivo | Cobre |
+| --- | --- | --- |
+| Unitário | `theme.test.ts` | Cor de traço de cada fase com 3:1 sobre fundo e superfície, nos dois temas |
+| Tela | `home-screen.test.tsx` | Última rotina com Repetir; sem treino, nada dela; backup fora do topo |
+| Tela | `editor-screen.test.tsx` | Sequência recolhida, abre e fecha |
+| Tela | `session-screen.test.tsx`, `room.test.ts` | Restante no treino pelo rótulo acessível; anel pela altura em 664 e 520 |
+| E2E + axe | `backup.spec.ts`, `ajustes.spec.ts`, `sessao.spec.ts` | Backup pelos Ajustes; cabeçalho e progresso novos da sessão |

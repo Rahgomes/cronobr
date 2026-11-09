@@ -87,7 +87,8 @@ const makeStyles = (colors: Colors) =>
   StyleSheet.create({
     section: { gap: space.sm },
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    bleed: { marginHorizontal: -space.lg },
+    // flexGrow 0: na web a ScrollView cresce por padrão e, em tela alta, esticava a faixa.
+    bleed: { marginHorizontal: -space.lg, flexGrow: 0 },
     row: { gap: space.md, paddingHorizontal: space.lg },
     dots: { flexDirection: 'row', justifyContent: 'center', gap: space.xs + 2 },
     dot: { width: 6, height: 6, borderRadius: radius.pill, backgroundColor: colors.border },

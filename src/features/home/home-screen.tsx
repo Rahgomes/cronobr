@@ -25,6 +25,7 @@ import { SectionTitle } from '@/ui/section-title';
 import { space } from '@/ui/tokens';
 import { RoundAction } from '@/ui/top-bar';
 
+import { LastRoutine } from './last-routine';
 import { QuickTiles } from './quick-tiles';
 import { RoutineRow } from './routine-row';
 
@@ -36,12 +37,15 @@ interface HomeData {
   now: number;
 }
 
-const RECENT_MAX = 8;
+/** Só a última aparece; as outras vêm de reserva se a última sumir da lista. */
+const RECENT_MAX = 1;
 // Largura pensada para 390 pt: um card e meio à vista, o meio cortado mostra que rola.
 const MODALITY_CARD = { width: 216, height: 280 };
-const RECENT_CARD = { width: 184, height: 184 };
 
-/** Início (C01b): recentes e modalidades em carrossel com foto; a lista completa fica um toque adiante. */
+/**
+ * Início (C01b): última rotina com Repetir, início rápido, modalidades em carrossel com foto,
+ * favoritas e as rotinas da pessoa. Histórico pelo link da última rotina; backup em Ajustes.
+ */
 export function HomeScreen() {
   const repos = useRepos();
   const t = useT();
@@ -122,25 +126,15 @@ export function HomeScreen() {
     };
   };
 
+  const last = data?.recent[0];
+  const lastTotal = last ? clock(summarize(buildTimeline(last.routine)).knownMs) : '';
+  const lastWhen = last ? relativeDay(last.lastEndedAt, data.now, t.words) : '';
+
   return (
     <Screen>
       <View style={styles.top}>
         <BrandMark height={36} />
         <View style={styles.actions}>
-          <RoundAction
-            icon="history"
-            label={t.home.history}
-            onPress={() => {
-              router.push('/historico');
-            }}
-          />
-          <RoundAction
-            icon="backup-restore"
-            label={t.home.backup}
-            onPress={() => {
-              router.push('/backup');
-            }}
-          />
           <RoundAction
             icon="cog-outline"
             label={t.home.settings}
@@ -150,6 +144,20 @@ export function HomeScreen() {
           />
         </View>
       </View>
+
+      {last ? (
+        <LastRoutine
+          name={last.routine.name}
+          detail={t.home.recentDetail(lastTotal, lastWhen)}
+          accessibilityLabel={t.home.repeatLabel(last.routine.name, lastTotal, lastWhen)}
+          onRepeat={() => {
+            router.push({ pathname: '/sessao', params: { repetir: last.entryId } });
+          }}
+          onHistory={() => {
+            router.push('/historico');
+          }}
+        />
+      ) : null}
 
       <QuickTiles />
 
@@ -165,37 +173,6 @@ export function HomeScreen() {
         >
           {t.home.inProgress(data.active.routine.name)}
         </Notice>
-      ) : null}
-
-      {data && data.recent.length > 0 ? (
-        <Carousel
-          title={t.home.recent}
-          itemWidth={RECENT_CARD.width}
-          seeAll={{
-            label: t.home.viewHistory,
-            onPress: () => {
-              router.push('/historico');
-            },
-          }}
-        >
-          {data.recent.map(({ entryId, routine, lastEndedAt }) => {
-            const total = clock(summarize(buildTimeline(routine)).knownMs);
-            const when = relativeDay(lastEndedAt, data.now, t.words);
-            return (
-              <PhotoCard
-                key={entryId}
-                {...RECENT_CARD}
-                photo={MODALITY[routine.modality].photo}
-                title={routine.name}
-                subtitle={t.home.recentDetail(total, when)}
-                accessibilityLabel={t.home.repeatLabel(routine.name, total, when)}
-                onPress={() => {
-                  router.push({ pathname: '/sessao', params: { repetir: entryId } });
-                }}
-              />
-            );
-          })}
-        </Carousel>
       ) : null}
 
       <Carousel
@@ -268,7 +245,7 @@ export function HomeScreen() {
         ))}
         <Button
           label={t.home.newRoutine}
-          kind="secondary"
+          kind="primary"
           onPress={() => {
             router.push({ pathname: '/rotina/[id]', params: { id: 'nova' } });
           }}

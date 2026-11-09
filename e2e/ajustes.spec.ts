@@ -17,8 +17,8 @@ test('idioma: inglês na hora, mantido ao recarregar, e volta ao do aparelho', a
 
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
-  await page.getByRole('button', { name: 'Back' }).click();
-  await expect(page.getByRole('button', { name: 'History', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Stopwatch', exact: true })).toBeVisible();
 
   await page.getByRole('button', { name: 'Settings' }).click();
   await page.getByRole('button', { name: 'Device (Português)' }).click();

@@ -374,8 +374,17 @@ export function SessionView({
       <RoundAction
         icon="close"
         label={t.session.stopWorkout}
+        {...(focus ? { tone: 'onPhase' as const } : {})}
         onPress={locked ? blocked : touch(confirmStop)}
       />
+      <Text
+        variant="caption"
+        color={focus ? 'onPhaseMuted' : 'textMuted'}
+        style={styles.routineName}
+        numberOfLines={2}
+      >
+        {session.routine.name}
+      </Text>
       <LockButton
         locked={locked}
         lock={lock.lock}
@@ -431,7 +440,14 @@ export function SessionView({
 }
 
 const styles = StyleSheet.create({
-  top: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: space.md },
+  top: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: space.sm,
+    paddingTop: space.md,
+  },
+  routineName: { flex: 1, textAlign: 'center' },
   ready: { alignItems: 'flex-end', paddingTop: space.md },
   content: { gap: space.lg },
   actions: { gap: space.md },

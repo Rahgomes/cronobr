@@ -78,7 +78,8 @@
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/legado/",
-      "/e2e/"
+      "/e2e/",
+      "/capturas/"
     ],
     "collectCoverageFrom": [
       "src/domain/**/*.ts",

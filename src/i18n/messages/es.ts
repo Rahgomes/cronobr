@@ -229,7 +229,8 @@ export const es: Messages = {
   },
   home: {
     continueWorkout: 'Continuar entrenamiento',
-    recent: 'Recientes',
+    lastRoutine: 'Último entrenamiento',
+    repeat: 'Repetir',
     viewHistory: 'Ver historial',
     modalities: 'Modalidades',
     seeAll: 'Ver todas',
@@ -252,8 +253,6 @@ export const es: Messages = {
     routineLabel: (name, detail, favorite) => `${name}, ${detail}${favorite ? ', favorita' : ''}`,
     optionsLabel: (name) => `Opciones de ${name}`,
     models: (count) => `${String(count)} ${count === 1 ? 'modelo' : 'modelos'}`,
-    history: 'Historial',
-    backup: 'Copia de seguridad y transferencia',
     settings: 'Ajustes',
   },
   editor: {
@@ -333,6 +332,8 @@ export const es: Messages = {
     editRestLabel: (time) => `Descanso entre bloques, ${time}. Editar`,
     blocksLimit: (count) =>
       `La rutina puede tener hasta ${String(count)} ${count === 1 ? 'bloque' : 'bloques'}.`,
+    showSequence: (count) => `Ver la secuencia (${String(count)} etapas)`,
+    hideSequence: 'Ocultar la secuencia',
     moreSteps: (count) => `y ${String(count)} ${count === 1 ? 'etapa más' : 'etapas más'}`,
   },
   routineOptions: {
@@ -421,6 +422,9 @@ export const es: Messages = {
     repetitionsShort: (count) => `${String(count)} rep.`,
     remaining: (time) => `Quedan ${time}`,
     nextStep: (name, time) => `Después: ${name} ${time}`,
+    ofDuration: (time) => `de ${time}`,
+    nextLabel: 'Siguiente',
+    elapsedOfTotal: (elapsed, total) => `${elapsed} / ${total}`,
     workoutRemaining: (time) => `Restante del entrenamiento: ${time}`,
     roundFraction: (round, total) => `${String(round)}/${String(total)}`,
     rowLabel: (index, name, time, suffix) => `${String(index)}. ${name}, ${time}${suffix}`,
@@ -531,6 +535,8 @@ export const es: Messages = {
     languageHint: 'Los nombres de tus rutinas quedan como los escribiste.',
     cues: 'Sonido y avisos',
     cuesHint: 'Sonidos de cada fase, voz, vibración y cuenta 3, 2, 1.',
+    backup: 'Copia de seguridad y transferencia',
+    backupHint: 'Guardar todo en un archivo, pasarlo a otro dispositivo o restaurar.',
     saveFailed: 'No se pudo guardar la elección. Inténtalo de nuevo.',
   },
 };

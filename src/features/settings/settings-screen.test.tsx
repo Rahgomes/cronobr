@@ -15,7 +15,7 @@ jest.mock('expo-router', () => jest.requireActual<object>('@/test/expo-router-mo
 function Probe() {
   const scheme = useColorSchemeInUse();
   const t = useT();
-  return <Button label={`${scheme} ${t.home.history}`} onPress={() => undefined} />;
+  return <Button label={`${scheme} ${t.home.newRoutine}`} onPress={() => undefined} />;
 }
 
 const settings = (
@@ -36,7 +36,7 @@ describe('Ajustes', () => {
     ).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Claro' }));
-    expect(await screen.findByRole('button', { name: 'light Histórico' })).toBeOnTheScreen();
+    expect(await screen.findByRole('button', { name: 'light Nova rotina' })).toBeOnTheScreen();
     expect(await repos.prefs.get(APPEARANCE_KEY)).toEqual({ theme: 'light', language: 'auto' });
 
     await fireEvent.press(screen.getByRole('button', { name: 'Français' }));
@@ -53,7 +53,7 @@ describe('Ajustes', () => {
     await renderApp(settings, repos);
     expect(await screen.findByRole('header', { name: 'Ajustes' })).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Oscuro', selected: true })).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'dark Historial' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'dark Nueva rutina' })).toBeOnTheScreen();
     await screen.unmount();
 
     await repos.prefs.set(APPEARANCE_KEY, { theme: 'roxo', language: 'de' });

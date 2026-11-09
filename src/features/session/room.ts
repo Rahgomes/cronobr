@@ -17,12 +17,16 @@ const RING_MAX = 260;
 const RING_MIN = 140;
 /** Título, rodada, próxima etapa, barra e total em volta do anel. */
 const AROUND_RING = 190;
+/** Em pé somam ainda o topo e os controles do rodapé. */
+const AROUND_RING_PORTRAIT = 470;
 
 export function sessionRoom(width: number, height: number): Room {
   const wide = width > height && width >= 560;
   if (!wide) {
     const text = Math.min(width, layout.contentMax) - space.lg * 2;
-    return { wide, text, ring: Math.min(RING_MAX, text) };
+    // Em pé, o anel também cede à altura: tempo, barra e "Próxima" cabem sem rolar.
+    const byHeight = Math.max(RING_MIN, height - AROUND_RING_PORTRAIT);
+    return { wide, text, ring: Math.min(RING_MAX, text, byHeight) };
   }
   const text = Math.min(width, layout.wideMax) - space.lg * 3 - CONTROLS_WIDTH;
   const ring = Math.max(RING_MIN, Math.min(RING_MAX, height - AROUND_RING, text));

@@ -232,7 +232,8 @@ export const fr: Messages = {
   },
   home: {
     continueWorkout: 'Continuer l’entraînement',
-    recent: 'Récents',
+    lastRoutine: 'Dernière séance',
+    repeat: 'Refaire',
     viewHistory: 'Voir l’historique',
     modalities: 'Disciplines',
     seeAll: 'Tout voir',
@@ -255,8 +256,6 @@ export const fr: Messages = {
     routineLabel: (name, detail, favorite) => `${name}, ${detail}${favorite ? ', favorite' : ''}`,
     optionsLabel: (name) => `Options de ${name}`,
     models: (count) => `${String(count)} ${count === 1 ? 'modèle' : 'modèles'}`,
-    history: 'Historique',
-    backup: 'Sauvegarde et transfert',
     settings: 'Réglages',
   },
   editor: {
@@ -336,6 +335,8 @@ export const fr: Messages = {
     editRestLabel: (time) => `Repos entre les blocs, ${time}. Modifier`,
     blocksLimit: (count) =>
       `La routine peut contenir jusqu’à ${String(count)} ${count === 1 ? 'bloc' : 'blocs'}.`,
+    showSequence: (count) => `Voir la séquence (${String(count)} étapes)`,
+    hideSequence: 'Masquer la séquence',
     moreSteps: (count) =>
       `et ${String(count)} ${count === 1 ? 'étape supplémentaire' : 'étapes supplémentaires'}`,
   },
@@ -426,6 +427,9 @@ export const fr: Messages = {
     repetitionsShort: (count) => `${String(count)} rép.`,
     remaining: (time) => `Il reste ${time}`,
     nextStep: (name, time) => `Ensuite : ${name} ${time}`,
+    ofDuration: (time) => `sur ${time}`,
+    nextLabel: 'Ensuite',
+    elapsedOfTotal: (elapsed, total) => `${elapsed} / ${total}`,
     workoutRemaining: (time) => `Temps restant de l'entraînement : ${time}`,
     roundFraction: (round, total) => `${String(round)}/${String(total)}`,
     rowLabel: (index, name, time, suffix) => `Étape ${String(index)}. ${name}, ${time}${suffix}`,
@@ -539,6 +543,8 @@ export const fr: Messages = {
     languageHint: 'Les noms de vos routines restent tels que vous les avez écrits.',
     cues: 'Sons et alertes',
     cuesHint: 'Sons de chaque phase, voix, vibration et décompte 3, 2, 1.',
+    backup: 'Sauvegarde et transfert',
+    backupHint: 'Tout enregistrer dans un fichier, passer à un autre appareil ou restaurer.',
     saveFailed: "Impossible d'enregistrer votre choix. Réessayez.",
   },
 };

@@ -232,7 +232,8 @@ export const pt = {
   },
   home: {
     continueWorkout: 'Continuar treino',
-    recent: 'Recentes',
+    lastRoutine: 'Última rotina',
+    repeat: 'Repetir',
     viewHistory: 'Ver histórico',
     modalities: 'Modalidades',
     seeAll: 'Ver todas',
@@ -257,8 +258,6 @@ export const pt = {
       `${name}, ${detail}${favorite ? ', favorita' : ''}`,
     optionsLabel: (name: string) => `Opções de ${name}`,
     models: (count: number) => `${String(count)} ${count === 1 ? 'modelo' : 'modelos'}`,
-    history: 'Histórico',
-    backup: 'Backup e transferência',
     settings: 'Ajustes',
   },
   editor: {
@@ -337,6 +336,8 @@ export const pt = {
     addStepLabel: (name: string) => `Adicionar etapa em ${name}`,
     editRestLabel: (time: string) => `Descanso entre blocos, ${time}. Editar`,
     blocksLimit: (count: number) => `A rotina pode ter até ${String(count)} blocos.`,
+    showSequence: (count: number) => `Ver a sequência (${String(count)} etapas)`,
+    hideSequence: 'Esconder a sequência',
     moreSteps: (count: number) => `e mais ${String(count)} etapas`,
   },
   routineOptions: {
@@ -423,6 +424,9 @@ export const pt = {
     repetitionsShort: (count: number | null) => `${String(count)} rep.`,
     remaining: (time: string) => `Faltam ${time}`,
     nextStep: (name: string, time: string) => `Depois: ${name} ${time}`,
+    ofDuration: (time: string) => `de ${time}`,
+    nextLabel: 'Próxima',
+    elapsedOfTotal: (elapsed: string, total: string) => `${elapsed} / ${total}`,
     workoutRemaining: (time: string) => `Restante no treino: ${time}`,
     roundFraction: (round: number, total: number) => `${String(round)}/${String(total)}`,
     rowLabel: (index: number, name: string, time: string, suffix: string) =>
@@ -534,6 +538,8 @@ export const pt = {
     languageHint: 'Nomes das suas rotinas ficam como você escreveu.',
     cues: 'Som e avisos',
     cuesHint: 'Sons de cada fase, voz, vibração e contagem 3, 2, 1.',
+    backup: 'Backup e transferência',
+    backupHint: 'Guardar tudo num arquivo, levar para outro aparelho ou restaurar.',
     saveFailed: 'Não deu para guardar a escolha. Tente de novo.',
   },
 } satisfies Record<string, unknown> & { words: Words };

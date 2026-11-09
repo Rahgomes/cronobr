@@ -76,6 +76,7 @@ export function EditorScreen({
   const key = draftKey(id, from, modality);
   const [load, setLoad] = useState<Load>({ status: 'loading' });
   const [draft, setDraft] = useState<Routine | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const [newId] = useState(() => idGenerator());
   const [leaving, setLeaving] = useState<'back' | 'start' | null>(null);
   const [stepAt, setStepAt] = useState<[number, number] | null>(null);
@@ -461,7 +462,7 @@ export function EditorScreen({
                 }}
                 style={styles.blockRest}
               >
-                <View style={[styles.bar, styles.rest]} />
+                <View style={[styles.bar, styles.blockRestBar]} />
                 <Text variant="label" style={styles.flex}>
                   {t.editor.blockRest}
                 </Text>
@@ -499,27 +500,39 @@ export function EditorScreen({
       </Card>
 
       <SectionTitle>{t.editor.preview}</SectionTitle>
-      <Card>
-        {timeline.slice(0, PREVIEW_MAX).map((segment) => (
-          <View key={segment.index} style={styles.previewRow}>
-            <Text color="textMuted" tabular style={styles.previewIndex}>
-              {String(segment.index + 1)}
-            </Text>
-            <Text style={styles.flex} numberOfLines={1}>
-              {segmentTitle(segment, t.words)}
-            </Text>
-            <Text tabular>
-              {segment.durationMs === null
-                ? t.editor.repetitions(segment.reps ?? 0)
-                : clock(segment.durationMs)}
-            </Text>
-          </View>
-        ))}
-        {timeline.length > PREVIEW_MAX ? (
-          <Text color="textMuted">{t.editor.moreSteps(timeline.length - PREVIEW_MAX)}</Text>
-        ) : null}
-        {timeline.length === 0 ? <Text color="textMuted">{t.editor.noSteps}</Text> : null}
-      </Card>
+      {/* Avançado aos poucos (E06 D): a sequência inteira fica um toque adiante. */}
+      {timeline.length === 0 ? null : (
+        <Button
+          label={showPreview ? t.editor.hideSequence : t.editor.showSequence(timeline.length)}
+          kind="text"
+          onPress={() => {
+            setShowPreview((v) => !v);
+          }}
+        />
+      )}
+      {showPreview || timeline.length === 0 ? (
+        <Card>
+          {timeline.slice(0, PREVIEW_MAX).map((segment) => (
+            <View key={segment.index} style={styles.previewRow}>
+              <Text color="textMuted" tabular style={styles.previewIndex}>
+                {String(segment.index + 1)}
+              </Text>
+              <Text style={styles.flex} numberOfLines={1}>
+                {segmentTitle(segment, t.words)}
+              </Text>
+              <Text tabular>
+                {segment.durationMs === null
+                  ? t.editor.repetitions(segment.reps ?? 0)
+                  : clock(segment.durationMs)}
+              </Text>
+            </View>
+          ))}
+          {timeline.length > PREVIEW_MAX ? (
+            <Text color="textMuted">{t.editor.moreSteps(timeline.length - PREVIEW_MAX)}</Text>
+          ) : null}
+          {timeline.length === 0 ? <Text color="textMuted">{t.editor.noSteps}</Text> : null}
+        </Card>
+      ) : null}
 
       {problem ? <Notice tone="danger">{problem}</Notice> : null}
 
@@ -546,8 +559,9 @@ const makeStyles = (colors: Colors) =>
   StyleSheet.create({
     footer: { flexDirection: 'row', gap: space.md },
     footerItem: { flex: 1 },
-    bleed: { marginHorizontal: -space.lg },
-    modalities: { gap: space.sm, paddingHorizontal: space.lg },
+    // flexGrow 0: na web a ScrollView cresce por padrão e, em tela alta, esticava a faixa.
+    bleed: { marginHorizontal: -space.lg, flexGrow: 0 },
+    modalities: { gap: space.sm, paddingHorizontal: space.lg, alignItems: 'center' },
     total: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     totalSide: { alignItems: 'flex-end', gap: 2, flexShrink: 1 },
     blockGroup: { gap: space.sm },
@@ -576,8 +590,10 @@ const makeStyles = (colors: Colors) =>
     },
     pressed: { opacity: 0.7 },
     bar: { width: 4, alignSelf: 'stretch', borderRadius: radius.pill },
-    work: { backgroundColor: colors.primary },
-    rest: { backgroundColor: colors.textMuted },
+    // Mesmas cores da sessão: o que se monta aqui é o que aparece no treino (E06 D).
+    work: { backgroundColor: colors.inkWork },
+    rest: { backgroundColor: colors.inkRest },
+    blockRestBar: { backgroundColor: colors.inkBlockRest },
     blockRest: {
       flexDirection: 'row',
       alignItems: 'center',

@@ -47,6 +47,15 @@ export const colors = {
   phaseCooldown: '#00695C',
   onPhase: '#FFFFFF',
   onPhaseMuted: '#EDEDED',
+  /**
+   * Cor da fase como traço (anel, barra da etapa, régua do editor) sobre o fundo do tema. No
+   * claro é a própria cor da fase; no escuro, uma versão clara (o verde-escuro sumia no preto).
+   */
+  inkPrep: '#8A5A00',
+  inkWork: '#1B5E20',
+  inkRest: '#1565C0',
+  inkBlockRest: '#4527A0',
+  inkCooldown: '#00695C',
 } as const;
 
 export type ColorRole = keyof typeof colors;
@@ -94,6 +103,11 @@ export const darkColors: Record<ColorRole, string> = {
   phaseCooldown: '#00695C',
   onPhase: '#FFFFFF',
   onPhaseMuted: '#EDEDED',
+  inkPrep: '#FFB74D',
+  inkWork: '#66BB6A',
+  inkRest: '#64B5F6',
+  inkBlockRest: '#B39DDB',
+  inkCooldown: '#4DB6AC',
 };
 
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32, xxxl: 48 } as const;

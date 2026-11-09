@@ -21,6 +21,17 @@ function pressSystemBack() {
 }
 
 describe('editor de rotinas', () => {
+  it('sequência completa fica um toque adiante (avançado aos poucos)', async () => {
+    const { repos } = await appRepos();
+    await renderApp(<EditorScreen id="nova" from="tabata-classic" />, repos);
+    const show = await screen.findByRole('button', { name: 'Ver a sequência (16 etapas)' });
+    expect(screen.queryByText('e mais 4 etapas')).toBeNull();
+    await fireEvent.press(show);
+    expect(screen.getByText('e mais 4 etapas')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Esconder a sequência' }));
+    expect(screen.queryByText('e mais 4 etapas')).toBeNull();
+  });
+
   it('nova: sem nome não salva e diz por quê; com nome grava e volta', async () => {
     const { repos } = await appRepos();
     await renderApp(<EditorScreen id="nova" modality="circuito" />, repos);

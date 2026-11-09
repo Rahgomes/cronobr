@@ -1,4 +1,5 @@
-// Ajustes (E06): tema e idioma à vista; som e avisos um toque adiante (personalização progressiva).
+// Ajustes (E06): tema e idioma à vista; som e avisos e backup um toque adiante (personalização
+// progressiva).
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -20,7 +21,6 @@ import { useAppearance } from './appearance-context';
 
 export function SettingsScreen() {
   const t = useT();
-  const colors = useColors();
   const { appearance, deviceLanguage, setAppearance } = useAppearance();
   const [failed, setFailed] = useState(false);
 
@@ -82,26 +82,57 @@ export function SettingsScreen() {
       {failed ? <Notice tone="danger">{t.settings.saveFailed}</Notice> : null}
 
       <Card>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t.settings.cues}
-          accessibilityHint={t.settings.cuesHint}
+        <SettingsLink
+          icon="volume-high"
+          label={t.settings.cues}
+          hint={t.settings.cuesHint}
           onPress={() => {
             router.push('/avisos');
           }}
-          style={styles.link}
-        >
-          <MaterialCommunityIcons name="volume-high" size={24} color={colors.primary} />
-          <View style={styles.grow}>
-            <Text variant="label">{t.settings.cues}</Text>
-            <Text variant="caption" color="textMuted">
-              {t.settings.cuesHint}
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={24} color={colors.textMuted} />
-        </Pressable>
+        />
+        <SettingsLink
+          icon="backup-restore"
+          label={t.settings.backup}
+          hint={t.settings.backupHint}
+          onPress={() => {
+            router.push('/backup');
+          }}
+        />
       </Card>
     </Screen>
+  );
+}
+
+/** Linha que leva a uma tela de ajustes mais detalhada (um toque adiante). */
+function SettingsLink({
+  icon,
+  label,
+  hint,
+  onPress,
+}: {
+  icon: 'volume-high' | 'backup-restore';
+  label: string;
+  hint: string;
+  onPress: () => void;
+}) {
+  const colors = useColors();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityHint={hint}
+      onPress={onPress}
+      style={styles.link}
+    >
+      <MaterialCommunityIcons name={icon} size={24} color={colors.primary} />
+      <View style={styles.grow}>
+        <Text variant="label">{label}</Text>
+        <Text variant="caption" color="textMuted">
+          {hint}
+        </Text>
+      </View>
+      <MaterialCommunityIcons name="chevron-right" size={24} color={colors.textMuted} />
+    </Pressable>
   );
 }
 

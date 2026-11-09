@@ -226,7 +226,8 @@ export const en: Messages = {
   },
   home: {
     continueWorkout: 'Continue workout',
-    recent: 'Recent',
+    lastRoutine: 'Last workout',
+    repeat: 'Repeat',
     viewHistory: 'View history',
     modalities: 'Workout types',
     seeAll: 'See all',
@@ -249,8 +250,6 @@ export const en: Messages = {
     routineLabel: (name, detail, favorite) => `${name}, ${detail}${favorite ? ', favorite' : ''}`,
     optionsLabel: (name) => `Options for ${name}`,
     models: (count) => `${String(count)} ${count === 1 ? 'template' : 'templates'}`,
-    history: 'History',
-    backup: 'Backup and transfer',
     settings: 'Settings',
   },
   editor: {
@@ -330,6 +329,8 @@ export const en: Messages = {
     editRestLabel: (time) => `Rest between blocks, ${time}. Edit`,
     blocksLimit: (count) =>
       `The routine can have up to ${String(count)} ${count === 1 ? 'block' : 'blocks'}.`,
+    showSequence: (count) => `Show the sequence (${String(count)} steps)`,
+    hideSequence: 'Hide the sequence',
     moreSteps: (count) => `and ${String(count)} more ${count === 1 ? 'step' : 'steps'}`,
   },
   routineOptions: {
@@ -416,6 +417,9 @@ export const en: Messages = {
     repetitionsShort: (count) => `${String(count)} reps`,
     remaining: (time) => `${time} left`,
     nextStep: (name, time) => `Next: ${name} ${time}`,
+    ofDuration: (time) => `of ${time}`,
+    nextLabel: 'Next',
+    elapsedOfTotal: (elapsed, total) => `${elapsed} / ${total}`,
     workoutRemaining: (time) => `Workout time left: ${time}`,
     roundFraction: (round, total) => `${String(round)}/${String(total)}`,
     rowLabel: (index, name, time, suffix) => `Step ${String(index)}. ${name}, ${time}${suffix}`,
@@ -524,6 +528,8 @@ export const en: Messages = {
     languageHint: 'Your routine names stay as you wrote them.',
     cues: 'Sounds and alerts',
     cuesHint: 'Phase sounds, voice, vibration and 3, 2, 1 countdown.',
+    backup: 'Backup and transfer',
+    backupHint: 'Save everything to a file, move to another device or restore.',
     saveFailed: "Couldn't save your choice. Try again.",
   },
 };

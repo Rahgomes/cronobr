@@ -192,3 +192,8 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   só para a tela que ganha com ela (a sessão). A decisão de colunas fica numa função pura
   testada por largura e altura; no teste de tela, `Dimensions.set` fora do `act` (dentro dele a
   próxima renderização vinha vazia).
+- **09/11 — E06 D, captura real ao lado do conceito:** um spec de Playwright só para fotografar
+  (config própria, fora do Jest) mostrou o que a revisão de código não via: anel verde-escuro
+  invisível no tema escuro, conteúdo da sessão escondido sob o rodapé em 664 px e, numa captura
+  com janela alta, chips do editor esticados (ScrollView do RN-web cresce por padrão). Cor de fase
+  precisa de duas versões: fundo para texto branco e traço sobre o fundo do tema.

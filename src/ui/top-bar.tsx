@@ -59,7 +59,8 @@ export function RoundAction({
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   label: string;
   onPress: () => void;
-  tone?: 'text' | 'primary' | 'gold';
+  /** `onPhase`: sobre a cor da fase (sessão em Foco), igual ao cadeado. */
+  tone?: 'text' | 'primary' | 'gold' | 'onPhase';
 }) {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -72,6 +73,7 @@ export function RoundAction({
       style={({ pressed }) => [
         styles.round,
         tone === 'gold' && { backgroundColor: colors.goldSoft },
+        tone === 'onPhase' && styles.onPhase,
         pressed && styles.pressed,
       ]}
     >
@@ -93,5 +95,6 @@ const makeStyles = (colors: Colors) =>
       backgroundColor: colors.iconButton,
     },
     pressed: { backgroundColor: colors.accentSoft },
+    onPhase: { backgroundColor: 'rgba(255, 255, 255, 0.2)' },
     title: { flex: 1, minWidth: 0 },
   });

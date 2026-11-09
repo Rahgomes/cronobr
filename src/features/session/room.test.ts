@@ -4,8 +4,13 @@ it('retrato: uma coluna, anel inteiro quando cabe', () => {
   expect(sessionRoom(412, 915)).toEqual({ wide: false, text: 380, ring: 260 });
 });
 
-it('celular pequeno: anel encolhe para a largura', () => {
-  expect(sessionRoom(240, 520)).toMatchObject({ wide: false, ring: 208 });
+it('celular estreito: anel encolhe para a largura', () => {
+  expect(sessionRoom(240, 800)).toMatchObject({ wide: false, ring: 208 });
+});
+
+it('celular baixo: anel encolhe pela altura, sem passar do mínimo', () => {
+  expect(sessionRoom(390, 664).ring).toBe(194);
+  expect(sessionRoom(390, 520).ring).toBe(140);
 });
 
 it('tablet em pé: largura do conteúdo limitada', () => {

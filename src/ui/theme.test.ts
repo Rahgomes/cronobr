@@ -32,6 +32,12 @@ const UI_PAIRS: [ColorRole, ColorRole][] = [
   ['inputBorder', 'surface'],
   ['focus', 'background'],
   ['gold', 'goldSoft'],
+  ...(['inkPrep', 'inkWork', 'inkRest', 'inkBlockRest', 'inkCooldown'] as const).flatMap(
+    (ink): [ColorRole, ColorRole][] => [
+      [ink, 'background'],
+      [ink, 'surface'],
+    ],
+  ),
 ];
 
 describe.each<ColorScheme>(['light', 'dark'])('tema %s', (scheme) => {

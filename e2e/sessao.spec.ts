@@ -61,7 +61,7 @@ test('treino completo: fases pelo relógio, conclusão e histórico com um regis
   await expectNoAxeViolations(page);
 
   await page.getByRole('button', { name: 'Voltar ao início' }).click();
-  // O treino feito vira um card em Recentes, pronto para repetir.
+  // O treino feito vira a "Última rotina" da Início, pronta para repetir.
   await expect(
     page.getByRole('button', { name: 'Repetir Tabata clássico, 4:00, feito hoje' }),
   ).toBeVisible();
@@ -126,7 +126,7 @@ test('visualizações Lista, Foco e Anel com axe; salto pela lista confirmado', 
   await expectNoAxeViolations(page);
   await freeze(page);
   await page.getByRole('button', { name: 'Anel' }).click();
-  await expect(page.getByText(/^Restante no treino/)).toBeVisible();
+  await expect(page.getByLabel(/^Restante no treino/)).toBeVisible();
   await page.clock.resume();
   await expectNoAxeViolations(page);
 });

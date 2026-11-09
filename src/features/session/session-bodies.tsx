@@ -6,7 +6,7 @@ import { ownName, segmentTitle } from '@/domain/cues';
 import type { Snapshot } from '@/domain/engine';
 import { clock, duration } from '@/domain/format';
 import { overallProgress, phaseProgress, rowState, type RowState } from '@/domain/progress';
-import type { Phase, Segment } from '@/domain/timeline';
+import { summarize, type Phase, type Segment } from '@/domain/timeline';
 import { useT } from '@/i18n/i18n-context';
 import type { Messages } from '@/i18n/messages/pt';
 import { fitFontSize } from '@/ui/fit';
@@ -18,6 +18,15 @@ import { radius, space, type ColorRole } from '@/ui/tokens';
 
 import { roundLabel } from './labels';
 import type { Room } from './room';
+
+/** A mesma fase como traço sobre o fundo do tema (anel, barras): clara no escuro. */
+const PHASE_INK: Record<Phase, ColorRole> = {
+  prep: 'inkPrep',
+  work: 'inkWork',
+  rest: 'inkRest',
+  blockRest: 'inkBlockRest',
+  cooldown: 'inkCooldown',
+};
 
 export const PHASE_TINT: Record<Phase, ColorRole> = {
   prep: 'phasePrep',
@@ -99,29 +108,123 @@ function TrainingBar({ timeline, snap }: Pick<BodyProps, 'timeline' | 'snap'>) {
   );
 }
 
-/** Anel (C03): o padrão. Etapa atual, próxima, rodada e total. */
+/** Selo da fase: cor e texto juntos (nunca só a cor). Sem nome próprio, é o título da etapa. */
+function PhaseBadge({ segment, header }: { segment: Segment; header: boolean }) {
+  const t = useT();
+  const colors = useColors();
+  const styles = useThemedStyles(makeStyles);
+  return (
+    <View
+      style={[styles.badge, { backgroundColor: colors[PHASE_TINT[segment.phase]] }]}
+      testID="phase-badge"
+      // Com nome próprio, o título já diz a fase ("Exercício · Agachamento"): o selo é só visual.
+      {...(header
+        ? {}
+        : {
+            accessibilityElementsHidden: true,
+            importantForAccessibility: 'no-hide-descendants' as const,
+          })}
+    >
+      <Text
+        variant="label"
+        style={[styles.badgeText, { color: colors.onPhase }]}
+        {...(header ? { accessibilityRole: 'header' as const } : {})}
+      >
+        {t.words.phase[segment.phase]}
+      </Text>
+    </View>
+  );
+}
+
+/** "Próxima": a etapa seguinte com a cor dela, para saber o que vem sem ler a lista. */
+function NextCard({ next }: { next: Segment | undefined }) {
+  const t = useT();
+  const colors = useColors();
+  const styles = useThemedStyles(makeStyles);
+  if (!next) {
+    return (
+      <View style={styles.next}>
+        <Text color="textMuted">{t.session.lastStep}</Text>
+      </View>
+    );
+  }
+  const time =
+    next.durationMs === null ? t.session.repetitionsShort(next.reps) : clock(next.durationMs);
+  return (
+    <View style={styles.next} accessible accessibilityLabel={nextLine(next, t)}>
+      <View style={[styles.nextBar, { backgroundColor: colors[PHASE_INK[next.phase]] }]} />
+      <View style={styles.grow}>
+        <Text variant="caption" color="textMuted">
+          {t.session.nextLabel}
+        </Text>
+        <Text variant="label" numberOfLines={2}>
+          {`${segmentTitle(next, t.words)} · ${time}`}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+/** Barra do treino com o feito e o que falta embaixo (C03). */
+function TrainingProgress({ timeline, snap }: Pick<BodyProps, 'timeline' | 'snap'>) {
+  const t = useT();
+  const styles = useThemedStyles(makeStyles);
+  const manual = timeline.some((segment) => segment.durationMs === null);
+  const total = summarize(timeline).knownMs;
+  return (
+    <View style={styles.progress}>
+      <TrainingBar timeline={timeline} snap={snap} />
+      <View
+        style={styles.progressRow}
+        accessible
+        accessibilityLabel={t.session.workoutRemaining(clock(snap.totalRemainingMs))}
+      >
+        <Text variant="caption" color="textMuted" tabular>
+          {manual
+            ? ''
+            : t.session.elapsedOfTotal(clock(total - snap.totalRemainingMs), clock(total))}
+        </Text>
+        <Text variant="caption" color="textMuted" tabular>
+          {`−${clock(snap.totalRemainingMs)}`}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+/**
+ * Anel (C03): o padrão. Selo da fase, nome da etapa, tempo dentro do anel na cor da fase, rodada,
+ * progresso do treino e a próxima etapa.
+ */
 export function RingBody({ timeline, snap, segment, room }: BodyProps) {
   const t = useT();
   const w = t.words;
+  const name = ownName(segment, w);
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const round = roundLabel(segment, w);
   return (
     <View style={styles.body}>
-      <Text variant="title" accessibilityRole="header" style={styles.center}>
-        {segmentTitle(segment, w)}
-      </Text>
-      {round ? (
-        <Text color="textMuted" style={styles.center}>
-          {round}
-        </Text>
-      ) : null}
+      <View style={styles.head}>
+        <PhaseBadge segment={segment} header={name === null} />
+        {name ? (
+          <Text
+            variant="title"
+            accessibilityRole="header"
+            accessibilityLabel={segmentTitle(segment, w)}
+            style={styles.center}
+            numberOfLines={2}
+          >
+            {name}
+          </Text>
+        ) : null}
+      </View>
       <View style={styles.ringBox}>
         <ProgressRing
           size={room.ring}
           stroke={RING_STROKE}
           progress={phaseProgress(timeline, snap)}
-          color={colors[PHASE_TINT[segment.phase]]}
+          color={colors[PHASE_INK[segment.phase]]}
           track={colors.border}
         >
           <BigTime
@@ -130,15 +233,20 @@ export function RingBody({ timeline, snap, segment, room }: BodyProps) {
             size={72}
             width={room.ring - RING_STROKE * 2 - space.lg * 2}
           />
+          {segment.durationMs === null ? null : (
+            <Text color="textMuted" tabular style={styles.center}>
+              {t.session.ofDuration(clock(segment.durationMs))}
+            </Text>
+          )}
         </ProgressRing>
       </View>
-      <Text color="textMuted" style={styles.center}>
-        {nextLine(timeline[segment.index + 1], t)}
-      </Text>
-      <TrainingBar timeline={timeline} snap={snap} />
-      <Text color="textMuted" style={styles.center}>
-        {t.session.workoutRemaining(clock(snap.totalRemainingMs))}
-      </Text>
+      {round ? (
+        <Text variant="label" style={styles.center}>
+          {round}
+        </Text>
+      ) : null}
+      <TrainingProgress timeline={timeline} snap={snap} />
+      <NextCard next={timeline[segment.index + 1]} />
     </View>
   );
 }
@@ -257,7 +365,7 @@ export function ListBody({
               }}
               style={[styles.row, state === 'current' && styles.rowCurrent]}
             >
-              <View style={[styles.rowBar, { backgroundColor: colors[PHASE_TINT[row.phase]] }]} />
+              <View style={[styles.rowBar, { backgroundColor: colors[PHASE_INK[row.phase]] }]} />
               <Text tabular color="textMuted" style={styles.rowIndex}>
                 {String(row.index + 1)}
               </Text>
@@ -288,7 +396,29 @@ const makeStyles = (colors: Colors) =>
     body: { gap: space.md, paddingTop: space.sm },
     center: { textAlign: 'center' },
     grow: { flex: 1, minWidth: 0 },
-    ringBox: { alignItems: 'center', paddingVertical: space.sm },
+    ringBox: { alignItems: 'center' },
+    head: { gap: space.sm },
+    badge: {
+      alignSelf: 'stretch',
+      alignItems: 'center',
+      borderRadius: radius.pill,
+      paddingVertical: space.xs,
+      paddingHorizontal: space.md,
+    },
+    badgeText: { textTransform: 'uppercase', letterSpacing: 1, textAlign: 'center' },
+    progress: { gap: space.xs },
+    progressRow: { flexDirection: 'row', justifyContent: 'space-between' },
+    next: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: space.md,
+      padding: space.md,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    nextBar: { width: 4, alignSelf: 'stretch', borderRadius: 2 },
     bar: {
       height: 6,
       borderRadius: radius.pill,

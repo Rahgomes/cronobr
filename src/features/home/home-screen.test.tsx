@@ -40,7 +40,7 @@ function done(id: string, routine: Routine, endedAt: number): HistoryEntry {
 }
 
 describe('Início', () => {
-  it('marca, histórico no topo e as modalidades em carrossel com a contagem de modelos', async () => {
+  it('marca, ajustes no topo e as modalidades em carrossel com a contagem de modelos', async () => {
     const { repos } = await appRepos();
     await renderApp(<HomeScreen />, repos);
     expect(await screen.findByRole('image', { name: 'CronôBR' })).toBeOnTheScreen();
@@ -62,8 +62,9 @@ describe('Início', () => {
 
     await fireEvent.press(screen.getByRole('button', { name: 'Ver todas' }));
     expect(router.push).toHaveBeenCalledWith('/modalidades');
-    await fireEvent.press(screen.getByRole('button', { name: 'Histórico' }));
-    expect(router.push).toHaveBeenCalledWith('/historico');
+    // Sem treino feito, nada de "última rotina"; backup e histórico não ficam no topo (E06 D).
+    expect(screen.queryByText('Última rotina')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Backup e transferência' })).toBeNull();
     await fireEvent.press(screen.getByRole('button', { name: 'Ajustes' }));
     expect(router.push).toHaveBeenCalledWith('/ajustes');
   });
@@ -81,7 +82,7 @@ describe('Início', () => {
     }
   });
 
-  it('recentes: um card por rotina, o mais novo primeiro, e tocar repete aquele registro', async () => {
+  it('última rotina: a mais recente, um toque repete aquele registro', async () => {
     const { repos } = await appRepos();
     const tabata = must(presetById('tabata-classic'));
     const hiit = must(presetById('hiit-sprint'));
@@ -93,9 +94,10 @@ describe('Início', () => {
     const cards = await screen.findAllByRole('button', { name: /^Repetir / });
     expect(cards.map((c) => c.props.accessibilityLabel as string)).toEqual([
       'Repetir Tabata clássico, 4:00, feito hoje',
-      'Repetir HIIT sprint, 9:45, feito ontem',
     ]);
+    expect(screen.getByText('Última rotina')).toBeOnTheScreen();
     expect(within(must(cards[0])).getByText('4:00 · hoje')).toBeOnTheScreen();
+    expect(within(must(cards[0])).getByText('Repetir')).toBeOnTheScreen();
     await fireEvent.press(must(cards[0]));
     expect(router.push).toHaveBeenCalledWith({ pathname: '/sessao', params: { repetir: 'h-new' } });
     await fireEvent.press(screen.getByRole('button', { name: 'Ver histórico' }));

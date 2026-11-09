@@ -91,7 +91,7 @@ describe('sessão', () => {
     expect(screen.getByRole('header', { name: 'Exercício' })).toBeOnTheScreen();
     expect(screen.getByText('Rodada 1 de 8')).toBeOnTheScreen();
     expect(screen.getByRole('timer')).toHaveTextContent('0:15');
-    expect(screen.getByText('Restante no treino: 3:45')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Restante no treino: 3:45')).toBeOnTheScreen();
   });
 
   it('callback atrasado: uma leitura só atravessa várias fases [PRD 2]', async () => {
