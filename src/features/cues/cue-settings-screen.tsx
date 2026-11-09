@@ -13,7 +13,7 @@ import { TopBar } from '@/ui/top-bar';
 
 import { useCues } from './cue-context';
 
-type Toggle = 'sound' | 'voice' | 'vibration' | 'countdown';
+type Toggle = 'sound' | 'voice' | 'vibration' | 'countdown' | 'pulse';
 
 const SLOTS: SoundSlot[] = ['prep', 'work', 'rest', 'finish'];
 
@@ -25,6 +25,7 @@ export function CueSettingsScreen() {
     { key: 'countdown', label: t.cues.countdown, hint: t.cues.countdownHint },
     { key: 'voice', label: t.cues.voice, hint: t.cues.voiceHint },
     { key: 'vibration', label: t.cues.vibration, hint: t.cues.vibrationHint },
+    { key: 'pulse', label: t.cues.pulse, hint: t.cues.pulseHint },
   ];
 
   const { prefs, setPrefs, port } = useCues();

@@ -2,6 +2,7 @@
 // arquivo importado (E05), então nada inválido chega ao motor por nenhuma porta.
 import { z } from 'zod';
 
+import { BPM_MAX, BPM_MIN } from './metronome';
 import { MODALITIES, type Routine } from './routine';
 import { buildTimeline, summarize } from './timeline';
 import type { LimitWords, Words } from './words';
@@ -63,6 +64,12 @@ function schemaFor(m: LimitWords) {
       disabled: z.boolean().optional(),
       sides: z.boolean().optional(),
       early: z.boolean().optional(),
+      bpm: z
+        .number()
+        .int(m.bpmRange(BPM_MIN, BPM_MAX))
+        .min(BPM_MIN, m.bpmRange(BPM_MIN, BPM_MAX))
+        .max(BPM_MAX, m.bpmRange(BPM_MIN, BPM_MAX))
+        .optional(),
     })
     .refine((step) => step.seconds !== null || step.reps !== null, {
       message: m.repsNeeded,

@@ -21,10 +21,10 @@ async function open(saved?: unknown) {
 }
 
 describe('Som e avisos', () => {
-  it('padrão: os quatro canais ligados e um som marcado por fase', async () => {
+  it('padrão: os canais e o pulso da cadência ligados, um som marcado por fase', async () => {
     await open();
     expect(await screen.findByRole('header', { name: 'Som e avisos' })).toBeOnTheScreen();
-    for (const name of ['Som', 'Contagem 3, 2, 1', 'Voz', 'Vibração']) {
+    for (const name of ['Som', 'Contagem 3, 2, 1', 'Voz', 'Vibração', 'Pulso da cadência']) {
       expect(screen.getByRole('switch', { name })).toBeChecked();
     }
     expect(screen.getAllByRole('button', { name: 'Sino de ringue', selected: true })).toHaveLength(
@@ -57,6 +57,14 @@ describe('Som e avisos', () => {
     expect(screen.getByRole('switch', { name: 'Voz' })).toBeChecked();
     await waitFor(async () => {
       expect(await repos.prefs.get(CUE_PREFS_KEY)).toMatchObject({ sound: false, voice: true });
+    });
+  });
+
+  it('desligar o pulso da cadência grava no banco', async () => {
+    const { repos } = await open();
+    await fireEvent(await screen.findByRole('switch', { name: 'Pulso da cadência' }), 'press');
+    await waitFor(async () => {
+      expect(await repos.prefs.get(CUE_PREFS_KEY)).toMatchObject({ pulse: false });
     });
   });
 

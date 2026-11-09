@@ -65,7 +65,12 @@ importação faz).
 - `modality`: `tabata`, `hiit`, `emom`, `amrap`, `boxe`, `circuito`, `corrida`, `mobilidade`,
   `personalizada`, `temporizador`.
 - Etapa: `seconds: null` com `reps` = etapa por repetições. Opcionais: `disabled` (fica fora da
-  execução), `sides` (roda lado esquerdo e lado direito), `early` (EMOM: dá para terminar antes).
+  execução), `sides` (roda lado esquerdo e lado direito), `early` (EMOM: dá para terminar antes),
+  `bpm` (cadência, desde a E07: inteiro de 30 a 240, pulso do metrônomo enquanto a etapa roda).
+- Campo novo e opcional não sobe o `schemaVersion`: a versão anterior do app ignora o que não
+  conhece e abre a rotina sem ele (provado com o código anterior lendo
+  `src/test/fixtures/rotina-cadencia-e07.cronobr`). O `schemaVersion` só sobe quando um campo
+  mudar de sentido ou passar a ser obrigatório.
 - Passa pelos mesmos limites do editor (nome até 60 letras, até 99 rodadas, 20 blocos, 50 etapas
   por bloco, 6 horas no total). Fora disso o arquivo inteiro é recusado com o motivo.
 

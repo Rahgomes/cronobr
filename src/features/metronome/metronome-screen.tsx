@@ -19,17 +19,15 @@ import { Chip } from '@/ui/chip';
 import { Screen } from '@/ui/screen';
 import { Stepper } from '@/ui/stepper';
 import { Text } from '@/ui/text';
-import type { Colors } from '@/ui/theme';
-import { useThemedStyles } from '@/ui/theme-context';
 import { space } from '@/ui/tokens';
 import { TopBar } from '@/ui/top-bar';
 
 import { createAudioClock } from './audio-clock';
 import { Metronome, type AudioClock } from './engine';
+import { Pulse } from './pulse';
 
 export const METRONOME_KEY = 'metronomo';
 const TEMPOS = [60, 90, 120, 150, 180] as const;
-const DOTS = 4;
 
 type Mode = 'idle' | 'preview' | 'running';
 
@@ -43,7 +41,6 @@ export function MetronomeScreen({
   createClock?: () => AudioClock | null;
 }) {
   const t = useT();
-  const styles = useThemedStyles(makeStyles);
   const [prefs, setPrefs, ready] = useStored(METRONOME_KEY, parseMetronome, METRONOME_START);
   const [mode, setMode] = useState<Mode>('idle');
   const [beat, setBeat] = useState(-1);
@@ -95,7 +92,7 @@ export function MetronomeScreen({
     const { clock, metronome } = engine.current;
     // O navegador só libera o áudio a partir de um toque: este é o toque.
     clock.resume().catch(() => undefined);
-    metronome.start(prefs.bpm, prefs.offsetMs, preview);
+    metronome.start(prefs.bpm, prefs.offsetMs, { preview });
     setMode(preview ? 'preview' : 'running');
     if (!preview) AccessibilityInfo.announceForAccessibility(t.metronome.playing(prefs.bpm));
   };
@@ -146,7 +143,9 @@ export function MetronomeScreen({
         <Text variant="label" color="textMuted" importantForAccessibility="no">
           {t.metronome.bpm}
         </Text>
-        <Pulse beat={beat} />
+        <View style={styles.pulse}>
+          <Pulse beat={beat} />
+        </View>
       </View>
       {unavailable ? (
         <Text color="danger" accessibilityRole="alert">
@@ -207,45 +206,11 @@ function StayAwake() {
   return null;
 }
 
-/**
- * Pulso em quatro pontos pequenos, o da batida aceso. Não pisca a tela inteira: a 240 BPM seriam
- * 4 clarões por segundo, acima do limite de 3 da WCAG 2.3.1 (D103). Escondido do leitor de tela:
- * ele ouve o som, e anunciar cada batida taparia tudo.
- */
-function Pulse({ beat }: { beat: number }) {
-  const styles = useThemedStyles(makeStyles);
-  const lit = beat < 0 ? -1 : beat % DOTS;
-  return (
-    <View
-      style={styles.dots}
-      aria-hidden
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-      testID="pulso"
-    >
-      {Array.from({ length: DOTS }, (_, i) => (
-        <View key={i} style={[styles.dot, i === lit && styles.on]} />
-      ))}
-    </View>
-  );
-}
-
-const makeStyles = (colors: Colors) =>
-  StyleSheet.create({
-    footer: { gap: space.sm },
-    dial: { alignItems: 'center', gap: space.xs, paddingVertical: space.lg },
-    bpm: { fontSize: 72, lineHeight: 80 },
-    dots: { flexDirection: 'row', gap: space.md, marginTop: space.md },
-    dot: {
-      width: 14,
-      height: 14,
-      borderRadius: 7,
-      borderWidth: 2,
-      // Contorno de campo (3:1 no fundo): o ponto apagado ainda se vê nos dois temas.
-      borderColor: colors.inputBorder,
-      backgroundColor: colors.surface,
-    },
-    on: { backgroundColor: colors.primary, borderColor: colors.primary },
-    card: { gap: space.sm },
-    tempos: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
-  });
+const styles = StyleSheet.create({
+  footer: { gap: space.sm },
+  dial: { alignItems: 'center', gap: space.xs, paddingVertical: space.lg },
+  bpm: { fontSize: 72, lineHeight: 80 },
+  pulse: { marginTop: space.md },
+  card: { gap: space.sm },
+  tempos: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+});

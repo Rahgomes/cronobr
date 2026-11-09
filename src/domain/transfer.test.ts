@@ -44,7 +44,7 @@ const rich: Routine = routine({
       repeat: 2,
       restAfterSeconds: 60,
       steps: [
-        step({ id: 's1', kind: 'work', name: 'Polichinelo', seconds: 30 }),
+        step({ id: 's1', kind: 'work', name: 'Polichinelo', seconds: 30, bpm: 160 }),
         step({ id: 's2', kind: 'work', name: 'Agachamento', seconds: null, reps: 12 }),
         step({ id: 's3', kind: 'rest', name: 'Respira', seconds: 15 }),
       ],
@@ -270,6 +270,18 @@ describe('nome do arquivo e impressão do conteúdo', () => {
     expect(fileName('Treino de Perna: ção! 💪')).toBe('treino-de-perna-cao.cronobr');
     expect(fileName('💪💪')).toBe('rotina.cronobr');
     expect(fileName('a'.repeat(80))).toBe(`${'a'.repeat(40)}.cronobr`);
+  });
+
+  it('cadência diferente é outro treino (impressão muda)', () => {
+    const plain = routine();
+    const paced = routine({
+      blocks: [block({ steps: [step({ kind: 'work', seconds: 20, bpm: 170 })] })],
+    });
+    const slower = routine({
+      blocks: [block({ steps: [step({ kind: 'work', seconds: 20, bpm: 150 })] })],
+    });
+    expect(fingerprint(paced)).not.toBe(fingerprint(slower));
+    expect(fingerprint(plain)).toBe(fingerprint(routine()));
   });
 
   it('mesmo treino com ids e datas diferentes tem a mesma impressão', () => {

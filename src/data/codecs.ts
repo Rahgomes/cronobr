@@ -18,6 +18,7 @@ const stepShape = z.object({
   disabled: z.boolean().optional(),
   sides: z.boolean().optional(),
   early: z.boolean().optional(),
+  bpm: int.optional(),
 });
 
 export const routineShape: z.ZodType<Routine> = z.object({

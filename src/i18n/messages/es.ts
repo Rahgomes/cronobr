@@ -56,6 +56,7 @@ export const es: Messages = {
       repsMax: (max) => `Las repeticiones pueden llegar a ${String(max)}.`,
       repsNeeded: 'Una etapa sin tiempo necesita repeticiones.',
       restNeedsTime: 'El descanso necesita tiempo.',
+      bpmRange: (min: number, max: number) => `Cadencia entre ${String(min)} y ${String(max)} BPM.`,
       roundsWhole: 'Las rondas deben ser un número entero.',
       roundsMin: 'El bloque necesita al menos 1 ronda.',
       roundsMax: (max) => `El bloque puede tener hasta ${String(max)} rondas.`,
@@ -179,6 +180,8 @@ export const es: Messages = {
     voiceHint: 'Dice el ejercicio, el tiempo y lo que sigue.',
     vibration: 'Vibración',
     vibrationHint: 'Para el móvil en el bolsillo, sin auriculares.',
+    pulse: 'Pulso de cadencia',
+    pulseHint: 'Metrónomo en las etapas con BPM. Calla mientras la app habla y en la cuenta final.',
     enableSound: 'Activa el sonido para usar la cuenta atrás.',
     lockedHint:
       'Con la pantalla bloqueada, los cambios de fase llegan como notificaciones con el mismo sonido. El volumen sigue el del dispositivo y se respeta el modo silencioso.',
@@ -256,6 +259,11 @@ export const es: Messages = {
     settings: 'Ajustes',
   },
   editor: {
+    cadence: 'Metrónomo en esta etapa',
+    cadenceHint: 'Pulso al ritmo elegido mientras corre la etapa.',
+    bpm: 'Cadencia',
+    previewBeats: 'Escuchar 4 pulsos',
+    bpmShort: (bpm: number) => `${String(bpm)} BPM`,
     leaveTitle: '¿Salir del editor?',
     leaveMessage: 'Tus cambios se guardan como borrador.',
     continueEditing: 'Seguir editando',
@@ -352,6 +360,7 @@ export const es: Messages = {
     deleteTitle: (name) => `¿Borrar "${name}"?`,
   },
   session: {
+    cadence: (bpm: number) => `Cadencia ${String(bpm)} BPM`,
     stopTitle: '¿Terminar el entrenamiento?',
     stopMessage: 'Lo que ya hiciste queda guardado en el historial.',
     continueWorkout: 'Continuar entrenamiento',

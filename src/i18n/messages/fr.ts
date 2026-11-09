@@ -56,6 +56,7 @@ export const fr: Messages = {
       repsMax: (max) => `Les répétitions peuvent aller jusqu'à ${String(max)}.`,
       repsNeeded: 'Une étape sans temps a besoin de répétitions.',
       restNeedsTime: "Le repos a besoin d'un temps.",
+      bpmRange: (min: number, max: number) => `Cadence entre ${String(min)} et ${String(max)} BPM.`,
       roundsWhole: 'Les tours doivent être un nombre entier.',
       roundsMin: "Le bloc a besoin d'au moins 1 tour.",
       roundsMax: (max) => `Le bloc peut avoir jusqu'à ${String(max)} tours.`,
@@ -182,6 +183,9 @@ export const fr: Messages = {
     voiceHint: 'Annonce l’exercice, la durée et la suite.',
     vibration: 'Vibration',
     vibrationHint: 'Pour le téléphone dans la poche, sans écouteurs.',
+    pulse: 'Pouls de cadence',
+    pulseHint:
+      "Métronome sur les étapes avec un BPM. Se tait quand l'app parle et pendant le compte final.",
     enableSound: 'Activez le son pour utiliser le décompte.',
     lockedHint:
       'Écran verrouillé, les changements de phase arrivent en notification avec le même son. Le volume suit celui de l’appareil et le mode silencieux est respecté.',
@@ -259,6 +263,11 @@ export const fr: Messages = {
     settings: 'Réglages',
   },
   editor: {
+    cadence: 'Métronome sur cette étape',
+    cadenceHint: "Un pouls au tempo choisi pendant l'étape.",
+    bpm: 'Cadence',
+    previewBeats: 'Écouter 4 battements',
+    bpmShort: (bpm: number) => `${String(bpm)} BPM`,
     leaveTitle: 'Quitter l’éditeur ?',
     leaveMessage: 'Vos modifications sont conservées en brouillon.',
     continueEditing: 'Continuer à modifier',
@@ -356,6 +365,7 @@ export const fr: Messages = {
     deleteTitle: (name) => `Supprimer « ${name} » ?`,
   },
   session: {
+    cadence: (bpm: number) => `Cadence ${String(bpm)} BPM`,
     stopTitle: "Terminer l'entraînement ?",
     stopMessage: "Ce que vous avez fait reste enregistré dans l'historique.",
     continueWorkout: "Continuer l'entraînement",

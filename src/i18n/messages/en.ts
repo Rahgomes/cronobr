@@ -56,6 +56,8 @@ export const en: Messages = {
       repsMax: (max) => `Reps can go up to ${String(max)}.`,
       repsNeeded: 'A step without time needs reps.',
       restNeedsTime: 'Rest needs a time.',
+      bpmRange: (min: number, max: number) =>
+        `Cadence must be ${String(min)} to ${String(max)} BPM.`,
       roundsWhole: 'Rounds must be a whole number.',
       roundsMin: 'The block needs at least 1 round.',
       roundsMax: (max) => `The block can have up to ${String(max)} rounds.`,
@@ -176,6 +178,9 @@ export const en: Messages = {
     voiceHint: 'Announces the exercise, time and what is next.',
     vibration: 'Vibration',
     vibrationHint: 'For your phone in your pocket, without headphones.',
+    pulse: 'Cadence pulse',
+    pulseHint:
+      'Metronome on steps with a BPM. Goes quiet while the app speaks and during the final count.',
     enableSound: 'Turn on sound to use the countdown.',
     lockedHint:
       'With the screen locked, phase changes arrive as notifications with the same sound. Volume follows your device settings and silent mode is respected.',
@@ -253,6 +258,11 @@ export const en: Messages = {
     settings: 'Settings',
   },
   editor: {
+    cadence: 'Metronome on this step',
+    cadenceHint: 'A pulse at the chosen tempo while the step runs.',
+    bpm: 'Cadence',
+    previewBeats: 'Hear 4 beats',
+    bpmShort: (bpm: number) => `${String(bpm)} BPM`,
     leaveTitle: 'Leave the editor?',
     leaveMessage: 'Your changes are kept as a draft.',
     continueEditing: 'Keep editing',
@@ -349,6 +359,7 @@ export const en: Messages = {
     deleteTitle: (name) => `Delete "${name}"?`,
   },
   session: {
+    cadence: (bpm: number) => `Cadence ${String(bpm)} BPM`,
     stopTitle: 'End workout?',
     stopMessage: "What you've done stays saved in history.",
     continueWorkout: 'Continue workout',

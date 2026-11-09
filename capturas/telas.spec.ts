@@ -129,3 +129,27 @@ test('metrônomo (E07 B)', async ({ page }) => {
   await shot(page, '21-metronomo');
   await page.getByRole('button', { name: 'Parar' }).click();
 });
+
+test('cadência na etapa (E07 C)', async ({ page }) => {
+  test.setTimeout(60_000);
+  await page.goto('/');
+  await page.getByRole('button', { name: /^Tabata: / }).click();
+  await page.getByRole('button', { name: 'Opções de Tabata clássico' }).click();
+  await page.getByRole('button', { name: 'Editar uma cópia' }).click();
+  await page.getByLabel('Nome da rotina').fill('Tabata ritmado');
+  await page.getByRole('button', { name: /^Exercício, 0:20\. Editar etapa$/ }).click();
+  await page.getByRole('switch', { name: 'Metrônomo nesta etapa' }).click();
+  for (let i = 0; i < 6; i += 1) {
+    await page.getByRole('button', { name: 'Aumentar Cadência' }).click();
+  }
+  await page.getByRole('button', { name: 'Ouvir 4 batidas' }).scrollIntoViewIfNeeded();
+  await shot(page, '22-etapa-cadencia');
+  await page.getByRole('button', { name: 'Fechar' }).click();
+  await page.getByRole('button', { name: 'Salvar', exact: true }).click();
+  await page.getByRole('button', { name: /^Tabata ritmado, / }).click();
+  await page.getByRole('switch', { name: 'Travar a tela ao começar' }).click();
+  await page.getByRole('button', { name: 'Começar', exact: true }).click();
+  await expect(page.getByLabel('Cadência 120 BPM')).toBeVisible({ timeout: 15_000 });
+  await page.waitForTimeout(3_200);
+  await shot(page, '23-sessao-cadencia');
+});

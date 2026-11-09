@@ -51,6 +51,8 @@ altura, para mostrar a tela toda de uma vez.
 | `19-temporizador-terminou` | Temporizadores | Diálogo "Ovo terminou" |
 | `20-inicio-temporizadores` | Início | Visão compacta dos ativos |
 | `21-metronomo` | Metrônomo (E07) | Tocando a 120 BPM, pulso aceso |
+| `22-etapa-cadencia` | Editor, folha da etapa | Metrônomo nesta etapa a 120 BPM, com prévia |
+| `23-sessao-cadencia` | Sessão | Exercício com cadência 120 BPM e pulso |
 
 ## Línguas (idiomas/)
 

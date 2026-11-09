@@ -21,6 +21,8 @@ export interface CuePrefs {
   vibration: boolean;
   /** Beep curto nos 3 últimos segundos de cada etapa com tempo. */
   countdown: boolean;
+  /** Pulso do metrônomo nas etapas com cadência (E07 C). */
+  pulse: boolean;
   sounds: Record<SoundSlot, SoundId>;
 }
 
@@ -29,6 +31,7 @@ export const DEFAULT_CUE_PREFS: CuePrefs = {
   voice: true,
   vibration: true,
   countdown: true,
+  pulse: true,
   sounds: { prep: 'beepLong', work: 'bell', rest: 'whistle', finish: 'finish' },
 };
 
@@ -181,6 +184,7 @@ export function parseCuePrefs(raw: unknown): CuePrefs {
     voice: isBool(o.voice) ? o.voice : d.voice,
     vibration: isBool(o.vibration) ? o.vibration : d.vibration,
     countdown: isBool(o.countdown) ? o.countdown : d.countdown,
+    pulse: isBool(o.pulse) ? o.pulse : d.pulse,
     sounds: { prep: slot('prep'), work: slot('work'), rest: slot('rest'), finish: slot('finish') },
   };
 }

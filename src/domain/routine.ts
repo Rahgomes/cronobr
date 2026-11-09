@@ -34,6 +34,8 @@ export interface Step {
    * rodada começa na hora certa (o relógio não muda).
    */
   early?: boolean | undefined;
+  /** Cadência (E07 C): pulso do metrônomo, em BPM, enquanto a etapa roda. Sem campo = sem pulso. */
+  bpm?: number | undefined;
 }
 
 export interface Block {

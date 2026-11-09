@@ -141,6 +141,27 @@ describe('editor de rotinas', () => {
     });
   });
 
+  it('cadência na etapa: liga, ajusta o BPM, aparece na linha e é gravada; desligar tira', async () => {
+    const { repos } = await appRepos();
+    await renderApp(<EditorScreen id="nova" />, repos);
+    await fireEvent.changeText(await screen.findByLabelText('Nome da rotina'), 'Corrida');
+    await fireEvent.press(screen.getByRole('button', { name: /^Exercício, 0:30\. Editar etapa$/ }));
+    expect(screen.queryByRole('button', { name: 'Aumentar Cadência' })).toBeNull();
+    await fireEvent(screen.getByRole('switch', { name: 'Metrônomo nesta etapa' }), 'press');
+    expect(screen.getByLabelText('Cadência: 90 BPM')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Aumentar Cadência' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Fechar' }));
+    expect(
+      screen.getByRole('button', { name: /^Exercício, 0:30, 95 BPM\. Editar etapa$/ }),
+    ).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
+    await waitFor(async () => {
+      const [saved] = await repos.routines.list();
+      expect(saved?.blocks[0]?.steps[0]).toMatchObject({ bpm: 95 });
+      expect(saved?.blocks[0]?.steps[1]?.bpm).toBeUndefined();
+    });
+  });
+
   it('modelo pronto vira cópia; o modelo não muda', async () => {
     const { repos } = await appRepos();
     await renderApp(<EditorScreen id="nova" from="tabata-classic" />, repos);

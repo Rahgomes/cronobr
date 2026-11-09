@@ -76,6 +76,15 @@ describe('limites da rotina', () => {
     ).toEqual(['Informe pelo menos 1 repetição.']);
   });
 
+  it('cadência: inteira, de 30 a 240 BPM', () => {
+    const paced = (bpm: number) =>
+      routine({ blocks: [block({ steps: [step({ kind: 'work', bpm })] })] });
+    expect(messages(paced(170))).toEqual([]);
+    expect(messages(paced(20))).toEqual(['Cadência entre 30 e 240 BPM.']);
+    expect(messages(paced(300))).toEqual(['Cadência entre 30 e 240 BPM.']);
+    expect(messages(paced(90.5))).toEqual(['Cadência entre 30 e 240 BPM.']);
+  });
+
   it('bloco: sem etapa, sem exercício, rodadas fora do limite', () => {
     expect(messages(routine({ blocks: [block({ steps: [] })] }))).toEqual([
       'O bloco precisa de pelo menos 1 etapa.',

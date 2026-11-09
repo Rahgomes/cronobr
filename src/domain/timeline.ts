@@ -21,6 +21,8 @@ export interface Segment {
   rounds: number | null;
   /** EMOM: "Terminei" antes do fim transforma o resto em descanso. */
   early?: boolean | undefined;
+  /** Cadência da etapa, em BPM (E07 C). */
+  bpm?: number | undefined;
 }
 
 type Draft = Omit<Segment, 'index'>;
@@ -34,6 +36,7 @@ function stepDraft(step: Step, block: number, round: number, rounds: number, sid
     name: step.name,
     ...(side ? { side } : {}),
     ...(step.early && step.kind === 'work' && step.seconds !== null ? { early: true } : {}),
+    ...(step.bpm === undefined ? {} : { bpm: step.bpm }),
     durationMs: step.seconds === null ? null : step.seconds * SECOND,
     reps: step.reps,
     block,

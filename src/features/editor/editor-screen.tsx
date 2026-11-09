@@ -418,7 +418,7 @@ export function EditorScreen({
                     accessibilityRole="button"
                     accessibilityLabel={t.editor.editStepLabel(
                       step.name,
-                      amount,
+                      step.bpm === undefined ? amount : `${amount}, ${t.editor.bpmShort(step.bpm)}`,
                       step.disabled === true,
                     )}
                     onPress={() => {
@@ -436,6 +436,11 @@ export function EditorScreen({
                           {t.editor.disabled}
                         </Text>
                       ) : null}
+                      {step.bpm === undefined ? null : (
+                        <Text variant="caption" color="textMuted" tabular>
+                          {t.editor.bpmShort(step.bpm)}
+                        </Text>
+                      )}
                     </View>
                     <Text variant="label" tabular color={step.disabled ? 'textMuted' : 'text'}>
                       {amount}

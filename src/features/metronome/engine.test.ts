@@ -86,10 +86,24 @@ describe('motor do metrônomo', () => {
     const audio = fakeAudio();
     const end = jest.fn();
     const m = new Metronome(audio.clock, jest.fn(), end);
-    m.start(240, 0, true);
+    m.start(240, 0, { preview: true });
     jest.advanceTimersByTime(3_000);
     expect(live(audio.clicks)).toHaveLength(4);
     expect(end).toHaveBeenCalledTimes(1);
     expect(m.running).toBe(false);
+  });
+
+  it('batida calada: sem som, mas a tela pulsa e o compasso não muda', () => {
+    const audio = fakeAudio();
+    const pulse = jest.fn();
+    const m = new Metronome(audio.clock, pulse, jest.fn());
+    // Cala o primeiro segundo (como a frase da troca de etapa).
+    m.start(120, 0, { muted: (since) => since < 1000 });
+    jest.advanceTimersByTime(3_000);
+    const heard = live(audio.clicks);
+    expect(heard[0]).toBeCloseTo(1.06, 6);
+    expect(heard[1]).toBeCloseTo(1.56, 6);
+    expect(pulse.mock.calls.length).toBeGreaterThanOrEqual(6);
+    m.stop();
   });
 });

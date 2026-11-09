@@ -9,7 +9,7 @@ backup gravado pela E05 lido e restaurado igual (`compat-e05.test.ts`).
 | --- | --- | --- |
 | A | Vários temporizadores: criar com nome, iniciar, pausar, repetir e encerrar cada um; visão compacta dos ativos; estado preservado ao navegar e reabrir; limite de 10; um relógio só para todos; conclusão de cada um com nome; avisos agrupados por dono (o treino não apaga os dos temporizadores) e política de colisão; convivência com um treino ativo | Feito |
 | B | Metrônomo: BPM de 30 a 240, pulso visual e sonoro, prévia, offline; agendamento pelo relógio de áudio (não por `setInterval`); variação entre batidas medida; ajuste de atraso para fone Bluetooth | Feito |
-| C | Cadência na etapa do treino: BPM opcional por etapa no editor; prioridade entre pulso, voz e aviso de troca de etapa; formato `.cronobr` aceita o campo novo sem quebrar o app antigo | A fazer |
+| C | Cadência na etapa do treino: BPM opcional por etapa no editor; prioridade entre pulso, voz e aviso de troca de etapa; formato `.cronobr` aceita o campo novo sem quebrar o app antigo | Feito |
 | D | Modelos adicionais: estudo e foco, tarefas pessoais, "sequência do profissional" (nomes e tempos recebidos), todos editáveis e nas 4 línguas | A fazer |
 | E | Testes de resistência: temporizadores terminando juntos, treino com cadência, troca de saída de áudio, tela bloqueada, consumo; roteiro de aparelho para o APK | A fazer |
 
@@ -85,3 +85,55 @@ e `/metronomo` na varredura de alvos de toque. Captura `21`.
 | D104 | **Toca só com a tela aberta**: ao sair da tela ou mandar o app para o fundo, para; enquanto toca, a tela fica acesa | Tocar em segundo plano exigiria serviço em primeiro plano no Android (declaração na loja) e modo de áudio no iPhone. O plugin ligava tudo isso por padrão; desligamos. Se o lote C pedir cadência com a tela apagada, decide-se lá |
 | D105 | **Atraso do fone só no pulso da tela** (manual, 0 a 400 ms em passos de 20, mais a latência que o aparelho informar) | O som não dá para adiantar; o que se acerta é a tela esperar o som chegar. Medir o atraso do Bluetooth sozinho exige microfone, e o app não pede microfone |
 | D106 | **Lib nativa carregada na hora de usar**; sem ela, o metrônomo explica que está indisponível e o resto do app segue | Importar no topo num binário sem o módulo derrubaria o app inteiro. A versão 2.0.0 ainda não tem binário: o APK único já sai com a lib (`runtimeVersion` = versão do app, então correção pelo ar não chega a binário antigo) |
+
+## Lote C · Cadência na etapa do treino
+
+| Item | Onde |
+| --- | --- |
+| `bpm` opcional na etapa (30 a 240), levado a cada segmento da linha do tempo (inclusive nos dois lados) | `src/domain/routine.ts`, `timeline.ts` |
+| Limite no editor e na importação ("Cadência entre 30 e 240 BPM") | `src/domain/limits.ts` |
+| Prioridade no ouvido e janelas de silêncio do pulso | `src/domain/cadence.ts` (5 testes) |
+| Motor: batida calada continua contando e pulsando na tela, só sem som | `src/features/metronome/engine.ts` (`muted`) |
+| Pulso na sessão: recomeça a cada troca de etapa, para na pausa e com o app no fundo; selo "Cadência 120 BPM" com os 4 pontos no topo, nas três visualizações | `src/features/session/use-cadence.ts`, `session-view.tsx` (5 testes) |
+| Editor: "Metrônomo nesta etapa", BPM de 5 em 5 e "Ouvir 4 batidas" (prévia antes de iniciar); a linha da etapa mostra o BPM | `step-sheet.tsx`, `editor-screen.tsx` (3 testes) |
+| "Pulso da cadência" nos Avisos, ligado por padrão | `src/domain/cues.ts`, `cue-settings-screen.tsx` |
+| Arquivo e banco com o campo novo; impressão de duplicata considera o BPM | `transfer.ts`, `codecs.ts`, `docs/spec/formato-cronobr.md` |
+
+### Prioridade entre pulso, voz e aviso de troca
+
+| Ordem | Aviso | Janela em que o som do pulso cala |
+| --- | --- | --- |
+| 1 | Conclusão do treino | O pulso já parou (fim da última etapa) |
+| 2 | Troca de etapa (som da fase e frase) | 2,5 s do começo da etapa, se som ou voz estiverem ligados |
+| 3 | Contagem 3, 2, 1 | 3 s finais, se som e contagem estiverem ligados |
+| 4 | "Metade do tempo" | 1,5 s a partir da metade, em exercício de 30 s ou mais com voz |
+| 5 | Pulso | Resto da etapa; nunca passa do fim dela |
+
+Testes: a sessão a 120 BPM ouve batidas só entre 2,5 s e 17 s numa etapa de 20 s, para na
+caminhada sem cadência, volta na corrida seguinte de novo depois da frase; com voz, som e
+contagem desligados toca a etapa inteira. No Chromium real (E2E `cadencia.spec.ts`), a primeira
+batida do treino sai entre 2,5 s e 3,7 s do começo da etapa, os intervalos ficam exatos a 90 BPM
+e a pausa não marca mais nenhuma.
+
+### Compatibilidade com o app anterior
+
+O `.cronobr` continua na `schemaVersion` 1. O arquivo `src/test/fixtures/rotina-cadencia-e07.cronobr`,
+gravado pelo código de agora, foi aberto pelo código do commit `49ad67a` (antes deste lote) numa
+`git worktree`: abriu sem erro, com a mesma duração (5:40), só sem o `bpm`. A mesma rotina gravada
+no banco pela versão nova também abre na anterior. O teste permanente
+`src/features/transfer/compat-e07.test.ts` confere que a versão de agora mantém o BPM de cada etapa.
+
+Testes: domínio (cadência 5, linha do tempo 1, limites 1, arquivo 1 e o fixture com BPM na ida e
+volta), motor (1), sessão (5), editor (3), Avisos (2), compatibilidade (1), E2E `cadencia.spec.ts`
+(1 caso x 2 temas, com axe). Capturas `22` e `23`.
+
+### Decisões do lote C
+
+| # | Decisão | Por quê |
+| --- | --- | --- |
+| D107 | **BPM por etapa**, opcional, em qualquer etapa (não por bloco nem por rotina) | Corrida e caminhada alternadas pedem ritmos diferentes no mesmo bloco. No editor vai de 5 em 5 (de 30 a 240 são 42 toques no pior caso); o arquivo aceita qualquer inteiro da faixa |
+| D108 | **O pulso cala o som, não abaixa o volume**, nas janelas dos avisos mais importantes; a tela continua pulsando | A voz do aparelho não deixa o app abaixar outro som só durante a frase. Calar é previsível, dá para testar e não embola duas coisas no ouvido. O ritmo não se perde porque a contagem das batidas segue |
+| D109 | **O pulso recomeça em cada troca de etapa** e para na pausa e com o app no fundo | Alinhado ao começo da etapa, a janela da frase cai no lugar certo. Com o app no fundo continuam as notificações das trocas (D104 mantida: sem serviço em primeiro plano) |
+| D110 | **Campo novo não sobe a `schemaVersion`** | A versão anterior descarta campo desconhecido e abre a rotina; subir a versão faria a anterior recusar o arquivo inteiro ("atualize o app") por causa de um extra |
+| D111 | **"Pulso da cadência" nos Avisos**, ligado por padrão; o atraso do fone do metrônomo vale também para o pulso do treino | Quem não quer o clique desliga num lugar só, sem editar cada rotina. O fone é o mesmo nas duas telas |
+| D112 | **Selo da cadência no topo da sessão**, embaixo do nome da rotina | Na primeira versão ficou abaixo do cartão "Próxima", fora da tela num celular de 390 x 844 (a captura mostrou). No topo aparece nas três visualizações sem empurrar o tempo |

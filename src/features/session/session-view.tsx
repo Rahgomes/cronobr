@@ -10,11 +10,16 @@ import { restingEarly, type Session } from '@/domain/engine';
 import type { SessionEvent } from '@/domain/events';
 import { clock, duration } from '@/domain/format';
 import { historyFromSession } from '@/domain/history';
+import { METRONOME_START, parseMetronome } from '@/domain/metronome';
 import { DEFAULT_SESSION_PREFS, parseSessionPrefs } from '@/domain/session-prefs';
 import { summarize, type Segment } from '@/domain/timeline';
 import { isAway } from '@/features/cues/away';
 import { useCues } from '@/features/cues/cue-context';
 import { setSessionRunning } from '@/features/cues/session-active';
+import { createAudioClock } from '@/features/metronome/audio-clock';
+import type { AudioClock } from '@/features/metronome/engine';
+import { METRONOME_KEY } from '@/features/metronome/metronome-screen';
+import { Pulse } from '@/features/metronome/pulse';
 import { useT } from '@/i18n/i18n-context';
 import type { Messages } from '@/i18n/messages/pt';
 import { Button } from '@/ui/button';
@@ -39,6 +44,7 @@ import {
   ViewSwitch,
   WideControl,
 } from './session-controls';
+import { useCadence } from './use-cadence';
 import { useSessionRunner } from './use-session-runner';
 import { useTouchLock } from './use-touch-lock';
 
@@ -59,6 +65,7 @@ export function SessionView({
   clockSource = systemClock,
   autoStart = false,
   again,
+  audioClock = createAudioClock,
 }: {
   initial: Session;
   clockSource?: Clock;
@@ -66,11 +73,14 @@ export function SessionView({
   autoStart?: boolean;
   /** "Repetir ao concluir": recomeça depois de AGAIN_DELAY_MS, a não ser que a pessoa pare. */
   again?: (() => void) | undefined;
+  /** Relógio de áudio do pulso da cadência; os testes passam um falso. */
+  audioClock?: () => AudioClock | null;
 }) {
   const repos = useRepos();
   const t = useT();
   const w = t.words;
   const { port, prefs } = useCues();
+  const [phaseStamp, setPhaseStamp] = useState(0);
   const runner = useSessionRunner({
     initial,
     repo: repos.session,
@@ -87,6 +97,7 @@ export function SessionView({
       if (!isAway()) port.play(cuesFor(events, runner.timeline, prefs, w));
       announce(events, t);
       const phase = events.find((event) => event.type === 'phase');
+      if (phase) setPhaseStamp((n) => n + 1);
       const segment = phase ? runner.timeline[phase.segment] : undefined;
       if (segment) AccessibilityInfo.announceForAccessibility(segmentTitle(segment, w));
     },
@@ -104,6 +115,24 @@ export function SessionView({
   const running = session.status === 'running';
   const window = useWindowDimensions();
   const room = sessionRoom(window.width, window.height);
+  const [metronomePrefs] = useStored(METRONOME_KEY, parseMetronome, METRONOME_START);
+
+  const current = timeline[snap.segment];
+  const resting = restingEarly(session, snap);
+  // EMOM terminado antes: a tela mostra descanso até a virada do minuto (e sem pulso).
+  const segment: Segment | undefined =
+    current && resting
+      ? { ...current, phase: 'rest', name: null, side: undefined, early: false, bpm: undefined }
+      : current;
+  const cadence = useCadence({
+    segment,
+    elapsedMs: snap.elapsedMs,
+    running,
+    phaseStamp,
+    prefs,
+    offsetMs: metronomePrefs.offsetMs,
+    createClock: audioClock,
+  });
 
   useEffect(() => {
     if (autoStart && runner.session.status === 'ready') runner.start();
@@ -262,13 +291,6 @@ export function SessionView({
     );
   }
 
-  const current = timeline[snap.segment];
-  const resting = restingEarly(session, snap);
-  // EMOM terminado antes: a tela mostra descanso até a virada do minuto.
-  const segment: Segment | undefined =
-    current && resting
-      ? { ...current, phase: 'rest', name: null, side: undefined, early: false }
-      : current;
   const manual = segment?.durationMs === null;
   const canFinishEarly = segment?.early === true;
   const amrap = session.routine.modality === 'amrap';
@@ -380,14 +402,29 @@ export function SessionView({
         {...(focus ? { tone: 'onPhase' as const } : {})}
         onPress={locked ? blocked : touch(confirmStop)}
       />
-      <Text
-        variant="caption"
-        color={focus ? 'onPhaseMuted' : 'textMuted'}
-        style={styles.routineName}
-        numberOfLines={2}
-      >
-        {session.routine.name}
-      </Text>
+      <View style={styles.middle}>
+        <Text
+          variant="caption"
+          color={focus ? 'onPhaseMuted' : 'textMuted'}
+          style={styles.routineName}
+          numberOfLines={2}
+        >
+          {session.routine.name}
+        </Text>
+        {cadence.bpm === null ? null : (
+          // Cadência no topo: aparece nas três visualizações sem empurrar o tempo para baixo.
+          <View
+            style={[styles.cadence, { backgroundColor: colors.surface }]}
+            accessible
+            accessibilityLabel={t.session.cadence(cadence.bpm)}
+          >
+            <Text variant="caption" tabular>
+              {t.session.cadence(cadence.bpm)}
+            </Text>
+            <Pulse beat={cadence.beat} small />
+          </View>
+        )}
+      </View>
       <LockButton
         locked={locked}
         lock={lock.lock}
@@ -450,7 +487,8 @@ const styles = StyleSheet.create({
     gap: space.sm,
     paddingTop: space.md,
   },
-  routineName: { flex: 1, textAlign: 'center' },
+  middle: { flex: 1, alignItems: 'center', gap: space.xs },
+  routineName: { textAlign: 'center' },
   ready: { alignItems: 'flex-end', paddingTop: space.md },
   content: { gap: space.lg },
   actions: { gap: space.md },
@@ -458,6 +496,14 @@ const styles = StyleSheet.create({
   switchBox: { alignSelf: 'center', borderRadius: radius.pill, padding: space.xs },
   option: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   grow: { flex: 1 },
+  cadence: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+    borderRadius: radius.pill,
+    paddingVertical: space.xs,
+    paddingHorizontal: space.md,
+  },
   wide: { flexDirection: 'row', gap: space.lg, flexGrow: 1 },
   side: { width: CONTROLS_WIDTH, gap: space.md },
   sideActions: { flexGrow: 1, justifyContent: 'center' },

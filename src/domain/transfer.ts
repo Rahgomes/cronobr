@@ -50,6 +50,9 @@ const stepFile = z.object({
   disabled: z.boolean().optional(),
   sides: z.boolean().optional(),
   early: z.boolean().optional(),
+  // E07 C. O app anterior descarta este campo ao ler (z.object tira o que não conhece): abre a
+  // rotina sem a cadência, sem erro. Por isso o schemaVersion continua 1.
+  bpm: z.number().int().optional(),
 });
 
 const blockFile = z.object({
@@ -139,6 +142,7 @@ function routineBody(routine: Routine): RoutineFile {
         ...(step.disabled ? { disabled: true } : {}),
         ...(step.sides ? { sides: true } : {}),
         ...(step.early ? { early: true } : {}),
+        ...(step.bpm === undefined ? {} : { bpm: step.bpm }),
       })),
     })),
   };
@@ -256,6 +260,7 @@ function routineFrom(
         ...(step.disabled ? { disabled: true } : {}),
         ...(step.sides ? { sides: true } : {}),
         ...(step.early ? { early: true } : {}),
+        ...(step.bpm === undefined ? {} : { bpm: step.bpm }),
       })),
     })),
     ...extra,
@@ -395,6 +400,7 @@ export function fingerprint(routine: Routine): string {
         !!step.disabled,
         !!step.sides,
         !!step.early,
+        step.bpm ?? null,
       ]),
     ]),
   ]);

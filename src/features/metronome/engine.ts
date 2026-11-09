@@ -52,6 +52,8 @@ export class Metronome {
   private loop: ReturnType<typeof setTimeout> | null = null;
   private lastAt: number | null = null;
   private limit = Infinity;
+  private origin = 0;
+  private muted: (sinceStartMs: number) => boolean = () => false;
   private bpm = 90;
   private offsetMs = 0;
   readonly marked: Marked[] = [];
@@ -67,7 +69,17 @@ export class Metronome {
     return this.cursor !== null;
   }
 
-  start(bpm: number, offsetMs: number, preview = false) {
+  /**
+   * `muted` cala o som de uma batida (a tela ainda pulsa), pelo tempo desde o começo: é como o
+   * treino dá a vez para a voz e a contagem (E07 C).
+   */
+  start(
+    bpm: number,
+    offsetMs: number,
+    options: { preview?: boolean; muted?: (sinceStartMs: number) => boolean } = {},
+  ) {
+    const preview = options.preview === true;
+    this.muted = options.muted ?? (() => false);
     this.stop();
     this.bpm = bpm;
     this.offsetMs = offsetMs;
@@ -75,7 +87,8 @@ export class Metronome {
     this.lastAt = null;
     this.marked.length = 0;
     this.missed = 0;
-    this.cursor = startCursor(this.clock.now);
+    this.origin = this.clock.now;
+    this.cursor = startCursor(this.origin);
     this.refill();
   }
 
@@ -120,7 +133,9 @@ export class Metronome {
     this.cursor = next;
     const latency = this.clock.outputLatency * 1000 + this.offsetMs;
     for (const beat of beats) {
-      const cancel = this.clock.click(beat.at);
+      const cancel = this.muted((beat.at - this.origin) * 1000)
+        ? () => undefined
+        : this.clock.click(beat.at);
       const visual = setTimeout(
         () => {
           this.onBeat({ index: beat.index });

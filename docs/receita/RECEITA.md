@@ -233,3 +233,16 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   perde a última escrita se a página recarregar no meio; recarregar de novo não traz de volta.
   No E2E, antes de recarregar, sair e voltar à tela: a leitura entra na mesma fila serial depois
   da escrita, então ver o valor ali prova que ele está gravado. Local passava; o CI, mais lento, não.
+- **09/11 — E07 C, campo novo sem quebrar o app anterior:** com `z.object` (que descarta o que
+  não conhece) na leitura, campo opcional novo não precisa subir a versão do formato. Provar de
+  verdade: gravar o arquivo pelo código novo num fixture, abrir uma `git worktree` no commit
+  anterior (com `node_modules` por symlink) e rodar ali um teste descartável que lê o fixture.
+  Mais forte que raciocinar sobre o schema.
+- **09/11 — Fila adiantada passa do fim:** metrônomo com fila de 1,5 s marca batidas depois do
+  fim da etapa; se a troca for percebida 250 ms depois, uma batida cai em cima do apito. A janela
+  "depois do fim" calada resolveu. Achado pelo teste de tela com o relógio do treino e o do áudio
+  andando juntos em passos de 250 ms.
+- **09/11 — Batida calada não é marcada:** ao medir de fora (registrando `start(quando)`), a
+  primeira batida audível aparece marcada por um reabastecimento posterior, não no começo. Para
+  medir "quanto depois do começo", usar o relógio do próprio contexto de áudio, que nasce junto
+  com a etapa.

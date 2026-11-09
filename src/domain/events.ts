@@ -6,7 +6,7 @@ import type { Snapshot } from './engine';
 import type { Phase, Segment } from './timeline';
 
 const LATE_MS = 1500;
-const HALFWAY_MIN_MS = 30_000;
+export const HALFWAY_MIN_MS = 30_000;
 
 export type SessionEvent =
   | { type: 'phase'; segment: number; phase: Phase; late: boolean }

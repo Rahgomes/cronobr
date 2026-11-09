@@ -268,6 +268,7 @@ describe('preferências gravadas', () => {
       voice: true,
       vibration: false,
       countdown: false,
+      pulse: false,
       sounds: { prep: 'gong', work: 'whistle', rest: 'beepLong', finish: 'bell' },
     };
     expect(parseCuePrefs(mine)).toEqual(mine);

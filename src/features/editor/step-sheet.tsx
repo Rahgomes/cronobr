@@ -2,7 +2,10 @@ import { StyleSheet, View } from 'react-native';
 
 import { clock } from '@/domain/format';
 import { LIMITS } from '@/domain/limits';
+import { BPM_MAX, BPM_MIN, METRONOME_START } from '@/domain/metronome';
 import type { Step } from '@/domain/routine';
+import type { AudioClock } from '@/features/metronome/engine';
+import { useBeatPreview } from '@/features/metronome/use-preview';
 import { useT } from '@/i18n/i18n-context';
 import { Button } from '@/ui/button';
 import { Chip } from '@/ui/chip';
@@ -27,12 +30,16 @@ export function StepSheet({
   step,
   actions,
   onClose,
+  createClock,
 }: {
   step: Step | null;
   actions: StepActions;
   onClose: () => void;
+  /** Relógio de áudio da prévia da cadência; os testes passam um falso. */
+  createClock?: () => AudioClock | null;
 }) {
   const t = useT();
+  const preview = useBeatPreview(createClock);
   if (!step)
     return (
       <Sheet title="" visible={false} onClose={onClose}>
@@ -138,6 +145,38 @@ export function StepSheet({
           }}
         />
       ) : null}
+      <Toggle
+        label={t.editor.cadence}
+        hint={t.editor.cadenceHint}
+        value={step.bpm !== undefined}
+        onChange={(on) => {
+          actions.change({ bpm: on ? METRONOME_START.bpm : undefined });
+        }}
+      />
+      {step.bpm === undefined ? null : (
+        <>
+          <Stepper
+            label={t.editor.bpm}
+            value={step.bpm}
+            min={BPM_MIN}
+            max={BPM_MAX}
+            step={5}
+            format={t.editor.bpmShort}
+            onChange={(bpm) => {
+              actions.change({ bpm });
+            }}
+          />
+          <Button
+            label={t.editor.previewBeats}
+            kind="secondary"
+            disabled={preview.playing || preview.unavailable}
+            disabledHint={preview.unavailable ? t.metronome.unavailable : undefined}
+            onPress={() => {
+              if (step.bpm !== undefined) preview.play(step.bpm);
+            }}
+          />
+        </>
+      )}
       <View style={styles.actions}>
         <Button label={t.editor.insertAfter} kind="secondary" onPress={actions.insertAfter} />
         <Button label={t.editor.duplicate} kind="secondary" onPress={actions.duplicate} />

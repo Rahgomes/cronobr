@@ -105,6 +105,21 @@ describe('linha do tempo', () => {
     });
   });
 
+  it('cadência da etapa vai para cada segmento dela, inclusive nos dois lados', () => {
+    const r = routine({
+      blocks: [
+        block({
+          repeat: 1,
+          steps: [
+            step({ kind: 'work', seconds: 30, bpm: 170, sides: true }),
+            step({ kind: 'work', seconds: 30 }),
+          ],
+        }),
+      ],
+    });
+    expect(buildTimeline(r).map((s) => s.bpm)).toEqual([170, 170, undefined]);
+  });
+
   it('resumo soma o que tem tempo e conta o que é manual', () => {
     const r = routine({
       prepSeconds: 5,

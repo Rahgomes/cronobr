@@ -27,6 +27,7 @@ export interface LimitWords {
   repsMax: (max: number) => string;
   repsNeeded: string;
   restNeedsTime: string;
+  bpmRange: (min: number, max: number) => string;
   roundsWhole: string;
   roundsMin: string;
   roundsMax: (max: number) => string;

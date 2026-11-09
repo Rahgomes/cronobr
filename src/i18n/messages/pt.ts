@@ -59,6 +59,7 @@ export const pt = {
       repsMax: (max: number) => `As repetições podem ir até ${String(max)}.`,
       repsNeeded: 'Etapa sem tempo precisa de repetições.',
       restNeedsTime: 'Descanso precisa de tempo.',
+      bpmRange: (min: number, max: number) => `Cadência entre ${String(min)} e ${String(max)} BPM.`,
       roundsWhole: 'As rodadas precisam ser um número inteiro.',
       roundsMin: 'O bloco precisa de pelo menos 1 rodada.',
       roundsMax: (max: number) => `O bloco pode ter até ${String(max)} rodadas.`,
@@ -182,6 +183,8 @@ export const pt = {
     voiceHint: 'Diz o exercício, o tempo e o próximo.',
     vibration: 'Vibração',
     vibrationHint: 'Para o celular no bolso, sem fone.',
+    pulse: 'Pulso da cadência',
+    pulseHint: 'Metrônomo nas etapas com BPM. Cala enquanto o app fala e na contagem final.',
     enableSound: 'Ligue o som para usar a contagem.',
     lockedHint:
       'Com a tela bloqueada, as trocas de fase chegam como notificação com o mesmo som. O volume segue o do aparelho, e o modo silencioso é respeitado.',
@@ -261,6 +264,11 @@ export const pt = {
     settings: 'Ajustes',
   },
   editor: {
+    cadence: 'Metrônomo nesta etapa',
+    cadenceHint: 'Pulso no ritmo escolhido enquanto a etapa roda.',
+    bpm: 'Cadência',
+    previewBeats: 'Ouvir 4 batidas',
+    bpmShort: (bpm: number) => `${String(bpm)} BPM`,
     leaveTitle: 'Sair do editor?',
     leaveMessage: 'Suas alterações ficam guardadas como rascunho.',
     continueEditing: 'Continuar editando',
@@ -356,6 +364,7 @@ export const pt = {
     deleteTitle: (name: string) => `Apagar "${name}"?`,
   },
   session: {
+    cadence: (bpm: number) => `Cadência ${String(bpm)} BPM`,
     stopTitle: 'Encerrar o treino?',
     stopMessage: 'O que você já fez fica salvo no histórico.',
     continueWorkout: 'Continuar treino',
