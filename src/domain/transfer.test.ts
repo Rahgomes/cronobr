@@ -262,6 +262,18 @@ describe('arquivos recusados antes de mexer em qualquer dado', () => {
   });
 });
 
+describe('arquivo que passou por outro sistema (E08, fluxos 5 e 6)', () => {
+  it('com BOM, quebras CRLF e indentado: abre igual', () => {
+    const text = routineFileText(rich, '2.0.0', NOW);
+    const pretty = JSON.stringify(JSON.parse(text), null, 2).replace(/\n/g, '\r\n');
+    for (const variant of [`\uFEFF${text}`, pretty, `\uFEFF${pretty}\r\n`]) {
+      const file = ok(variant);
+      if (file.kind !== 'routine') throw new Error(file.kind);
+      expect(fingerprint(file.routine)).toBe(fingerprint(rich));
+    }
+  });
+});
+
 describe('modalidade de uma versão mais nova do app', () => {
   it('abre como personalizada, com o resto igual (E07 D)', () => {
     const text = routineFileText(rich, '2.0.0', NOW).replace(

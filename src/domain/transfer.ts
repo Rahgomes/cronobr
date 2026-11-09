@@ -306,7 +306,8 @@ export function readTransferFile(
   }
   let raw: unknown;
   try {
-    raw = JSON.parse(text);
+    // BOM no começo: editor de texto ou app de mensagem que regravou o arquivo (E08).
+    raw = JSON.parse(text.startsWith('\uFEFF') ? text.slice(1) : text);
   } catch {
     return fail('notJson', f.notJson);
   }

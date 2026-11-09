@@ -172,6 +172,10 @@ export const pt = {
     restorePoint: (date: string) => `Cópia de como estava em ${date}, antes de substituir tudo.`,
   },
   cues: {
+    blockedTitle: 'Notificações bloqueadas',
+    blocked:
+      'Com a tela à vista tudo funciona. Com a tela bloqueada, as trocas de fase e o fim dos temporizadores não avisam até você liberar as notificações do CronôBR.',
+    openSettings: 'Abrir configurações',
     channel: (name: string) => `Treino: ${name}`,
     silentChannel: 'Treino: sem som',
     title: 'Som e avisos',

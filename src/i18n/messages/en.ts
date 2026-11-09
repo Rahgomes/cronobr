@@ -167,6 +167,10 @@ export const en: Messages = {
     restorePoint: (date) => `Copy of the state on ${date}, before replacing everything.`,
   },
   cues: {
+    blockedTitle: 'Notifications blocked',
+    blocked:
+      "Everything works while the screen is on. With the screen locked, phase changes and timer ends won't alert you until you allow CronôBR notifications.",
+    openSettings: 'Open settings',
     channel: (name) => `Workout: ${name}`,
     silentChannel: 'Workout: no sound',
     title: 'Sound and cues',

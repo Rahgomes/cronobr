@@ -54,10 +54,9 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-async function open(routineId: string | undefined = 'tabata-classic') {
+async function open(routineId: string | undefined = 'tabata-classic', port = fakePort()) {
   const env = await unlockedRepos();
   const clock = fakeClock();
-  const port = fakePort();
   await renderApp(<SessionScreen routineId={routineId} clockSource={clock} />, env.repos, port);
   /** O relógio anda e o intervalo da tela dispara uma vez (ou várias, se `ticks`). */
   const advance = async (ms: number, ticks = 1) => {
@@ -81,6 +80,14 @@ describe('sessão', () => {
     expect(await screen.findByRole('header', { name: 'Tabata clássico' })).toBeOnTheScreen();
     expect(screen.getByText('Duração total: 4:00')).toBeOnTheScreen();
     expect(screen.getByText('8 exercícios')).toBeOnTheScreen();
+    expect(screen.queryByText('Notificações bloqueadas')).toBeNull();
+  });
+
+  it('notificação recusada: a prévia avisa, e o treino começa igual (E08, fluxo 8)', async () => {
+    await open('tabata-classic', fakePort('off'));
+    expect(await screen.findByText('Notificações bloqueadas')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Começar' }));
+    expect(screen.getByRole('header', { name: 'Preparação' })).toBeOnTheScreen();
   });
 
   it('começa na preparação e anda pelas fases conforme o relógio', async () => {

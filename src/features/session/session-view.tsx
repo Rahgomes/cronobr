@@ -15,6 +15,7 @@ import { DEFAULT_SESSION_PREFS, parseSessionPrefs } from '@/domain/session-prefs
 import { summarize, type Segment } from '@/domain/timeline';
 import { isAway } from '@/features/cues/away';
 import { useCues } from '@/features/cues/cue-context';
+import { NotificationsBlocked } from '@/features/cues/notifications-blocked';
 import { setSessionRunning } from '@/features/cues/session-active';
 import { createAudioClock } from '@/features/metronome/audio-clock';
 import type { AudioClock } from '@/features/metronome/engine';
@@ -256,6 +257,7 @@ export function SessionView({
           <Text variant="display" accessibilityRole="header">
             {session.routine.name}
           </Text>
+          <NotificationsBlocked />
           <Card>
             <Text variant="label">{t.session.totalDuration(clock(summary.knownMs))}</Text>
             <Text color="textMuted">

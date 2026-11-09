@@ -284,4 +284,14 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   `.filter({ visible: true })`. (2) Criar 10 itens seguidos por um formulário que fecha deslizando:
   o clique seguinte pega o formulário antigo. Esperar o item novo aparecer e o campo sumir antes do
   próximo. Rodar 4 vezes seguidas antes de confiar.
+- **09/11 — E08 A, mapear antes de escrever teste:** listar cada exigência do PRD ao lado do teste
+  que já a prova mostrou que quase tudo existia; as lacunas reais eram poucas e duas eram defeito
+  (arquivo com BOM recusado; permissão de notificação recusada sem nenhum aviso). Mapa primeiro,
+  teste novo só onde o mapa ficou vazio.
+- **09/11 — "Primeira abertura offline" na web:** sem service worker não há abertura offline de
+  verdade, mas dá para provar o que importa: `page.route('**/*')` derrubando tudo que não é o
+  próprio servidor e conferindo que o app nem tentou nada de fora (fonte, ícone, CDN).
+- **09/11 — Aviso clicável esconde o texto do leitor de tela:** um `Pressable` com rótulo vira um
+  botão só com o rótulo; a explicação dentro dele some para o TalkBack. Explicação e botão
+  separados.
 

@@ -6,7 +6,7 @@ import * as Haptics from 'expo-haptics';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import * as Notifications from 'expo-notifications';
 import * as Speech from 'expo-speech';
-import { Platform } from 'react-native';
+import { Linking, Platform } from 'react-native';
 
 import type { PlannedAlert } from '@/domain/alerts';
 import type { Language } from '@/domain/appearance';
@@ -16,7 +16,7 @@ import { deviceLanguageTags } from '@/i18n/device';
 import { MESSAGES } from '@/i18n/i18n-context';
 
 import { isAway } from './away';
-import { OWNER_MAX, type AlertOwner, type CuePort } from './port';
+import { OWNER_MAX, type AlertOwner, type CuePort, type NotifyState } from './port';
 
 const SOURCES: Record<SoundId, number> = {
   beepShort: require('@assets/sounds/beepShort.wav') as number,
@@ -96,6 +96,16 @@ async function setupNotifications() {
       sound: null,
     }),
   ]);
+}
+
+async function notifyState(): Promise<NotifyState> {
+  try {
+    const current = await Notifications.getPermissionsAsync();
+    if (current.granted) return 'on';
+    return current.canAskAgain ? 'ask' : 'off';
+  } catch {
+    return 'none';
+  }
 }
 
 async function ensurePermission(): Promise<boolean> {
@@ -218,6 +228,10 @@ export function createExpoPort(): CuePort {
     keepAwake: (on) => {
       const run = on ? activateKeepAwakeAsync(KEEP_AWAKE_TAG) : deactivateKeepAwake(KEEP_AWAKE_TAG);
       run.catch(ignore);
+    },
+    notifications: () => (native ? notifyState() : Promise.resolve('none')),
+    openSettings: () => {
+      Linking.openSettings().catch(ignore);
     },
   };
 }

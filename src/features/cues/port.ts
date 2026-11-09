@@ -4,6 +4,13 @@ import type { Cues, SoundId } from '@/domain/cues';
 
 export type AlertOwner = 'sessao' | 'temporizadores';
 
+/**
+ * Permissão de notificação: `on` liberada, `ask` ainda dá para pedir (o app pede ao começar),
+ * `off` recusada sem poder pedir de novo (só nas configurações do aparelho), `none` onde não há
+ * notificação agendada (web).
+ */
+export type NotifyState = 'on' | 'ask' | 'off' | 'none';
+
 /** Teto por dono: juntos cabem nos 64 pendentes do iPhone, com folga (D96). */
 export const OWNER_MAX: Record<AlertOwner, number> = { sessao: 50, temporizadores: 10 };
 
@@ -23,6 +30,10 @@ export interface CuePort {
   schedule: (owner: AlertOwner, alerts: PlannedAlert[]) => void;
   /** Tela acesa durante o treino. */
   keepAwake: (on: boolean) => void;
+  /** Como está a permissão de notificação agora (E08: fluxo "recusar permissões"). */
+  notifications: () => Promise<NotifyState>;
+  /** Abre as configurações do app no aparelho, para liberar a notificação. */
+  openSettings: () => void;
 }
 
 /** Porta muda: sem módulo nativo disponível (ou antes da carga), nada acontece e nada quebra. */
@@ -31,4 +42,6 @@ export const silentPort: CuePort = {
   preview: () => undefined,
   schedule: () => undefined,
   keepAwake: () => undefined,
+  notifications: () => Promise.resolve('none'),
+  openSettings: () => undefined,
 };

@@ -169,6 +169,10 @@ export const es: Messages = {
     restorePoint: (date) => `Copia del estado del ${date}, antes de reemplazar todo.`,
   },
   cues: {
+    blockedTitle: 'Notificaciones bloqueadas',
+    blocked:
+      'Con la pantalla a la vista todo funciona. Con la pantalla bloqueada, los cambios de fase y el fin de los temporizadores no avisan hasta que permitas las notificaciones de CronôBR.',
+    openSettings: 'Abrir ajustes',
     channel: (name) => `Entrenamiento: ${name}`,
     silentChannel: 'Entrenamiento: sin sonido',
     title: 'Sonido y avisos',

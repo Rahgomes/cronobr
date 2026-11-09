@@ -172,6 +172,10 @@ export const fr: Messages = {
     restorePoint: (date) => `Copie de l’état du ${date}, avant de tout remplacer.`,
   },
   cues: {
+    blockedTitle: 'Notifications bloquées',
+    blocked:
+      'Tout fonctionne écran allumé. Écran verrouillé, les changements de phase et la fin des minuteurs ne vous préviennent pas tant que les notifications de CronôBR ne sont pas autorisées.',
+    openSettings: 'Ouvrir les réglages',
     channel: (name) => `Entraînement : ${name}`,
     silentChannel: 'Entraînement : sans son',
     title: 'Sons et alertes',

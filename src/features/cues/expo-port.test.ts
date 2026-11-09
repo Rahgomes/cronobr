@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import * as Notifications from 'expo-notifications';
 import * as Speech from 'expo-speech';
-import { Platform } from 'react-native';
+import { Linking, Platform } from 'react-native';
 
 import type { PlannedAlert } from '@/domain/alerts';
 import { must } from '@/test/domain';
@@ -294,5 +294,25 @@ describe('porta real dos avisos', () => {
     port.keepAwake(false);
     expect(activateKeepAwakeAsync).toHaveBeenCalledWith('sessao');
     expect(deactivateKeepAwake).toHaveBeenCalledWith('sessao');
+  });
+
+  it('estado da permissão: liberada, dá para pedir, recusada; na web não existe', async () => {
+    const port = createExpoPort();
+    expect(await port.notifications()).toBe('on');
+    N.getPermissionsAsync.mockResolvedValue({ granted: false, canAskAgain: true } as never);
+    expect(await port.notifications()).toBe('ask');
+    N.getPermissionsAsync.mockResolvedValue({ granted: false, canAskAgain: false } as never);
+    expect(await port.notifications()).toBe('off');
+    N.getPermissionsAsync.mockRejectedValue(new Error('sem módulo'));
+    expect(await port.notifications()).toBe('none');
+    setOS('web');
+    expect(await createExpoPort().notifications()).toBe('none');
+  });
+
+  it('abrir configurações leva às do app; falha não derruba', async () => {
+    const open = jest.spyOn(Linking, 'openSettings').mockRejectedValue(new Error('não deu'));
+    createExpoPort().openSettings();
+    await flush();
+    expect(open).toHaveBeenCalledTimes(1);
   });
 });

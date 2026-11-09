@@ -8,7 +8,7 @@ import type { Repos } from '@/data/repos';
 import { sqliteRepos } from '@/data/sqlite-repos';
 import type { Instant } from '@/domain/engine';
 import { CueProvider } from '@/features/cues/cue-context';
-import type { CuePort } from '@/features/cues/port';
+import type { CuePort, NotifyState } from '@/features/cues/port';
 import { FilePortProvider, type FilePort } from '@/features/transfer/file-port';
 import { DialogHost } from '@/ui/dialog';
 import { ThemeProvider } from '@/ui/theme-context';
@@ -66,8 +66,10 @@ export function fakeClock(start = 0, wallOffset = 1_700_000_000_000) {
 }
 
 /** Porta de avisos falsa: registra o que a tela pediu para tocar, agendar e manter acesa. */
-export function fakePort() {
+export function fakePort(notify: NotifyState = 'on') {
   const port = {
+    notifications: jest.fn(() => Promise.resolve(notify)),
+    openSettings: jest.fn<undefined, []>(),
     play: jest.fn<undefined, Parameters<CuePort['play']>>(),
     preview: jest.fn<undefined, Parameters<CuePort['preview']>>(),
     schedule: jest.fn<undefined, Parameters<CuePort['schedule']>>(),

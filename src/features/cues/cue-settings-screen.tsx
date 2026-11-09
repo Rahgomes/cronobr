@@ -12,6 +12,7 @@ import { space } from '@/ui/tokens';
 import { TopBar } from '@/ui/top-bar';
 
 import { useCues } from './cue-context';
+import { NotificationsBlocked } from './notifications-blocked';
 
 type Toggle = 'sound' | 'voice' | 'vibration' | 'countdown' | 'pulse';
 
@@ -35,6 +36,7 @@ export function CueSettingsScreen() {
   return (
     <Screen>
       <TopBar title={t.cues.title} />
+      <NotificationsBlocked />
       <Card>
         {toggles.map(({ key, label, hint }) => (
           <View key={key} style={styles.row}>
