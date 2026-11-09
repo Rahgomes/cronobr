@@ -7,8 +7,8 @@ import { snapshot, type Instant, type Session } from './engine';
 import type { Segment } from './timeline';
 import type { Words } from './words';
 
-/** O iOS guarda até 64 notificações pendentes por app; sobra folga para as de outros fluxos. */
-export const MAX_ALERTS = 60;
+/** O iOS guarda até 64 notificações pendentes por app; o treino fica com 50 e os temporizadores com 10 (D96). */
+export const MAX_ALERTS = 50;
 
 export interface PlannedAlert {
   /** Relógio civil (Date.now) em que a etapa começa. */

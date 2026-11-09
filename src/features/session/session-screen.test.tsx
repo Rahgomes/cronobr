@@ -262,17 +262,17 @@ describe('sessão', () => {
   describe('avisos', () => {
     it('começar agenda as trocas futuras e acende a tela; pausar cancela e apaga', async () => {
       const { port, clock } = await startTabata();
-      const plan = must(port.schedule.mock.calls.at(-1))[0];
+      const plan = must(port.schedule.mock.calls.at(-1))[1];
       expect(plan).toHaveLength(16);
       expect(plan[0]).toMatchObject({ at: clock.now().wall + 10_000, title: 'Vai, 20 segundos' });
       expect(port.keepAwake).toHaveBeenLastCalledWith(true);
 
       await fireEvent.press(screen.getByRole('button', { name: 'Pausar' }));
-      expect(port.schedule).toHaveBeenLastCalledWith([]);
+      expect(port.schedule).toHaveBeenLastCalledWith('sessao', []);
       expect(port.keepAwake).toHaveBeenLastCalledWith(false);
 
       await fireEvent.press(screen.getByRole('button', { name: 'Retomar' }));
-      expect(must(port.schedule.mock.calls.at(-1))[0]).toHaveLength(16);
+      expect(must(port.schedule.mock.calls.at(-1))[1]).toHaveLength(16);
     });
 
     it('troca de fase com o app na tela toca o som, fala e vibra uma vez', async () => {
@@ -332,7 +332,7 @@ describe('sessão', () => {
       const { port } = await startTabata();
       await fireEvent.press(screen.getByRole('button', { name: 'Encerrar treino' }));
       await fireEvent.press(screen.getByRole('button', { name: 'Encerrar' }));
-      expect(port.schedule).toHaveBeenLastCalledWith([]);
+      expect(port.schedule).toHaveBeenLastCalledWith('sessao', []);
       expect(port.keepAwake).toHaveBeenLastCalledWith(false);
     });
   });

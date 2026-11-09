@@ -28,6 +28,7 @@ import { RoundAction } from '@/ui/top-bar';
 import { LastRoutine } from './last-routine';
 import { QuickTiles } from './quick-tiles';
 import { RoutineRow } from './routine-row';
+import { TimersSummary } from './timers-summary';
 
 interface HomeData {
   active: Session | null;
@@ -160,6 +161,7 @@ export function HomeScreen() {
       ) : null}
 
       <QuickTiles />
+      <TimersSummary />
 
       {data?.active ? (
         <Notice

@@ -35,7 +35,8 @@ jest.mock('expo-notifications', () => ({
   getPermissionsAsync: jest.fn(),
   requestPermissionsAsync: jest.fn(),
   getExactAlarmPermissionsAsync: jest.fn(() => Promise.resolve({ granted: true })),
-  cancelAllScheduledNotificationsAsync: jest.fn(() => Promise.resolve()),
+  getAllScheduledNotificationsAsync: jest.fn(() => Promise.resolve([])),
+  cancelScheduledNotificationAsync: jest.fn(() => Promise.resolve()),
   scheduleNotificationAsync: jest.fn(() => Promise.resolve('id')),
   AndroidImportance: { HIGH: 4 },
   AndroidNotificationVisibility: { PUBLIC: 1 },
@@ -178,10 +179,10 @@ describe('porta real dos avisos', () => {
     setOS('web');
     const port = createExpoPort();
     port.play({ sound: null, speech: null, haptic: 'phase' });
-    port.schedule([ALERT]);
+    port.schedule('sessao', [ALERT]);
     await flush();
     expect(Haptics.impactAsync).not.toHaveBeenCalled();
-    expect(N.cancelAllScheduledNotificationsAsync).not.toHaveBeenCalled();
+    expect(N.getAllScheduledNotificationsAsync).not.toHaveBeenCalled();
     expect(N.setNotificationHandler).not.toHaveBeenCalled();
   });
 
@@ -199,13 +200,14 @@ describe('porta real dos avisos', () => {
     });
   });
 
-  it('agendar troca tudo: cancela e agenda com som, canal e alarme exato', async () => {
+  it('agendar troca os do dono: cancela e agenda com som, canal e alarme exato', async () => {
     const port = createExpoPort();
-    port.schedule([ALERT, { ...ALERT, at: 2_000, sound: null }]);
+    port.schedule('sessao', [ALERT, { ...ALERT, at: 2_000, sound: null }]);
     await flush();
     await flush();
-    expect(N.cancelAllScheduledNotificationsAsync).toHaveBeenCalled();
+    expect(N.getAllScheduledNotificationsAsync).toHaveBeenCalled();
     expect(N.scheduleNotificationAsync).toHaveBeenCalledWith({
+      identifier: 'sessao:0',
       content: {
         title: ALERT.title,
         body: ALERT.body,
@@ -225,7 +227,7 @@ describe('porta real dos avisos', () => {
   it('iOS usa melhor esforço; sem permissão (e sem poder pedir) só cancela', async () => {
     setOS('ios');
     const port = createExpoPort();
-    port.schedule([ALERT]);
+    port.schedule('sessao', [ALERT]);
     await flush();
     await flush();
     expect(N.scheduleNotificationAsync).toHaveBeenCalledWith(
@@ -235,10 +237,10 @@ describe('porta real dos avisos', () => {
     );
     jest.clearAllMocks();
     N.getPermissionsAsync.mockResolvedValue({ granted: false, canAskAgain: false } as never);
-    port.schedule([ALERT]);
+    port.schedule('sessao', [ALERT]);
     await flush();
     await flush();
-    expect(N.cancelAllScheduledNotificationsAsync).toHaveBeenCalled();
+    expect(N.getAllScheduledNotificationsAsync).toHaveBeenCalled();
     expect(N.scheduleNotificationAsync).not.toHaveBeenCalled();
   });
 
@@ -246,7 +248,7 @@ describe('porta real dos avisos', () => {
     N.getPermissionsAsync.mockResolvedValue({ granted: false, canAskAgain: true } as never);
     N.requestPermissionsAsync.mockResolvedValue({ granted: false } as never);
     const port = createExpoPort();
-    port.schedule([ALERT]);
+    port.schedule('sessao', [ALERT]);
     await flush();
     await flush();
     expect(N.requestPermissionsAsync).toHaveBeenCalledTimes(1);
@@ -255,10 +257,35 @@ describe('porta real dos avisos', () => {
 
   it('lista vazia só cancela, sem pedir permissão', async () => {
     const port = createExpoPort();
-    port.schedule([]);
+    port.schedule('sessao', []);
     await flush();
-    expect(N.cancelAllScheduledNotificationsAsync).toHaveBeenCalled();
+    expect(N.getAllScheduledNotificationsAsync).toHaveBeenCalled();
     expect(N.getPermissionsAsync).not.toHaveBeenCalled();
+  });
+
+  it('cada dono cancela só os seus (o antigo, sem dono, é da sessão) e respeita o teto', async () => {
+    N.getAllScheduledNotificationsAsync.mockResolvedValue(
+      ['sessao:0', 'sessao:1', 'temporizadores:0', 'a1b2-antigo'].map((identifier) => ({
+        identifier,
+      })) as never,
+    );
+    const port = createExpoPort();
+    port.schedule(
+      'temporizadores',
+      Array.from({ length: 14 }, (_, i) => ({ ...ALERT, at: i })),
+    );
+    await flush();
+    await flush();
+    const cancelled = () => N.cancelScheduledNotificationAsync.mock.calls.map(([id]) => id);
+    expect(cancelled()).toEqual(['temporizadores:0']);
+    expect(N.scheduleNotificationAsync).toHaveBeenCalledTimes(10);
+    expect(N.scheduleNotificationAsync).toHaveBeenLastCalledWith(
+      expect.objectContaining({ identifier: 'temporizadores:9' }),
+    );
+    jest.clearAllMocks();
+    port.schedule('sessao', []);
+    await flush();
+    expect(cancelled()).toEqual(['sessao:0', 'sessao:1', 'a1b2-antigo']);
   });
 
   it('tela acesa liga e desliga pela mesma etiqueta', () => {

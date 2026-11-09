@@ -15,12 +15,16 @@ import { PRESET_TEXT } from './presets';
 
 const ALL: Record<string, Messages> = { pt, en, es, fr };
 
+/** Argumentos que não são número nem texto (lista de nomes). */
+const SAMPLES: Record<string, unknown[]> = { '.timers.finished': [['Ovo', 'Chá', 'Pão']] };
+
 /** Cada folha: texto não vazio; função devolve texto não vazio com argumentos de exemplo. */
 function leaves(value: unknown, path: string, out: [string, string][]) {
   if (typeof value === 'string') out.push([path, value]);
   else if (typeof value === 'function') {
     const fn = value as (...args: unknown[]) => unknown;
-    const sample = Array.from({ length: fn.length }, (_, i) => (i % 2 ? 'Nome' : 2));
+    const sample =
+      SAMPLES[path] ?? Array.from({ length: fn.length }, (_, i) => (i % 2 ? 'Nome' : 2));
     out.push([path, String(fn(...sample))]);
   } else if (typeof value === 'object' && value !== null) {
     for (const [key, inner] of Object.entries(value)) leaves(inner, `${path}.${key}`, out);

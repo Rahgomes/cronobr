@@ -46,6 +46,10 @@ altura, para mostrar a tela toda de uma vez.
 | `14-historico` | Histórico | Um registro |
 | `15-backup` | Backup e transferência | Sem ponto de restauração |
 | `16-ajustes` | Ajustes | Padrão |
+| `17-temporizador-novo` | Temporizadores (E07) | Formulário de criar |
+| `18-temporizadores` | Temporizadores | Três: rodando, pausado, rodando |
+| `19-temporizador-terminou` | Temporizadores | Diálogo "Ovo terminou" |
+| `20-inicio-temporizadores` | Início | Visão compacta dos ativos |
 
 ## Línguas (idiomas/)
 

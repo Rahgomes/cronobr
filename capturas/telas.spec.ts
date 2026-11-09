@@ -84,3 +84,36 @@ test('telas', async ({ page }) => {
   await expect(page.getByRole('heading').first()).toBeVisible();
   await shot(page, '15-backup');
 });
+
+test('temporizadores (E07 A)', async ({ page }) => {
+  await page.clock.install({ time: T0 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Temporizadores' }).click();
+  await expect(page.getByRole('heading', { name: 'Temporizadores' })).toBeVisible();
+  const create = async (name: string, minutes: number) => {
+    await page.getByRole('button', { name: 'Novo temporizador' }).click();
+    await page.getByLabel('Nome').fill(name);
+    for (let m = 5; m < minutes; m += 1) {
+      await page.getByRole('button', { name: 'Aumentar Minutos' }).click();
+    }
+    for (let m = 5; m > minutes; m -= 1) {
+      await page.getByRole('button', { name: 'Diminuir Minutos' }).click();
+    }
+    if (name === 'Feijão') await shot(page, '17-temporizador-novo');
+    await page.getByRole('button', { name: `Iniciar ${String(minutes)}:00` }).click();
+  };
+  await create('Ovo', 1);
+  await create('Chá', 4);
+  await create('Feijão', 8);
+  await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
+  await page.clock.runFor(30_000);
+  await page.getByRole('button', { name: 'Pausar Chá' }).click();
+  await shot(page, '18-temporizadores');
+  await page.clock.runFor(40_000);
+  await expect(page.getByRole('heading', { name: 'Ovo terminou' })).toBeVisible();
+  await shot(page, '19-temporizador-terminou');
+  await page.getByRole('button', { name: 'OK' }).click();
+  await page.getByRole('button', { name: 'Voltar' }).click();
+  await expect(page.getByRole('button', { name: /^Temporizadores, / })).toBeVisible();
+  await shot(page, '20-inicio-temporizadores');
+});

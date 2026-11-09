@@ -14,6 +14,7 @@ import { DEFAULT_SESSION_PREFS, parseSessionPrefs } from '@/domain/session-prefs
 import { summarize, type Segment } from '@/domain/timeline';
 import { isAway } from '@/features/cues/away';
 import { useCues } from '@/features/cues/cue-context';
+import { setSessionRunning } from '@/features/cues/session-active';
 import { useT } from '@/i18n/i18n-context';
 import type { Messages } from '@/i18n/messages/pt';
 import { Button } from '@/ui/button';
@@ -75,7 +76,7 @@ export function SessionView({
     repo: repos.session,
     clock: clockSource,
     onMilestone: (next, now) => {
-      port.schedule(planAlerts(next, runner.timeline, now, prefs, w));
+      port.schedule('sessao', planAlerts(next, runner.timeline, now, prefs, w));
     },
     onEvents: (all, snap) => {
       // EMOM terminado antes: a metade do minuto já é descanso, não tem o que avisar.
@@ -123,11 +124,13 @@ export function SessionView({
   // Tela acesa só rodando; ao sair da tela de sessão, nada fica agendado nem aceso.
   useEffect(() => {
     port.keepAwake(running);
+    setSessionRunning(running);
   }, [port, running]);
   useEffect(
     () => () => {
       port.keepAwake(false);
-      port.schedule([]);
+      setSessionRunning(false);
+      port.schedule('sessao', []);
     },
     [port],
   );

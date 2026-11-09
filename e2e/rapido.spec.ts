@@ -4,7 +4,7 @@ import { expectNoAxeViolations } from './axe';
 
 test('temporizador: ajustar, nomear e cair na prévia certa', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Temporizador' }).click();
+  await page.getByRole('button', { name: 'Temporizador', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Temporizador' })).toBeVisible();
   await expectNoAxeViolations(page);
   await page.getByRole('button', { name: 'Aumentar Minutos' }).click();

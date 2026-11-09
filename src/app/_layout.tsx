@@ -10,6 +10,7 @@ import { resolveLanguage } from '@/domain/appearance';
 import { CueProvider } from '@/features/cues/cue-context';
 import { createExpoPort } from '@/features/cues/expo-port';
 import { AppearanceProvider } from '@/features/settings/appearance-context';
+import { TimersProvider } from '@/features/timers/timers-context';
 import { createFilePort } from '@/features/transfer/expo-file-port';
 import { FilePortProvider } from '@/features/transfer/file-port';
 import { deviceLanguageTags } from '@/i18n/device';
@@ -86,9 +87,11 @@ export default function RootLayout() {
             <AppearanceProvider>
               <HintProvider>
                 <CueProvider port={port}>
-                  <FilePortProvider port={files}>
-                    <AppStack />
-                  </FilePortProvider>
+                  <TimersProvider>
+                    <FilePortProvider port={files}>
+                      <AppStack />
+                    </FilePortProvider>
+                  </TimersProvider>
                 </CueProvider>
               </HintProvider>
             </AppearanceProvider>

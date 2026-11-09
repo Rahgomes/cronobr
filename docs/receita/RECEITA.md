@@ -208,3 +208,13 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   screencast + log do clique) mostrou o toque no lugar antigo do botão, porque a fonte dos ícones
   chega depois. Ícone sempre numa caixa do tamanho dele. Teste: `page.route('**/*.ttf')` com
   atraso e comparar a posição do botão antes e depois.
+- **09/11 — E07 A, agendamento por dono:** a porta de notificações começou com "troca tudo"
+  (cancelAll), ótimo para um fluxo só. O segundo fluxo (temporizadores) mostrou que começar um
+  treino apagaria o alarme do ovo. Identificador `dono:n` e cancelar só os do dono; o agendado
+  por versão antiga, sem dono, conta como do fluxo que já existia. Vale para todo app que agenda
+  notificação local de mais de um lugar.
+- **09/11 — Overlay global reprovado pelo axe:** uma faixa fixa por cima de todas as telas cobre
+  o "Voltar" do topo; o axe acusa alvo sobreposto. Para aviso que interrompe, usar o diálogo que
+  o app já tem. E no Playwright, o axe usa os timers da página: com `page.clock` parado ele não
+  termina, então soltar o relógio só durante a medição.
+

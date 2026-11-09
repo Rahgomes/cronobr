@@ -56,6 +56,7 @@ const ROUTES = [
   '/intervalado',
   '/temporizador',
   '/cronometro',
+  '/temporizadores',
   '/modalidade/tabata',
   '/rotina/nova?modalidade=circuito',
 ];

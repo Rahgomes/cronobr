@@ -16,7 +16,7 @@ import { deviceLanguageTags } from '@/i18n/device';
 import { MESSAGES } from '@/i18n/i18n-context';
 
 import { isAway } from './away';
-import type { CuePort } from './port';
+import { OWNER_MAX, type AlertOwner, type CuePort } from './port';
 
 const SOURCES: Record<SoundId, number> = {
   beepShort: require('@assets/sounds/beepShort.wav') as number,
@@ -105,8 +105,24 @@ async function ensurePermission(): Promise<boolean> {
   return (await Notifications.requestPermissionsAsync()).granted;
 }
 
-async function replaceAlerts(alerts: PlannedAlert[]) {
-  await Notifications.cancelAllScheduledNotificationsAsync();
+/**
+ * O identificador leva o dono na frente (`temporizadores:3`). O que não tem dono conhecido veio de
+ * uma versão anterior, que só agendava treino: conta como da sessão.
+ */
+const OWNERS = Object.keys(OWNER_MAX) as AlertOwner[];
+function belongsTo(owner: AlertOwner, identifier: string): boolean {
+  const prefix = OWNERS.find((o) => identifier.startsWith(`${o}:`));
+  return prefix ? prefix === owner : owner === 'sessao';
+}
+
+async function replaceAlerts(owner: AlertOwner, all: PlannedAlert[]) {
+  const pending = await Notifications.getAllScheduledNotificationsAsync();
+  await Promise.all(
+    pending
+      .filter((request) => belongsTo(owner, request.identifier))
+      .map((request) => Notifications.cancelScheduledNotificationAsync(request.identifier)),
+  );
+  const alerts = all.slice(0, OWNER_MAX[owner]);
   if (alerts.length === 0 || !(await ensurePermission())) return;
   // alarmClock: o Android não adia (sem a permissão de alarme exato, cai no melhor esforço).
   const { granted: exact } =
@@ -114,8 +130,9 @@ async function replaceAlerts(alerts: PlannedAlert[]) {
       ? await Notifications.getExactAlarmPermissionsAsync()
       : { granted: false };
   await Promise.all(
-    alerts.map((alert) =>
+    alerts.map((alert, index) =>
       Notifications.scheduleNotificationAsync({
+        identifier: `${owner}:${String(index)}`,
         content: {
           title: alert.title,
           body: alert.body,
@@ -194,9 +211,9 @@ export function createExpoPort(): CuePort {
     preview: (sound) => {
       playSound(sound);
     },
-    schedule: (alerts) => {
+    schedule: (owner, alerts) => {
       if (!native) return;
-      queue = queue.then(() => replaceAlerts(alerts)).catch(ignore);
+      queue = queue.then(() => replaceAlerts(owner, alerts)).catch(ignore);
     },
     keepAwake: (on) => {
       const run = on ? activateKeepAwakeAsync(KEEP_AWAKE_TAG) : deactivateKeepAwake(KEEP_AWAKE_TAG);
