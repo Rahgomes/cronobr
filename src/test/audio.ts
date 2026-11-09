@@ -6,6 +6,12 @@ import type { AudioClock } from '@/features/metronome/engine';
  */
 interface FakeAudio {
   stall: number;
+  /**
+   * Relógio de áudio parado (ligação no iPhone, saída trocada, fone desligado): o tempo de áudio
+   * não anda enquanto o resto anda. `thaw` volta a andar de onde parou.
+   */
+  freeze: () => void;
+  thaw: () => void;
   resumed: number;
   closed: number;
   clicks: { at: number; cancelled: boolean }[];
@@ -14,14 +20,25 @@ interface FakeAudio {
 
 export function fakeAudio(): FakeAudio {
   const start = Date.now();
+  let frozenAt: number | null = null;
+  let lost = 0;
+  const raw = () => (Date.now() - start) / 1000 + audio.stall;
   const audio: FakeAudio = {
     stall: 0,
+    freeze: () => {
+      frozenAt = raw() - lost;
+    },
+    thaw: () => {
+      if (frozenAt === null) return;
+      lost = raw() - frozenAt;
+      frozenAt = null;
+    },
     resumed: 0,
     closed: 0,
     clicks: [],
     clock: {
       get now() {
-        return (Date.now() - start) / 1000 + audio.stall;
+        return frozenAt ?? raw() - lost;
       },
       outputLatency: 0,
       click: (at) => {

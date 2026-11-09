@@ -16,6 +16,7 @@ import { useStored } from '@/data/use-stored';
 import type { PlannedAlert } from '@/domain/alerts';
 import type { Instant } from '@/domain/engine';
 import {
+  announce,
   canAdd,
   collide,
   createTimer,
@@ -83,6 +84,8 @@ export function TimersProvider({
   const [now, setNow] = useState(() => clockSource.now());
   // O intervalo lê sempre a lista mais nova sem ser recriado a cada mudança.
   const latest = useRef({ timers, save });
+  // Fins já avisados junto com outro (D98): id -> hora do fim.
+  const announced = useRef<ReadonlyMap<string, number>>(new Map());
   // O botão do diálogo é tocado depois: usa as ações da lista mais nova.
   const actions = useRef<Pick<TimersState, 'repeat'>>({ repeat: noop });
   useEffect(() => {
@@ -99,11 +102,15 @@ export function TimersProvider({
       if (result.done.length === 0) return;
       latest.current.save(result.timers);
       const fresh = result.done.filter((timer) => at.wall - (timer.doneAt ?? 0) < STALE_MS);
-      if (fresh.length === 0) return;
-      const text = t.timers.finished(fresh.map((timer) => timer.name));
+      // Fins a menos de 1 s viram um aviso só, como na notificação agendada: sem isso o segundo
+      // diálogo trocava o primeiro e a segunda fala cortava a primeira.
+      const { group, announced: next } = announce(fresh, result.timers, announced.current);
+      announced.current = next;
+      if (group.length === 0) return;
+      const text = t.timers.finished(group.map((timer) => timer.name));
       // Aviso escrito no diálogo do app, por cima de qualquer tela (inclusive da sessão). Um só
       // terminou: dá para repetir dali mesmo.
-      const single = fresh.length === 1 ? fresh[0] : undefined;
+      const single = group.length === 1 ? group[0] : undefined;
       dialog.alert(text, undefined, [
         ...(single
           ? [

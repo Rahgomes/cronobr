@@ -36,7 +36,7 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-async function open(cuePrefs = DEFAULT_CUE_PREFS) {
+async function open(cuePrefs = DEFAULT_CUE_PREFS, paced = PACED) {
   const env = await appRepos();
   await env.repos.prefs.set(SESSION_PREFS_KEY, { view: 'anel', lockOnStart: false });
   await env.repos.prefs.set(CUE_PREFS_KEY, cuePrefs);
@@ -44,7 +44,7 @@ async function open(cuePrefs = DEFAULT_CUE_PREFS) {
   const audio = fakeAudio();
   const created = jest.fn(() => audio.clock);
   await renderApp(
-    <SessionView initial={createSession('s1', PACED)} clockSource={clock} audioClock={created} />,
+    <SessionView initial={createSession('s1', paced)} clockSource={clock} audioClock={created} />,
     env.repos,
     fakePort(),
   );
@@ -135,5 +135,52 @@ describe('cadência na sessão', () => {
     expect(Math.max(...heard)).toBeGreaterThan(18);
     // Nem com tudo desligado passa do fim da etapa.
     expect(Math.max(...heard)).toBeLessThan(20);
+  });
+
+  it('áudio parado no meio (ligação, fone desligado): ao voltar, a contagem final segue calada', async () => {
+    const { audio, advance } = await open();
+    await advance(8_000);
+    audio.freeze();
+    await advance(4_000);
+    expect(audio.resumed).toBeGreaterThan(1);
+    const frozenAt = audio.clock.now;
+    audio.thaw();
+    await advance(7_000);
+    // Relógio de áudio 4 s atrás do treino: o clique em `at` (áudio) toca em at + 4 s do treino.
+    const after = live(audio.clicks).filter((at) => at > frozenAt);
+    expect(after.length).toBeGreaterThan(0);
+    expect(Math.max(...after.map((at) => at + 4))).toBeLessThan(17);
+  });
+
+  it('tela bloqueada várias vezes num treino longo: um áudio só, nada acumula, volta no ritmo', async () => {
+    let listener: ((state: AppStateStatus) => void) | undefined;
+    jest.spyOn(AppState, 'addEventListener').mockImplementation((_, fn) => {
+      listener = fn;
+      return { remove: jest.fn() };
+    });
+    // 10 voltas de 30 s: o treino segue rodando durante os 20 bloqueios.
+    const long = { ...PACED, blocks: PACED.blocks.map((b) => ({ ...b, repeat: 10 })) };
+    const { audio, created, advance } = await open(DEFAULT_CUE_PREFS, long);
+    const counts: number[] = [];
+    // 20 bloqueios de 3 s, cada um no meio de uma corrida ou caminhada.
+    for (let i = 0; i < 20; i += 1) {
+      await advance(4_000);
+      await act(() => {
+        listener?.('background');
+      });
+      await advance(3_000);
+      await act(() => {
+        listener?.('active');
+      });
+      counts.push(jest.getTimerCount());
+    }
+    expect(created).toHaveBeenCalledTimes(1);
+    expect(audio.closed).toBe(0);
+    expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(8);
+    // Ainda no treino (140 s de 290, caminhando); na corrida seguinte (150 s) o pulso volta.
+    expect(screen.getByRole('timer')).toBeOnTheScreen();
+    const heard = live(audio.clicks).length;
+    await advance(14_000);
+    expect(live(audio.clicks).length).toBeGreaterThan(heard);
   });
 });

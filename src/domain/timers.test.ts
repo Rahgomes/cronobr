@@ -1,5 +1,6 @@
 import type { Instant } from './engine';
 import {
+  announce,
   canAdd,
   collide,
   createTimer,
@@ -141,3 +142,35 @@ function must<T>(value: T | undefined): T {
   if (value === undefined) throw new Error('faltou');
   return value;
 }
+
+describe('o que avisar na tela (D98, E07 E)', () => {
+  const run = (id: string, startWall: number) =>
+    start(createTimer(id, id, 60_000), { mono: 0, wall: startWall });
+  const done = (timer: Timer, doneAt: number | null): Timer => ({
+    ...timer,
+    status: 'done',
+    since: null,
+    remainingMs: 0,
+    doneAt,
+  });
+
+  it('junta quem ainda roda e termina a menos de 1 s; ao terminar, não avisa de novo', () => {
+    const a = run('a', 0);
+    const b = run('b', 400);
+    const c = run('c', 1_500);
+    const first = announce([done(a, 60_000)], [b, c], new Map());
+    expect(first.group.map((t) => t.id)).toEqual(['a', 'b']);
+    const second = announce([done(b, 60_400)], [c], first.announced);
+    expect(second.group).toEqual([]);
+    expect(second.announced.size).toBe(0);
+    expect(announce([done(c, 61_500)], [], second.announced).group.map((t) => t.id)).toEqual(['c']);
+  });
+
+  it('avisado em grupo mas terminou fora da janela (pausou no meio): avisa sozinho', () => {
+    const b = run('b', 400);
+    const late = announce([done(b, 70_000)], [], new Map([['b', 60_400]]));
+    expect(late.group.map((t) => t.id)).toEqual(['b']);
+    // Sem hora de fim gravada conta como 0: também fora da janela.
+    expect(announce([done(b, null)], [], new Map([['b', 60_400]])).group).toHaveLength(1);
+  });
+});

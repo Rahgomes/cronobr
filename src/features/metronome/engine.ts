@@ -30,6 +30,16 @@ export const HORIZON_S = 1.5;
 export const REFILL_MS = 250;
 /** Batidas guardadas para a medição de variação (as últimas). */
 const MEASURE_MAX = 512;
+/**
+ * Áudio que ficou mais que isto para trás do relógio do aparelho num passo do laço está parado
+ * (ligação no iPhone, saída trocada, fone desligado). Um passo normal difere em poucos ms.
+ */
+const LOST_MIN_S = 0.1;
+/** Enquanto o áudio está parado, pede para retomar no máximo a cada tanto. */
+const RESUME_EVERY_MS = 1000;
+
+/** Relógio do aparelho que só anda para a frente (o civil pode pular). */
+const wallNow = () => performance.now() / 1000;
 
 export interface BeatEvent {
   index: number;
@@ -54,6 +64,11 @@ export class Metronome {
   private limit = Infinity;
   private origin = 0;
   private muted: (sinceStartMs: number) => boolean = () => false;
+  /** Segundos em que o áudio ficou parado desde o começo (somam no "desde o começo"). */
+  private lostS = 0;
+  private lastAudio = 0;
+  private lastWall = 0;
+  private lastResume = -Infinity;
   private bpm = 90;
   private offsetMs = 0;
   readonly marked: Marked[] = [];
@@ -88,6 +103,9 @@ export class Metronome {
     this.marked.length = 0;
     this.missed = 0;
     this.origin = this.clock.now;
+    this.lostS = 0;
+    this.lastAudio = this.origin;
+    this.lastWall = wallNow();
     this.cursor = startCursor(this.origin);
     this.refill();
   }
@@ -128,12 +146,20 @@ export class Metronome {
       this.lastAt = p.at;
       return false;
     });
-    const { beats, cursor: next, missed } = fill(cursor, now, HORIZON_S, this.bpm, this.limit);
+    if (this.audioStopped(now)) {
+      this.schedule();
+      return;
+    }
+    const {
+      beats,
+      cursor: next,
+      missed,
+    } = fill(this.cursor ?? cursor, now, HORIZON_S, this.bpm, this.limit);
     this.missed += missed;
     this.cursor = next;
     const latency = this.clock.outputLatency * 1000 + this.offsetMs;
     for (const beat of beats) {
-      const cancel = this.muted((beat.at - this.origin) * 1000)
+      const cancel = this.muted((beat.at - this.origin + this.lostS) * 1000)
         ? () => undefined
         : this.clock.click(beat.at);
       const visual = setTimeout(
@@ -161,10 +187,41 @@ export class Metronome {
       );
       return;
     }
+    this.schedule();
+  }
+
+  private schedule() {
     this.loop = setTimeout(() => {
       this.loop = null;
       this.refill();
     }, REFILL_MS);
+  }
+
+  /**
+   * Áudio parado enquanto o aparelho seguiu: o que estava na fila tocaria atrasado (em cima da
+   * contagem final, por exemplo), então sai; a conta "desde o começo" soma o tempo perdido; e
+   * pede para retomar, porque no iPhone o áudio interrompido por ligação não volta sozinho.
+   * Devolve true enquanto continua parado (nada novo entra na fila).
+   */
+  private audioStopped(now: number): boolean {
+    const wall = wallNow();
+    const behind = wall - this.lastWall - (now - this.lastAudio);
+    const frozen = now === this.lastAudio;
+    this.lastAudio = now;
+    this.lastWall = wall;
+    if (behind <= LOST_MIN_S) return false;
+    this.lostS += behind;
+    const dropped = this.pending.filter((p) => p.at > now);
+    dropped.forEach(unmark);
+    this.pending = this.pending.filter((p) => p.at <= now);
+    const cursor = this.cursor;
+    if (cursor) this.cursor = retime(this.lastAt, cursor.index - dropped.length, now, this.bpm);
+    if (!frozen) return false;
+    if (wall * 1000 - this.lastResume >= RESUME_EVERY_MS) {
+      this.lastResume = wall * 1000;
+      this.clock.resume().catch(() => undefined);
+    }
+    return true;
   }
 }
 

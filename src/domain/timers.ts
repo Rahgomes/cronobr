@@ -173,3 +173,30 @@ export function parseTimers(raw: unknown): Timer[] {
   }
   return out;
 }
+
+/**
+ * O que avisar agora, pela mesma política da notificação agendada (D98): os que acabaram de
+ * terminar mais os que ainda rodam e terminam a menos de COLLISION_MS do primeiro deles.
+ * `announced` guarda, por id, a hora do fim já avisada em grupo: quando esse terminar dentro da
+ * janela, não avisa de novo; se mudou (pausado no meio), avisa sozinho.
+ */
+export function announce(
+  done: readonly Timer[],
+  timers: readonly Timer[],
+  announced: ReadonlyMap<string, number>,
+): { group: Timer[]; announced: Map<string, number> } {
+  const next = new Map(announced);
+  const fresh = done.filter((timer) => {
+    const expected = next.get(timer.id);
+    next.delete(timer.id);
+    return expected === undefined || Math.abs((timer.doneAt ?? 0) - expected) >= COLLISION_MS;
+  });
+  if (fresh.length === 0) return { group: [], announced: next };
+  const first = Math.min(...fresh.map((timer) => timer.doneAt ?? 0));
+  const soon = timers.flatMap((timer) => {
+    const at = endsAt(timer);
+    return at !== null && at - first < COLLISION_MS && !next.has(timer.id) ? [{ timer, at }] : [];
+  });
+  for (const { timer, at } of soon) next.set(timer.id, at);
+  return { group: [...fresh, ...soon.map((s) => s.timer)], announced: next };
+}

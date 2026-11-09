@@ -262,3 +262,21 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   com o primeiro modelo com etapa por repetições (espera toque, não tem duração). Filtrar pela
   propriedade (`manualCount === 0`) e afirmar quantos ficaram de fora, para o próximo modelo assim
   não sumir do teste sem aviso.
+- **09/11 — E07 E, teste de resistência acha defeito de verdade:** dois dos testes do PRD
+  ("timers concluindo juntos", "mudança de áudio") acharam bug que nenhum teste de função pegou.
+  Vale escrever o teste de resistência antes da correção e provar que ele falha sem ela (no E2E,
+  voltar o arquivo do commit anterior, exportar e rodar: falhou com `suspended`).
+- **09/11 — Simular "áudio parado" sem aparelho:** no Jest, um relógio de áudio falso com
+  `freeze`/`thaw` (o tempo de áudio para, o resto anda). No Chromium, guardar o `AudioContext`
+  criado (subclasse instalada por `addInitScript`) e chamar `suspend()` como o sistema faria numa
+  ligação.
+- **09/11 — Medir consumo no navegador:** CDP `HeapProfiler.collectGarbage` e depois
+  `Performance.getMetrics` (JSHeapUsedSize, Nodes, JSEventListeners); contar intervalos e
+  timeouts vivos embrulhando `setInterval`/`setTimeout` no `addInitScript` (sem `page.clock`, que
+  troca esses timers). Tela bloqueada no RN-web = `visibilitychange` com `document.visibilityState`
+  redefinido. Guardar os números como limite com folga, num tema só.
+- **09/11 — Duração em segundos inteiros esconde colisão fina:** temporizador com 60,4 s vira 61 s;
+  para testar fins a 400 ms, variar a hora de começo, não a duração.
+- **09/11 — `page.goto` no meio do E2E recarrega:** a gravação recém-feita pode morrer. Navegar
+  pelos botões do app e esperar a linha nova aparecer antes de sair da tela.
+

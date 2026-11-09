@@ -11,7 +11,7 @@ backup gravado pela E05 lido e restaurado igual (`compat-e05.test.ts`).
 | B | Metrônomo: BPM de 30 a 240, pulso visual e sonoro, prévia, offline; agendamento pelo relógio de áudio (não por `setInterval`); variação entre batidas medida; ajuste de atraso para fone Bluetooth | Feito |
 | C | Cadência na etapa do treino: BPM opcional por etapa no editor; prioridade entre pulso, voz e aviso de troca de etapa; formato `.cronobr` aceita o campo novo sem quebrar o app antigo | Feito |
 | D | Modelos adicionais: estudo e foco, tarefas pessoais, "sequência do profissional" (nomes e tempos recebidos), todos editáveis e nas 4 línguas | Feito |
-| E | Testes de resistência: temporizadores terminando juntos, treino com cadência, troca de saída de áudio, tela bloqueada, consumo; roteiro de aparelho para o APK | A fazer |
+| E | Testes de resistência: temporizadores terminando juntos, treino com cadência, troca de saída de áudio, tela bloqueada, consumo; roteiro de aparelho para o APK | Feito |
 
 ## Decisões de partida
 
@@ -168,3 +168,65 @@ tempo, criação e revisão no editor; sessão de estudo com "Foco" na tela. `/s
 | D116 | **Leitor tolerante e explícito**: aceita o jeito comum de escrever, e o que não entende é apontado pela linha, nunca adivinhado | Errar o tempo de um exercício de fisioterapia em silêncio é pior que pedir para corrigir uma linha. Séries viram etapas numeradas ("série 1 de 3") para a pessoa saber onde está |
 | D117 | **Descanso entre exercícios automático** (padrão 15 s, ajustável de 0 a 2 min), pulado quando a linha seguinte já é um descanso | A maioria das listas recebidas não escreve o descanso; quando escreve, vale o que o profissional mandou |
 | D118 | **Modalidade desconhecida abre como personalizada** (banco e arquivo) | Modalidade nova é o tipo de mudança que mais vai acontecer; recusar o arquivo inteiro por ela seria o mesmo problema que D110 evitou para campos. Nenhum binário com a lista antiga foi distribuído |
+
+## Lote E · Testes de resistência
+
+O que o PRD pede testar: temporizadores concluindo juntos, sessão ativa com cadência, mudança de
+áudio, tela bloqueada e consumo de recursos. Tudo que dá para provar sem aparelho foi provado em
+Jest (relógio falso) e no Chromium real (E2E). Dois testes acharam defeito, corrigido no lote.
+
+| Cenário | Como | Resultado |
+| --- | --- | --- |
+| 10 temporizadores no mesmo instante | Jest, `timers-together.test.tsx` | 1 aviso, 1 som, todos os nomes ("Ovo, Chá, ... e Café terminaram"), os 10 marcados como terminados |
+| Fins a menos de 1 s (400 ms) | idem | **Defeito achado:** a tela avisava cada um (o 2º diálogo trocava o 1º, a 2ª fala cortava a 1ª), enquanto a notificação juntava. Corrigido (D119): a tela avisa como a notificação |
+| 10 em cadeia, a cada 600 ms | idem | Os 5 grupos da tela são os mesmos 5 da notificação agendada |
+| 10 juntos com treino rodando | idem | 1 som, sem voz por cima do treino |
+| Do grupo, mas pausado antes do fim | idem e `timers.test.ts` | Quando termina de fato, avisa sozinho |
+| Áudio parado no meio da cadência (ligação, saída trocada, fone desligado) | Jest no motor e na sessão; E2E suspende o `AudioContext` de verdade | **Defeito achado:** o motor não pedia para retomar (no iPhone, o áudio interrompido não volta sozinho) e a fila velha tocava atrasada, um clique podia cair na contagem final. Corrigido (D120). O E2E falha sem a correção (fica `suspended`) e passa com ela (volta a `running` em menos de 1 s) |
+| Motor 1 hora a 240 BPM | Jest, `engine.test.ts` | Timers vivos do JS nunca passam de 8; medição presa em 512; nenhuma batida perdida; 14.400 cliques |
+| Tela bloqueada 20 vezes num treino com cadência | Jest, `session-cadence.test.tsx` | 1 áudio criado e nunca fechado no meio; timers vivos estáveis; o pulso volta na corrida seguinte |
+| Consumo: 10 temporizadores + treino com cadência + 6 bloqueios, 60 s em tempo real | E2E `resistencia.spec.ts` (Chromium, CDP depois da coleta de lixo) | Ver a tabela abaixo |
+
+### Consumo medido (Chromium, Pixel 7 emulado)
+
+| Medida | Antes | Depois de 60 s e 6 bloqueios |
+| --- | --- | --- |
+| Memória do JS (heap usado) | 15,1 MB | 15,5 MB (oscila entre 15,3 e 15,6) |
+| Nós do DOM | 1.247 | 1.247 |
+| Listeners | 801 | 797 |
+| AudioContext criados | 1 | 1 |
+| Intervalos vivos | 2 (temporizadores e sessão) | 2 |
+| Timeouts vivos | 3 | 0 a 4 |
+| Cliques sintetizados | 0 | 42 (nenhum com a tela bloqueada) |
+
+O teste guarda esses números como limite (heap +3 MB, nós +200, listeners +50, timeouts < 40,
+um áudio só, nenhum intervalo novo) e roda num tema só: o tema não muda o consumo.
+
+### Roteiro de aparelho para o APK
+
+O que só o aparelho responde: a saída real (alto-falante, fone com e sem fio), a ligação de
+verdade, o sistema bloqueando a tela e a bateria. Junta-se ao roteiro da E03 (seção 5) na mesma
+rodada do APK único. Registrar aparelho, sistema e versão do app.
+
+| # | Cenário | Como | Aprovado se |
+| --- | --- | --- | --- |
+| E1 | 10 temporizadores juntos, tela bloqueada | Criar 10 de 1 min em sequência rápida, bloquear | Notificações agrupadas como na tela; nenhuma repetida ao desbloquear |
+| E2 | Temporizador acaba durante o treino | Treino com voz e um temporizador de 1 min | Som do temporizador sem voz; a voz do treino não é cortada |
+| E3 | Cadência no alto-falante | Corrida com 170 BPM, 5 min | Batidas regulares de ouvido; nenhuma em cima da frase ou da contagem |
+| E4 | Cadência no fone Bluetooth | Ajustar o atraso do fone no metrônomo até o pulso bater com o som | Pulso e som juntos depois do ajuste; anotar o valor (ms) por fone |
+| E5 | Desligar o fone no meio | Desconectar o Bluetooth com a cadência tocando | Anotar: segue no alto-falante ou cala. Não pode travar o treino nem disparar rajada de cliques |
+| E6 | Ligação no meio | Receber e encerrar uma ligação durante a corrida | Depois da ligação o pulso volta sozinho em até 1 s, no ritmo, e sem clique na contagem final |
+| E7 | Tela bloqueada com cadência | Bloquear no meio da corrida | Pulso para; as trocas seguem pela notificação; ao desbloquear o pulso volta |
+| E8 | Metrônomo 30 min | 180 BPM, tela acesa, brilho fixo | Anotar % de bateria gasto e temperatura; o app não pode ser fechado pelo sistema |
+| E9 | Treino longo com cadência e 3 temporizadores | 30 min, tela acesa | Anotar bateria e memória (`adb shell dumpsys meminfo` no Android); memória sem subir sem parar |
+| E10 | Economia de bateria ligada | Repetir E3 e E7 | Mesmo resultado, ou registrar a diferença |
+| E11 | Sequência colada do WhatsApp | Colar uma lista real recebida | Cada linha lida ou apontada pelo número; nada inventado |
+
+### Decisões do lote E
+
+| # | Decisão | Por quê |
+| --- | --- | --- |
+| D119 | **Na tela, temporizadores que terminam a menos de 1 s um do outro viram um aviso só**, o mesmo grupo da notificação: no primeiro fim já entram os que ainda rodam e terminam dentro da janela; quando esses terminam, não avisam de novo. Se um deles foi pausado no meio e terminou depois, avisa sozinho | O diálogo é um só por vez e a voz também: dois avisos colados apagam o primeiro. Mesma regra na notificação e na tela é mais fácil de entender e de testar (D98) |
+| D120 | **Áudio parado é detectado pelo próprio motor**: a cada passo do laço compara o relógio de áudio com o do aparelho (`performance.now`); mais de 100 ms para trás é áudio parado. Aí desmarca o que estava na fila, soma o tempo perdido no "desde o começo" (é por ele que a sessão cala a frase e a contagem) e pede para retomar no máximo uma vez por segundo | Funciona igual na web e no aparelho, sem depender de evento de interrupção de cada sistema. No iPhone, áudio interrompido por ligação não volta sem `resume()`. Desmarcar evita a rajada de cliques atrasados |
+| D121 | **Consumo vira teste com limite**, não só medição: o E2E falha se a memória, os nós, os listeners ou os timers crescerem, ou se nascer um segundo áudio | Medir uma vez não pega regressão. Os limites têm folga larga (o medido fica bem abaixo) para não falhar por ruído da máquina |
+| D122 | **Saída real, ligação, Bluetooth e bateria ficam no roteiro do APK** | O navegador não tem fone, ligação nem bateria de celular. O que foi provado aqui é o comportamento do app quando o sistema faz essas coisas (áudio suspenso, tela oculta); o efeito no aparelho se confere no APK único |

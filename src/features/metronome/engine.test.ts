@@ -106,4 +106,51 @@ describe('motor do metrônomo', () => {
     expect(pulse.mock.calls.length).toBeGreaterThanOrEqual(6);
     m.stop();
   });
+
+  it('áudio parado (ligação, saída trocada): tenta retomar, desmarca a fila velha e não perde a conta', () => {
+    const audio = fakeAudio();
+    const since: number[] = [];
+    const m = new Metronome(audio.clock, jest.fn(), jest.fn());
+    m.start(120, 0, {
+      muted: (ms) => {
+        since.push(ms);
+        return false;
+      },
+    });
+    jest.advanceTimersByTime(1_000);
+    const before = audio.clicks.length;
+    audio.freeze();
+    jest.advanceTimersByTime(3_000);
+    // Parado: pede para retomar (no iPhone, a ligação suspende e ninguém retoma sozinho)...
+    expect(audio.resumed).toBeGreaterThan(0);
+    // ...e o que estava na fila não toca atrasado quando o áudio voltar.
+    expect(audio.clicks.slice(0, before).filter((c) => c.at > 1 && !c.cancelled)).toEqual([]);
+    expect(audio.clicks.length).toBe(before);
+    audio.thaw();
+    since.length = 0;
+    jest.advanceTimersByTime(2_000);
+    // Depois de voltar, o tempo "desde o começo" é o de verdade (4 s), não o do áudio (1 s):
+    // é por ele que a sessão cala a contagem final e o fim da etapa.
+    expect(Math.min(...since)).toBeGreaterThanOrEqual(4_000);
+    expect(measureJitter(m.marked.slice(-4), 120).maxDeviationMs).toBeLessThan(1e-6);
+    m.stop();
+  });
+
+  it('1 hora a 240 BPM: fila, medição e timers do JS não crescem', () => {
+    const audio = fakeAudio();
+    const m = new Metronome(audio.clock, jest.fn(), jest.fn());
+    m.start(240, 0);
+    const counts: number[] = [];
+    for (let minute = 0; minute < 60; minute += 1) {
+      jest.advanceTimersByTime(60_000);
+      counts.push(jest.getTimerCount());
+    }
+    // Fila de 1,5 s a 4 batidas/s: até 7 pulsos marcados mais o laço.
+    expect(Math.max(...counts)).toBeLessThanOrEqual(8);
+    expect(m.marked.length).toBeLessThanOrEqual(512);
+    expect(m.missed).toBe(0);
+    expect(live(audio.clicks).length).toBeGreaterThanOrEqual(60 * 60 * 4 - 1);
+    m.stop();
+    expect(jest.getTimerCount()).toBe(0);
+  });
 });
