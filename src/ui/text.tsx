@@ -1,7 +1,7 @@
 import { Text as RNText, type TextProps } from 'react-native';
 
 import { useColors } from './theme-context';
-import { type ColorRole, type TypeVariant, type as typeScale } from './tokens';
+import { maxScale, type ColorRole, type TypeVariant, type as typeScale } from './tokens';
 
 type Props = TextProps & {
   variant?: TypeVariant;
@@ -15,6 +15,7 @@ export function Text({ variant = 'body', color = 'text', tabular = false, style,
   const colors = useColors();
   return (
     <RNText
+      maxFontSizeMultiplier={maxScale[variant]}
       style={[
         typeScale[variant],
         { color: colors[color] },

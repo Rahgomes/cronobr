@@ -10,8 +10,8 @@ jest.mock('react-native-safe-area-context', () => ({
 }));
 
 it.each([
-  [false, ['top', 'bottom']],
-  [true, ['top']],
+  [false, ['top', 'bottom', 'left', 'right']],
+  [true, ['top', 'left', 'right']],
 ])('dentro das abas=%s respeita as bordas %j', async (insideTabs, edges) => {
   await render(
     <InsideTabsContext.Provider value={insideTabs}>
@@ -38,4 +38,16 @@ it('lista longa renderiza só a primeira janela (PRD 23 PF5)', async () => {
   expect(screen.getByText('Cliente 0')).toBeOnTheScreen();
   expect(screen.queryByText('Cliente 299')).toBeNull();
   expect(screen.getAllByText(/^Cliente \d+$/).length).toBeLessThanOrEqual(20);
+});
+
+it.each([
+  [false, 640],
+  [true, 1080],
+])('wide=%s limita a largura do conteúdo e do rodapé a %i (tablet)', async (wide, max) => {
+  await render(
+    <Screen wide={wide} footer={<Text>Rodapé</Text>}>
+      <Text>Conteúdo</Text>
+    </Screen>,
+  );
+  expect(screen.getByText('Rodapé').parent).toHaveStyle({ maxWidth: max, alignSelf: 'center' });
 });

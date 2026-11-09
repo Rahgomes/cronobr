@@ -184,3 +184,11 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   qualidade: o português fica idêntico, então os testes de tela não mudam e provam a extração.
 - **08/11 — Rodar o E2E em outra língua acha bug de acessibilidade:** o botão desligado com
   opacidade 0,6 reprovou o axe numa tela que o E2E em português só visitava depois de preencher.
+- **09/11 — E06 C, alvo de toque medido no E2E:** um laço no navegador mede todo controle
+  visível (role button, switch, radio, link) e falha abaixo de 44 x 44. Achou o interruptor
+  (52 x 32, dependia de hitSlop, que a web ignora) e o cabeçalho do bloco no editor (38 de
+  altura). Barato e vale para todo app novo.
+- **09/11 — Paisagem sem módulo nativo:** liberar a rotação no app inteiro e dar layout próprio
+  só para a tela que ganha com ela (a sessão). A decisão de colunas fica numa função pura
+  testada por largura e altura; no teste de tela, `Dimensions.set` fora do `act` (dentro dele a
+  próxima renderização vinha vazia).

@@ -23,3 +23,8 @@ describe('Switch', () => {
     expect(onValueChange).not.toHaveBeenCalled();
   });
 });
+
+it('área de toque de 48 mesmo com o trilho de 32 (vale na web, que não tem hitSlop)', async () => {
+  await render(<Switch value onValueChange={jest.fn()} accessibilityLabel="Voz" />);
+  expect(screen.getByRole('switch', { name: 'Voz' })).toHaveStyle({ minHeight: 48 });
+});

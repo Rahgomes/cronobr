@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { Colors } from './theme';
 import { useThemedStyles } from './theme-context';
-import { radius, space, touch } from './tokens';
+import { layout, radius, space, touch } from './tokens';
 
 type Props = {
   children: ReactNode;
@@ -34,7 +34,13 @@ type Props = {
   statusTint?: string;
   /** Pinta a tela inteira (fundo, rolagem e rodapé): a visualização Foco usa a cor da fase. */
   tint?: string | undefined;
+  /** Conteúdo mais largo no tablet e na paisagem (sessão em duas colunas). */
+  wide?: boolean;
 };
+
+/** Laterais sempre: na paisagem o recorte da câmera fica de lado (E06 C). */
+const EDGES = ['top', 'bottom', 'left', 'right'] as const;
+const EDGES_IN_TABS = ['top', 'left', 'right'] as const;
 
 /**
  * Verdadeiro nas telas das abas: a barra de abas já soma a área da barra de gestos. Somar de novo
@@ -44,7 +50,15 @@ type Props = {
 export const InsideTabsContext = createContext(false);
 
 /** Toda tela passa por aqui: edge-to-edge do targetSdk 36 exige respeitar as áreas seguras. */
-export function Screen({ children, footer, fab, scrollRef, statusTint, tint }: Props) {
+export function Screen({
+  children,
+  footer,
+  fab,
+  scrollRef,
+  statusTint,
+  tint,
+  wide = false,
+}: Props) {
   const styles = useThemedStyles(makeStyles);
   const insideTabs = useContext(InsideTabsContext);
   const painted = tint ? { backgroundColor: tint } : null;
@@ -52,18 +66,24 @@ export function Screen({ children, footer, fab, scrollRef, statusTint, tint }: P
     <SafeAreaView
       // Com statusTint, o recuo do topo (atrás da barra de status) pinta na cor do cabeçalho.
       style={[styles.safe, statusTint ? { backgroundColor: statusTint } : null, painted]}
-      edges={insideTabs ? ['top'] : ['top', 'bottom']}
+      edges={insideTabs ? EDGES_IN_TABS : EDGES}
     >
       <ScrollView
         style={[styles.scroll, painted]}
         ref={scrollRef}
-        contentContainerStyle={[styles.content, fab ? styles.fabRoom : null]}
+        contentContainerStyle={[
+          styles.content,
+          wide ? styles.wideMax : styles.max,
+          fab ? styles.fabRoom : null,
+        ]}
         keyboardShouldPersistTaps="handled"
       >
         {children}
       </ScrollView>
       {footer ? (
-        <View style={[styles.footer, tint ? [painted, styles.footerPlain] : null]}>{footer}</View>
+        <View style={[styles.footer, tint ? [painted, styles.footerPlain] : null]}>
+          <View style={[styles.footerInner, wide ? styles.wideMax : styles.max]}>{footer}</View>
+        </View>
       ) : null}
       {fab ? (
         <View style={styles.fab} pointerEvents="box-none">
@@ -109,7 +129,7 @@ export function ListScreen<T>({
   return (
     <SafeAreaView
       style={[styles.safe, statusTint ? { backgroundColor: statusTint } : null]}
-      edges={insideTabs ? ['top'] : ['top', 'bottom']}
+      edges={insideTabs ? EDGES_IN_TABS : EDGES}
     >
       <FlatList
         style={styles.scroll}
@@ -123,14 +143,18 @@ export function ListScreen<T>({
         // Espaço entre linhas por separador, não por gap: o gap somava nos espaçadores invisíveis
         // que a virtualização põe no lugar das linhas fora da tela.
         ItemSeparatorComponent={Separator}
-        contentContainerStyle={[styles.listContent, fab ? styles.fabRoom : null]}
+        contentContainerStyle={[styles.listContent, styles.max, fab ? styles.fabRoom : null]}
         keyboardShouldPersistTaps="handled"
         initialNumToRender={10}
         windowSize={7}
         removeClippedSubviews={Platform.OS === 'android'}
         extraData={extraData}
       />
-      {footer ? <View style={styles.footer}>{footer}</View> : null}
+      {footer ? (
+        <View style={styles.footer}>
+          <View style={[styles.footerInner, styles.max]}>{footer}</View>
+        </View>
+      ) : null}
       {fab ? (
         <View style={styles.fab} pointerEvents="box-none">
           {fab}
@@ -170,8 +194,10 @@ const makeStyles = (colors: Colors) =>
       shadowOffset: { width: 0, height: 3 },
     },
     footerPlain: { borderTopWidth: 0 },
+    max: { width: '100%', maxWidth: layout.contentMax, alignSelf: 'center' },
+    wideMax: { width: '100%', maxWidth: layout.wideMax, alignSelf: 'center' },
+    footerInner: { gap: space.sm },
     footer: {
-      gap: space.sm,
       paddingHorizontal: space.lg,
       paddingTop: space.md,
       paddingBottom: space.md,

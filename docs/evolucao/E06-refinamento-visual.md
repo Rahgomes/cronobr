@@ -9,7 +9,7 @@ reais do app e troca os conceitos por capturas das telas de verdade.
 | --- | --- | --- |
 | A | Ajustes com tema (aparelho, claro, escuro) e idioma (aparelho, pt-BR, en, es, fr); base de textos em 4 línguas; aparência no backup; correções de passagem | Entregue 08/11 |
 | B | Todos os textos nas 4 línguas: telas, motivos de recusa do arquivo, rótulos de fase, som e modalidade, datas, voz no idioma escolhido, modelos prontos traduzidos (nome escrito pela pessoa nunca muda) | Entregue 08/11 |
-| C | Acessibilidade e layout: texto grande sem corte, contador com teto de escala, anúncio só em troca de fase, alvos de toque, alternativa a arrastar, movimento reduzido, paisagem na sessão, tablet e áreas seguras | A fazer |
+| C | Acessibilidade e layout: texto grande sem corte, contador com teto de escala, anúncio só em troca de fase, alvos de toque, alternativa a arrastar, movimento reduzido, paisagem na sessão, tablet e áreas seguras | Entregue 09/11 |
 | D | Refinamento pelas imagens-conceito: Início (última rotina e favoritas, começar em poucos toques), editor (avançado aos poucos), sessão (contador em destaque; preparar, executar, descansar e concluir por texto, som e cor; descanso entre etapas e entre blocos), estados de salvar, erro, vazio e importado; menos cartão e ícone decorativo | A fazer |
 | E | Capturas reais por tela, tamanho, tema e língua, com dispositivos e dimensões anotados; conferência de que fluxos e dados das etapas anteriores seguem iguais | A fazer |
 
@@ -83,3 +83,38 @@ traduções.
 | Unitário | testes do domínio | Passam `pt.words`; lado da mobilidade como campo |
 | Tela | `cue-settings-screen.test.tsx`, `expo-port.test.ts` | Porta recebe a língua; voz em `en-US` |
 | E2E + axe | `e2e/idiomas.spec.ts` | Navegador em `en-US`, `es-ES` e `fr-FR`: Início, modelo, sessão, editor, Ajustes, histórico, backup e avisos na língua, `<html lang>`, nada passando da largura da tela, axe nos dois temas |
+
+## 5. Lote C: acessibilidade e layout
+
+| Item | Onde | O que mudou |
+| --- | --- | --- |
+| Letra ampliada | `src/ui/text.tsx`, `tokens.ts` (`maxScale`) | Texto corrido cresce até 200% (WCAG 1.4.4); título até 1,6x e o display até 1,4x. Títulos do topo, do bloco no editor e da sessão quebram em 2 linhas em vez de cortar |
+| Contador | `src/ui/fit.ts`, `session-bodies.tsx` | Não cresce com a letra do sistema (já é o maior texto) e diminui para caber numa linha: 120 pixels de "00:45" passavam de uma tela de 320 |
+| Anúncio | `session-view.tsx` | Já era só na troca de fase e no fim; agora tem teste que garante que os segundos não são anunciados |
+| Alvos de toque | `src/ui/switch.tsx`, editor | Interruptor com área de 48 (o trilho de 32 dependia da folga invisível, que a web não tem); cabeçalho do bloco no editor com 48 (tinha 38) |
+| Arrastar | Início, editor | Já tinha alternativa: "Ver todos" no carrossel e mover para cima/baixo pelo "⋯" (D33). Nada novo |
+| Movimento reduzido | `src/ui/switch.tsx` | O interruptor animava mesmo com "reduzir animações"; agora vai direto. Transições de tela e avisos já respeitavam |
+| Paisagem | `app.config.ts`, `session/room.ts`, `session-view.tsx` | O app gira. A sessão deitada fica em duas colunas: tempo à esquerda, controles à direita, sem rolar. As outras telas rolam e centralizam |
+| Tablet | `src/ui/screen.tsx`, `dialog.tsx`, `sheet.tsx` | Conteúdo, rodapé, diálogos e folhas com largura máxima de 640, centralizados (sessão deitada até 1.080) |
+| Áreas seguras | `src/ui/screen.tsx` | Bordas laterais respeitadas: deitado, o recorte da câmera fica de lado |
+
+### Decisões do lote C
+
+| # | Decisão | Por quê |
+| --- | --- | --- |
+| D82 | **Teto de escala por variante, não desligar a escala** | Desligar quebra a WCAG 1.4.4. Texto corrido vai a 200%; o que já nasce grande cresce menos, para não cortar |
+| D83 | **Número grande com tamanho calculado pela largura**, além do `adjustsFontSizeToFit` | O ajuste automático só existe no nativo; a conta vale na web e dá o mesmo resultado nos dois |
+| D84 | **O app inteiro gira**, sem travar por tela | Travar por tela pede módulo nativo novo. Todas as telas já rolam; só a sessão ganhou layout próprio, que é onde a paisagem ajuda (celular apoiado no chão ou no tripé) |
+| D85 | **Alvo de toque medido no E2E**: todo controle visível com 44 x 44 ou mais, em 13 telas | Pegou dois casos que a revisão de código não viu (interruptor e cabeçalho do bloco) |
+
+### Testes do lote C
+
+| Tipo | Arquivo | Cobre |
+| --- | --- | --- |
+| Unitário | `src/ui/fit.test.ts`, `session/room.test.ts` | Tamanho que cabe; colunas e anel por largura e altura (retrato, celular pequeno, tablet, paisagem baixa) |
+| Tela | `text.test.tsx`, `screen.test.tsx`, `switch.test.tsx` | Teto por variante; bordas laterais; largura máxima; área de 48 |
+| Tela | `session/session-layout.test.tsx` | Anúncio só na troca de fase; paisagem nas três visualizações; girar no meio não perde o tempo; contador com letra 2x numa tela de 320 |
+| E2E + axe | `e2e/layout.spec.ts` | Alvos de toque em 13 telas; sessão deitada em 915 x 412 com tempo e controles visíveis sem rolar; tablet 1024 x 1366 centralizado; Foco em 320 x 568 sem estourar |
+
+Pendente de aparelho (vai no APK): letra no máximo do Android e do iPhone, TalkBack e VoiceOver na
+sessão, giro real com recorte de câmera.

@@ -10,7 +10,7 @@ import { HintProvider } from './hint';
 import { Text } from './text';
 import type { Colors } from './theme';
 import { useColors, useThemedStyles } from './theme-context';
-import { radius, space, touch } from './tokens';
+import { layout, radius, space, touch } from './tokens';
 
 export function Sheet({
   title,
@@ -76,6 +76,9 @@ const makeStyles = (colors: Colors) =>
       opacity: 0.4,
     },
     surface: {
+      width: '100%',
+      maxWidth: layout.contentMax,
+      alignSelf: 'center',
       maxHeight: '95%',
       backgroundColor: colors.surface,
       borderTopLeftRadius: 28,

@@ -24,7 +24,7 @@ import { Text } from '@/ui/text';
 import { TextField } from '@/ui/text-field';
 import type { Colors } from '@/ui/theme';
 import { useColors, useThemedStyles } from '@/ui/theme-context';
-import { radius, space } from '@/ui/tokens';
+import { radius, space, touch } from '@/ui/tokens';
 import { TopBar } from '@/ui/top-bar';
 
 import { BlockSheet } from './block-sheet';
@@ -398,7 +398,7 @@ export function EditorScreen({
                 }}
                 style={styles.blockHeader}
               >
-                <Text variant="title" style={styles.flex} numberOfLines={1}>
+                <Text variant="title" style={styles.flex} numberOfLines={2}>
                   {block.name}
                 </Text>
                 <View style={styles.repeat}>
@@ -556,6 +556,7 @@ const makeStyles = (colors: Colors) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: space.sm,
+      minHeight: touch.minTarget,
       paddingBottom: space.sm,
     },
     repeat: {

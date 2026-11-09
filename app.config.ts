@@ -14,7 +14,8 @@ const config: ExpoConfig = {
   owner: 'rahgomes',
   version: '2.0.0',
   scheme: 'cronobr',
-  orientation: 'portrait',
+  // Gira (E06 C): a sessão usa a paisagem em duas colunas; as outras telas rolam e centralizam.
+  orientation: 'default',
   userInterfaceStyle: 'automatic',
   icon: './assets/images/icon.png',
   ios: {

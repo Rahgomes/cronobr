@@ -9,7 +9,7 @@ import { Button } from './button';
 import { Text } from './text';
 import type { Colors } from './theme';
 import { useThemedStyles } from './theme-context';
-import { radius, space } from './tokens';
+import { layout, radius, space } from './tokens';
 
 export type DialogButton = {
   text: string;
@@ -118,6 +118,9 @@ const makeStyles = (colors: Colors) =>
       opacity: 0.4,
     },
     surface: {
+      width: '100%',
+      maxWidth: layout.contentMax,
+      alignSelf: 'center',
       backgroundColor: colors.surface,
       borderTopLeftRadius: 28,
       borderTopRightRadius: 28,

@@ -111,6 +111,21 @@ export const type = {
   caption: { fontSize: 13, lineHeight: 18, fontWeight: '400' },
 } as const satisfies Record<string, TextStyle>;
 
+/**
+ * Teto da letra ampliada do sistema, por variante (E06 C). Texto corrido acompanha até 200%
+ * (WCAG 1.4.4); título e número grande já nascem grandes e crescem menos, para não cortar.
+ */
+export const maxScale: Record<keyof typeof type, number> = {
+  display: 1.4,
+  title: 1.6,
+  body: 2,
+  label: 2,
+  caption: 2,
+};
+
+/** Largura máxima do conteúdo: no tablet a tela fica centralizada, sem linha de 1.000 pixels. */
+export const layout = { contentMax: 640, wideMax: 1080 } as const;
+
 export const elevation = {
   raised: {
     elevation: 3,

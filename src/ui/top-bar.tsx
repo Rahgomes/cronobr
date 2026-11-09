@@ -37,7 +37,8 @@ export function TopBar({ title, right }: { title: string; right?: ReactNode }) {
         variant="title"
         style={styles.title}
         accessibilityRole="header"
-        numberOfLines={1}
+        // Duas linhas com letra ampliada, sem cortar a palavra (E06 C).
+        numberOfLines={2}
         adjustsFontSizeToFit
         minimumFontScale={0.7}
       >

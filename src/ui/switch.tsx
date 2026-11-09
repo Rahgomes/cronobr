@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Animated, Pressable, StyleSheet } from 'react-native';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
 
 import { useBlockedPress } from './hint';
 import type { Colors } from './theme';
 import { useThemedStyles } from './theme-context';
 import { radius, touch } from './tokens';
+import { useReduceMotion } from './use-reduce-motion';
 
 type Props = {
   value: boolean;
@@ -35,14 +36,15 @@ export function Switch({
   const styles = useThemedStyles(makeStyles);
   const blocked = useBlockedPress(disabled, disabledHint);
   const [position] = useState(() => new Animated.Value(value ? 1 : 0));
+  const reduce = useReduceMotion();
 
   useEffect(() => {
     Animated.timing(position, {
       toValue: value ? 1 : 0,
-      duration: 150,
+      duration: reduce ? 0 : 150,
       useNativeDriver: true,
     }).start();
-  }, [value, position]);
+  }, [value, position, reduce]);
 
   return (
     <Pressable
@@ -53,31 +55,37 @@ export function Switch({
       aria-checked={value}
       accessibilityHint={blocked.explains ? disabledHint : undefined}
       disabled={blocked.pressDisabled}
-      hitSlop={(touch.minTarget - TRACK_H) / 2}
       onPress={() => {
         if (blocked.explains) blocked.explain();
         else onValueChange(!value);
       }}
-      style={[styles.track, value ? styles.on : styles.off, disabled && styles.disabled]}
+      // A área de toque é a caixa de 48; o trilho é o desenho dentro dela (a web não tem hitSlop).
+      style={styles.target}
     >
-      <Animated.View
-        style={[
-          styles.thumb,
-          {
-            transform: [
-              {
-                translateX: position.interpolate({ inputRange: [0, 1], outputRange: [0, TRAVEL] }),
-              },
-            ],
-          },
-        ]}
-      />
+      <View style={[styles.track, value ? styles.on : styles.off, disabled && styles.disabled]}>
+        <Animated.View
+          style={[
+            styles.thumb,
+            {
+              transform: [
+                {
+                  translateX: position.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, TRAVEL],
+                  }),
+                },
+              ],
+            },
+          ]}
+        />
+      </View>
     </Pressable>
   );
 }
 
 const makeStyles = (colors: Colors) =>
   StyleSheet.create({
+    target: { minHeight: touch.minTarget, minWidth: TRACK_W, justifyContent: 'center' },
     track: {
       width: TRACK_W,
       height: TRACK_H,

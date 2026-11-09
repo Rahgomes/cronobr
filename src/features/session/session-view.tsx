@@ -1,6 +1,6 @@
 import { router, usePreventRemove } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { AccessibilityInfo, StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { useRepos } from '@/data/data-context';
 import { useStored } from '@/data/use-stored';
@@ -28,6 +28,7 @@ import { radius, space } from '@/ui/tokens';
 import { RoundAction } from '@/ui/top-bar';
 
 import { systemClock, type Clock } from './clock';
+import { CONTROLS_WIDTH, sessionRoom } from './room';
 import { FocusBody, ListBody, PHASE_TINT, RingBody } from './session-bodies';
 import {
   LockButton,
@@ -100,6 +101,8 @@ export function SessionView({
   const { view } = prefsSession;
   const lock = useTouchLock({ auto: prefsSession.lockOnStart, active });
   const running = session.status === 'running';
+  const window = useWindowDimensions();
+  const room = sessionRoom(window.width, window.height);
 
   useEffect(() => {
     if (autoStart && runner.session.status === 'ready') runner.start();
@@ -290,118 +293,139 @@ export function SessionView({
       },
     ]);
   };
-  return (
-    <Screen
-      tint={tint}
-      footer={
-        <View style={styles.actions}>
-          {amrap ? (
-            <RoundCounter
-              count={session.tally ?? 0}
-              locked={locked}
-              onAdd={() => {
-                lock.poke();
-                runner.logRound(1);
-              }}
-              onUndo={touch(() => {
-                runner.logRound(-1);
-              })}
-            />
-          ) : null}
-          {canFinishEarly ? (
-            <WideControl
-              label={t.session.finishEarly}
-              locked={locked}
-              onBlocked={blocked}
-              onPress={touch(() => {
-                runner.finishEarly();
-                if (!isAway()) port.play(earlyRestCues(prefs, w));
-              })}
-            />
-          ) : null}
-          {manual ? (
-            <WideControl
-              label={t.session.advanceManual}
-              locked={locked}
-              onBlocked={blocked}
-              onPress={touch(runner.advanceManual)}
-            />
-          ) : null}
-          {locked ? <LockedHint /> : null}
-          <View style={styles.controls}>
-            <RoundControl
-              icon="skip-previous"
-              label={t.session.previousStep}
-              locked={locked}
-              onBlocked={blocked}
-              onPhase={focus}
-              onPress={touch(runner.back)}
-            />
-            <RoundControl
-              big
-              icon={paused ? 'play' : 'pause'}
-              label={paused ? t.session.resume : t.session.pause}
-              locked={locked}
-              holdWhenLocked
-              onBlocked={blocked}
-              onPhase={focus}
-              onPress={touch(paused ? runner.resume : runner.pause)}
-            />
-            <RoundControl
-              icon="skip-next"
-              label={t.session.skipStep}
-              locked={locked}
-              onBlocked={blocked}
-              onPhase={focus}
-              onPress={touch(runner.skip)}
-            />
-          </View>
-          {locked ? null : (
-            <View style={focus ? [styles.switchBox, { backgroundColor: colors.surface }] : null}>
-              <ViewSwitch
-                value={view}
-                onChange={(next) => {
-                  lock.poke();
-                  setPrefs({ ...prefsSession, view: next });
-                }}
-              />
-            </View>
-          )}
-        </View>
-      }
-    >
-      <View style={styles.top}>
-        <RoundAction
-          icon="close"
-          label={t.session.stopWorkout}
-          onPress={locked ? blocked : touch(confirmStop)}
-        />
-        <LockButton
+  const actions = (
+    <View style={styles.actions}>
+      {amrap ? (
+        <RoundCounter
+          count={session.tally ?? 0}
           locked={locked}
-          lock={lock.lock}
-          unlock={lock.unlock}
+          onAdd={() => {
+            lock.poke();
+            runner.logRound(1);
+          }}
+          onUndo={touch(() => {
+            runner.logRound(-1);
+          })}
+        />
+      ) : null}
+      {canFinishEarly ? (
+        <WideControl
+          label={t.session.finishEarly}
+          locked={locked}
+          onBlocked={blocked}
+          onPress={touch(() => {
+            runner.finishEarly();
+            if (!isAway()) port.play(earlyRestCues(prefs, w));
+          })}
+        />
+      ) : null}
+      {manual ? (
+        <WideControl
+          label={t.session.advanceManual}
+          locked={locked}
+          onBlocked={blocked}
+          onPress={touch(runner.advanceManual)}
+        />
+      ) : null}
+      {locked ? <LockedHint /> : null}
+      <View style={styles.controls}>
+        <RoundControl
+          icon="skip-previous"
+          label={t.session.previousStep}
+          locked={locked}
           onBlocked={blocked}
           onPhase={focus}
+          onPress={touch(runner.back)}
+        />
+        <RoundControl
+          big
+          icon={paused ? 'play' : 'pause'}
+          label={paused ? t.session.resume : t.session.pause}
+          locked={locked}
+          holdWhenLocked
+          onBlocked={blocked}
+          onPhase={focus}
+          onPress={touch(paused ? runner.resume : runner.pause)}
+        />
+        <RoundControl
+          icon="skip-next"
+          label={t.session.skipStep}
+          locked={locked}
+          onBlocked={blocked}
+          onPhase={focus}
+          onPress={touch(runner.skip)}
         />
       </View>
+      {locked ? null : (
+        <View style={focus ? [styles.switchBox, { backgroundColor: colors.surface }] : null}>
+          <ViewSwitch
+            value={view}
+            onChange={(next) => {
+              lock.poke();
+              setPrefs({ ...prefsSession, view: next });
+            }}
+          />
+        </View>
+      )}
+    </View>
+  );
+  const topRow = (
+    <View style={styles.top}>
+      <RoundAction
+        icon="close"
+        label={t.session.stopWorkout}
+        onPress={locked ? blocked : touch(confirmStop)}
+      />
+      <LockButton
+        locked={locked}
+        lock={lock.lock}
+        unlock={lock.unlock}
+        onBlocked={blocked}
+        onPhase={focus}
+      />
+    </View>
+  );
+  const main = (
+    <>
       {segment ? (
         <View style={styles.content}>
           {view === 'foco' ? (
-            <FocusBody timeline={timeline} snap={snap} segment={segment} />
+            <FocusBody timeline={timeline} snap={snap} segment={segment} room={room} />
           ) : view === 'lista' ? (
             <ListBody
               timeline={timeline}
               snap={snap}
               segment={segment}
+              room={room}
               onJump={locked ? null : jump}
             />
           ) : (
-            <RingBody timeline={timeline} snap={snap} segment={segment} />
+            <RingBody timeline={timeline} snap={snap} segment={segment} room={room} />
           )}
           {paused ? <Notice tone="alert">{t.session.paused}</Notice> : null}
           {runner.progressFailed ? <Notice tone="danger">{t.session.progressFailed}</Notice> : null}
         </View>
       ) : null}
+    </>
+  );
+  // Paisagem (E06 C): corpo à esquerda, controles à direita, tudo sem rolar.
+  if (room.wide) {
+    return (
+      <Screen tint={tint} wide>
+        <View style={styles.wide} testID="session-wide">
+          <View style={styles.grow}>{main}</View>
+          <View style={styles.side}>
+            {topRow}
+            <View style={styles.sideActions}>{actions}</View>
+          </View>
+        </View>
+      </Screen>
+    );
+  }
+  return (
+    <Screen tint={tint} footer={actions}>
+      {topRow}
+      {main}
     </Screen>
   );
 }
@@ -415,4 +439,7 @@ const styles = StyleSheet.create({
   switchBox: { alignSelf: 'center', borderRadius: radius.pill, padding: space.xs },
   option: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   grow: { flex: 1 },
+  wide: { flexDirection: 'row', gap: space.lg, flexGrow: 1 },
+  side: { width: CONTROLS_WIDTH, gap: space.md },
+  sideActions: { flexGrow: 1, justifyContent: 'center' },
 });

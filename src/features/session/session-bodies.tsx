@@ -9,6 +9,7 @@ import { overallProgress, phaseProgress, rowState, type RowState } from '@/domai
 import type { Phase, Segment } from '@/domain/timeline';
 import { useT } from '@/i18n/i18n-context';
 import type { Messages } from '@/i18n/messages/pt';
+import { fitFontSize } from '@/ui/fit';
 import { ProgressRing } from '@/ui/progress-ring';
 import { Text } from '@/ui/text';
 import type { Colors } from '@/ui/theme';
@@ -16,6 +17,7 @@ import { useColors, useThemedStyles } from '@/ui/theme-context';
 import { radius, space, type ColorRole } from '@/ui/tokens';
 
 import { roundLabel } from './labels';
+import type { Room } from './room';
 
 export const PHASE_TINT: Record<Phase, ColorRole> = {
   prep: 'phasePrep',
@@ -29,18 +31,33 @@ export interface BodyProps {
   timeline: readonly Segment[];
   snap: Snapshot;
   segment: Segment;
+  room: Room;
 }
 
-/** Número grande: o que falta, ou as repetições numa etapa manual. */
-function BigTime({ segment, snap, size, color }: BodyProps & { size: number; color?: string }) {
+/**
+ * Número grande: o que falta, ou as repetições numa etapa manual. Não cresce com a letra do
+ * sistema (já é o maior texto da tela) e diminui para caber numa linha na largura `width`.
+ */
+function BigTime({
+  segment,
+  snap,
+  size,
+  width,
+  color,
+}: Omit<BodyProps, 'room' | 'timeline'> & { size: number; width: number; color?: string }) {
   const t = useT();
   const manual = segment.durationMs === null;
+  const text = manual ? t.session.repetitionsShort(segment.reps) : clock(snap.remainingMs ?? 0);
+  const fitted = fitFontSize(text, width, size);
   return (
     <Text
       variant="display"
       tabular
+      maxFontSizeMultiplier={1}
+      numberOfLines={1}
+      adjustsFontSizeToFit
       style={[
-        { fontSize: size, lineHeight: Math.round(size * 1.1) },
+        { fontSize: fitted, lineHeight: Math.round(fitted * 1.1) },
         styles.center,
         color ? { color } : null,
       ]}
@@ -50,8 +67,9 @@ function BigTime({ segment, snap, size, color }: BodyProps & { size: number; col
           ? t.session.repetitions(segment.reps)
           : t.session.remaining(duration(Math.ceil((snap.remainingMs ?? 0) / 1000) * 1000))
       }
+      testID="session-clock"
     >
-      {manual ? t.session.repetitionsShort(segment.reps) : clock(snap.remainingMs ?? 0)}
+      {text}
     </Text>
   );
 }
@@ -64,7 +82,7 @@ function nextLine(next: Segment | undefined, t: Messages): string {
 }
 
 /** Barra fina do treino inteiro. */
-function TrainingBar({ timeline, snap }: Omit<BodyProps, 'segment'>) {
+function TrainingBar({ timeline, snap }: Pick<BodyProps, 'timeline' | 'snap'>) {
   const t = useT();
   const styles = useThemedStyles(makeStyles);
   const progress = overallProgress(timeline, snap);
@@ -82,7 +100,7 @@ function TrainingBar({ timeline, snap }: Omit<BodyProps, 'segment'>) {
 }
 
 /** Anel (C03): o padrão. Etapa atual, próxima, rodada e total. */
-export function RingBody({ timeline, snap, segment }: BodyProps) {
+export function RingBody({ timeline, snap, segment, room }: BodyProps) {
   const t = useT();
   const w = t.words;
   const colors = useColors();
@@ -100,13 +118,18 @@ export function RingBody({ timeline, snap, segment }: BodyProps) {
       ) : null}
       <View style={styles.ringBox}>
         <ProgressRing
-          size={260}
-          stroke={12}
+          size={room.ring}
+          stroke={RING_STROKE}
           progress={phaseProgress(timeline, snap)}
           color={colors[PHASE_TINT[segment.phase]]}
           track={colors.border}
         >
-          <BigTime timeline={timeline} snap={snap} segment={segment} size={72} />
+          <BigTime
+            snap={snap}
+            segment={segment}
+            size={72}
+            width={room.ring - RING_STROKE * 2 - space.lg * 2}
+          />
         </ProgressRing>
       </View>
       <Text color="textMuted" style={styles.center}>
@@ -121,7 +144,7 @@ export function RingBody({ timeline, snap, segment }: BodyProps) {
 }
 
 /** Foco (C03b): número gigante sobre a cor da fase, pouca informação. */
-export function FocusBody({ timeline, snap, segment }: BodyProps) {
+export function FocusBody({ timeline, snap, segment, room }: BodyProps) {
   const t = useT();
   const w = t.words;
   const name = ownName(segment, w);
@@ -142,13 +165,7 @@ export function FocusBody({ timeline, snap, segment }: BodyProps) {
           {name ?? w.phase[segment.phase].toUpperCase()}
         </Text>
       </View>
-      <BigTime
-        timeline={timeline}
-        snap={snap}
-        segment={segment}
-        size={120}
-        color={colors.onPhase}
-      />
+      <BigTime snap={snap} segment={segment} size={120} width={room.text} color={colors.onPhase} />
       <Text style={[styles.center, soft]}>{nextLine(timeline[segment.index + 1], t)}</Text>
       <View style={styles.facts}>
         {segment.round !== null && segment.rounds !== null ? (
@@ -182,6 +199,7 @@ export function ListBody({
   timeline,
   snap,
   segment,
+  room,
   onJump,
 }: BodyProps & { onJump: ((target: Segment) => void) | null }) {
   const t = useT();
@@ -200,16 +218,16 @@ export function ListBody({
           </Text>
         </View>
         {name ? (
-          <Text variant="title" accessibilityRole="header" style={styles.grow} numberOfLines={1}>
+          <Text variant="title" accessibilityRole="header" style={styles.grow} numberOfLines={2}>
             {name}
           </Text>
         ) : (
-          <Text variant="title" accessibilityRole="header" style={styles.grow} numberOfLines={1}>
+          <Text variant="title" accessibilityRole="header" style={styles.grow} numberOfLines={2}>
             {round ?? w.phase[segment.phase]}
           </Text>
         )}
       </View>
-      <BigTime timeline={timeline} snap={snap} segment={segment} size={64} />
+      <BigTime snap={snap} segment={segment} size={64} width={room.text} />
       {round && name ? (
         <Text color="textMuted" style={styles.center}>
           {round}
@@ -260,6 +278,8 @@ export function ListBody({
     </View>
   );
 }
+
+const RING_STROKE = 12;
 
 const styles = StyleSheet.create({ center: { textAlign: 'center' } });
 
