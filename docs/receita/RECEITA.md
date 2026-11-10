@@ -334,3 +334,10 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
 - **09/11 — Privacidade a partir da divulgação oficial do SDK:** a tabela da Play e a da App Store
   saem da página de divulgação de dados do próprio SDK de anúncio, mais o que o código faz. Sem
   conta, fica anotado o que muda com ela (ATT, recursos opcionais).
+- **10/11 — `expo-doctor` antes de qualquer build nativo:** nenhum APK tinha sido compilado
+  desde que entraram o áudio nativo e o SDK de anúncio. O doctor achou o `expo-asset` faltando
+  (dependência obrigatória do `expo-audio`; o app podia fechar ao abrir) e 3 versões abaixo do
+  SDK. Rodar a cada dependência nativa nova, não só no fim.
+- **10/11 — Relatório final confere número no código:** ao montar a matriz, o teto de avisos
+  agendados citado no doc da E03 (60) já era 50 desde a E07. Cada número do relatório foi
+  reconferido no código antes de entrar.

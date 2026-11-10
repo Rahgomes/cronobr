@@ -45,7 +45,7 @@ etapa exige build nativo e registro por cenário (seção 5).
 ## 4. O que os testes provam
 
 - **Domínio (100%)**: frase por fase, "Última rodada", "Próximo: X", prioridade entre eventos,
-  canais independentes, plano de notificações (horário, teto de 60, etapa manual, pausa, fim).
+  canais independentes, plano de notificações (horário, teto de 50 desde a E07, etapa manual, pausa, fim).
 - **Tela com banco real**: começar agenda 16 avisos no Tabata e acende a tela; pausar cancela e
   apaga; retomar reagenda; troca de fase toca uma vez; preferência gravada vale; fora da tela o
   app não toca; encerrar cancela.
