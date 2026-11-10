@@ -9,7 +9,7 @@ APK único).
 | A | Qualidade e fluxos críticos: mapa de cada exigência do PRD para o teste que a prova; lacunas cobertas (primeira abertura sem rede, permissão recusada, texto ampliado, arquivo vindo de outro sistema); fixtures de versões anteriores conferidas | Feito |
 | B | Performance: o que dá para medir sem aparelho (abertura do pacote web, resposta dos controles, precisão das transições, biblioteca e histórico volumosos) com limite em teste; roteiro de medição no aparelho (abertura, memória e bateria em sessão longa) | Feito |
 | C | Monetização: banner discreto só com IDs de teste, longe dos controles de treino, sem intersticial; uso normal sem anúncio (falha, offline, sem preenchimento); consentimento e declarações pela documentação oficial atual | Feito |
-| D | Lojas: textos nas 4 línguas (título candidato, descrição curta e completa) dentro dos limites atuais de cada loja; lista de capturas; privacidade igual ao comportamento real; instruções de backup e importação; nada de "funciona ilimitado em segundo plano" | A fazer |
+| D | Lojas: textos nas 4 línguas (título candidato, descrição curta e completa) dentro dos limites atuais de cada loja; lista de capturas; privacidade igual ao comportamento real; instruções de backup e importação; nada de "funciona ilimitado em segundo plano" | Feito |
 | E | Relatório final: matriz Android/iOS de cada requisito (aprovado, reprovado, não testado), evidências, defeitos que impedem lançamento, limitações, o que depende de aparelho ou conta, próximos passos | A fazer |
 
 ## Decisões de partida
@@ -182,3 +182,91 @@ Capturas 30 e 31.
 | # | Decisão | Por quê |
 | --- | --- | --- |
 | D134 | **Passo de 1 s e número digitável** em todo valor com + e − | Passo de 5 s não chega em 0:42; para ir de 0:20 a 3:00, digitar é mais rápido que qualquer passo. Com o número editável, o passo pequeno não obriga a tocar 160 vezes. Edição no próprio lugar, sem seletor nativo, mantém o D08 |
+
+## Lote D · Lojas
+
+Nada foi publicado e nenhuma conta foi criada (D125). Limites conferidos em 09/11/2026 nas
+páginas oficiais do Play Console e do App Store Connect.
+
+| Entrega | Onde |
+| --- | --- |
+| Textos nas 4 línguas (nome, descrição curta, subtítulo, texto promocional, palavras-chave, descrição completa, novidades) | Fonte: `loja/textos.ts`. Para ler: `docs/lojas/textos.md`, gerado pelo teste |
+| Privacidade: política (pt e en), Segurança dos dados da Play, Privacidade do app da App Store | `docs/lojas/privacidade.md` |
+| Instruções de backup e importação | Dentro da descrição completa, com os nomes de botão do app em cada língua |
+| Lista de capturas | Abaixo |
+
+### O que o teste dos textos garante
+
+`loja/textos.test.ts` (29 testes) quebra se:
+
+- um campo passar do limite da loja (palavras-chave contadas em bytes, como a Apple conta);
+- uma palavra-chave repetir o nome (desperdício: o nome já conta na busca) ou tiver menos de 3
+  letras;
+- aparecer "CronoBR" sem acento, travessão ou promessa de funcionamento ilimitado;
+- os números do texto (24 modelos, 13 modalidades, 10 temporizadores) ficarem diferentes do
+  domínio;
+- o caminho do backup citar um botão que não existe na tradução do app (Ajustes > Backup e
+  transferência > Exportar backup, Abrir arquivo, Incluir histórico, Juntar, Substituir tudo);
+- a frase da tela bloqueada perder a condição (permitir notificações, sistema pode atrasar);
+- o `docs/lojas/textos.md` ficar diferente da fonte.
+
+### Benefícios do texto e a prova de cada um
+
+| Benefício | Prova | Falta no aparelho |
+| --- | --- | --- |
+| Sem internet, sem cadastro | `e2e/fluxos.spec.ts` (nenhuma requisição de fora) | Modo avião no APK |
+| 24 modelos, 13 modalidades, atalhos rápidos | `presets.test.ts`, `inicio.spec.ts`, `rapido.spec.ts` | |
+| Até 10 temporizadores | `timers.test.ts`, `temporizadores.spec.ts`, `resistencia.spec.ts` | |
+| Editor com blocos, lados, descanso, digitar valores | `editor-screen.test.tsx`, `stepper.test.tsx`, `editor.spec.ts`, `rapido.spec.ts` | |
+| Colar a sequência do profissional | `sequence.test.ts`, `sequencia.spec.ts` | |
+| Voz, sons, contagem, vibração | `cue-settings-screen.test.tsx`, `expo-port.test.ts` | Roteiro E03 |
+| Metrônomo e cadência | `engine.test.ts` do metrônomo, `cadencia.spec.ts` | Roteiro E07 |
+| Notificação com a tela bloqueada, se permitida | `session-screen.test.tsx`, `notifications-blocked.test.tsx` | Roteiro E03 #1, #2, #10 |
+| Histórico uma vez só, calendário, notas, repetir | `sessao.spec.ts`, `historico.spec.ts` | |
+| Backup entre Android e iPhone | `transfer.test.ts`, `backup.spec.ts`, formato único | Fluxos 5 e 6 do lote A |
+| 4 línguas, temas, texto ampliado, leitor de tela | `messages.test.ts`, `capturas/matriz.spec.ts`, axe em todos os E2E | TalkBack e VoiceOver |
+| Anúncio fora do treino | `ad-slot.test.tsx`, `session-screen.test.tsx`, `editor-screen.test.tsx` | Roteiro A1 a A6 |
+
+O que depende do aparelho entra no texto porque está implementado e testado na lógica; antes de
+publicar, os roteiros da rodada do APK precisam passar (relatório do lote E).
+
+### Capturas para as lojas
+
+Tiradas do APK e do build de iPhone, não da web: barra de status, fontes e teclado do sistema são
+os de verdade. Play: até 8 por tipo de aparelho, PNG ou JPEG sem transparência, lado entre 320 e
+3.840 px, 1080 x 1920 ou mais em 9:16 para entrar nas recomendações. App Store: de 1 a 10, iPhone
+6,9" (1320 x 2868) ou 6,5" (1284 x 2778). As capturas web de referência mostram cada tela.
+
+| # | Tela | Mostra | Referência |
+| --- | --- | --- | --- |
+| 1 | Início com uso | Modalidades, recentes e suas rotinas | `13-inicio-com-uso` |
+| 2 | Treino em andamento (anel) | Fase, tempo grande, próxima fase | `07-sessao-anel-exercicio` |
+| 3 | Treino em modo Foco | A cor da fase na tela inteira | `08-sessao-foco-exercicio` |
+| 4 | Modalidade Tabata | Modelos prontos | `02-modalidade` |
+| 5 | Editor | Blocos, etapas e valores digitados | `04-editor` e `30-valor-digitado` |
+| 6 | Temporizadores | Vários ao mesmo tempo | `18-temporizadores` |
+| 7 | Histórico | Calendário e registros | `14-historico` |
+| 8 | Backup e transferência | Exportar e abrir arquivo | `15-backup` |
+| 9 | Metrônomo e cadência (só App Store) | Ritmo por etapa | `23-sessao-cadencia` |
+| 10 | Sequência do profissional (só App Store) | Texto colado vira rotina | `28-sequencia` |
+
+Uma série em tema claro para pt-BR e en-US; as outras línguas usam as mesmas telas com o app
+na língua. Sem anúncio nas capturas (só aparecem com anúncio real ou de teste, e o de teste diz
+"Test Ad").
+
+### Pendências (dependem de conta)
+
+- Disponibilidade do nome "CronôBR: Tabata e HIIT" nas duas lojas, e se a busca por "cronobr"
+  sem acento acha o app (testar no console e na loja depois de publicar em teste fechado).
+- Política de privacidade em URL pública e endereço de contato.
+- Questionários de classificação etária e do público-alvo.
+- Capturas tiradas nos aparelhos.
+
+### Decisões do lote D
+
+| # | Decisão | Por quê |
+| --- | --- | --- |
+| D135 | **Textos das lojas em TypeScript com teste**, não em documento solto | O texto promete coisas do app: o teste amarra limites, números e nomes de botão ao código, e o doc legível é gerado da mesma fonte. Mudou o botão ou o número de modelos, o teste avisa |
+| D136 | **Nome nas lojas com acento: "CronôBR: Tabata e HIIT"** | A marca foi decidida com o circunflexo (`docs/marca/MARCA.md`, 07/11); o PRD escreve sem porque é anterior. A busca sem acento entra nas pendências |
+| D137 | **Público-alvo de 13 anos ou mais**, anúncio de classificação livre | Com menores de 13, a Play exige o programa para famílias e SDK de anúncio certificado para crianças. O app serve a qualquer idade, e o anúncio pedido é livre (PG) |
+| D138 | **Nenhum dado "usado para rastrear você" na App Store** | Sem pedido de rastreamento (D132), o app não pode rastrear e o SDK não acessa o identificador da Apple. Se o lançamento ligar o ATT, essa tabela muda junto |

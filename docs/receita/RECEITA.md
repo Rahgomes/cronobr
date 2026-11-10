@@ -327,3 +327,10 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
 - **09/11 — Confirmar ao sair do campo com dois campos:** contar focos (`onFocus` soma, `onBlur`
   subtrai) e confirmar só se, 150 ms depois do blur, nenhum dos dois tiver o foco. Passar de
   minutos para segundos não confirma no meio.
+- **09/11 — Texto de loja é código:** os textos ficam num `.ts` com teste que confere limite de
+  cada campo (palavra-chave da Apple conta bytes, "ô" vale 2), números contra o domínio e nomes
+  de botão contra as traduções do app; o `.md` legível é gerado pelo mesmo teste. Na primeira
+  rodada ele pegou palavra-chave repetindo o nome (bytes jogados fora).
+- **09/11 — Privacidade a partir da divulgação oficial do SDK:** a tabela da Play e a da App Store
+  saem da página de divulgação de dados do próprio SDK de anúncio, mais o que o código faz. Sem
+  conta, fica anotado o que muda com ela (ATT, recursos opcionais).
