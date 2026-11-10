@@ -378,8 +378,7 @@ export function EditorScreen({
           value={draft.prepSeconds}
           min={0}
           max={LIMITS.prepMaxSeconds}
-          step={5}
-          format={(s) => clock(s * 1000)}
+          kind="duration"
           onChange={(prepSeconds) => {
             update(edit.routine(draft, { prepSeconds }));
           }}
@@ -496,7 +495,7 @@ export function EditorScreen({
           value={draft.cooldownSeconds}
           min={0}
           max={LIMITS.cooldownMaxSeconds}
-          step={15}
+          kind="duration"
           format={(s) => (s === 0 ? t.editor.none : clock(s * 1000))}
           onChange={(cooldownSeconds) => {
             update(edit.routine(draft, { cooldownSeconds }));

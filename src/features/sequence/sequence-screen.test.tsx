@@ -42,8 +42,14 @@ describe('Cadastrar sequência recebida', () => {
     expect(screen.getByText('2 séries · 12 reps')).toBeOnTheScreen();
     expect(screen.getByText('10 reps · cada lado')).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('button', { name: 'Aumentar Voltas' }));
+    // Descanso digitado à mão (D134): toca no número, escreve os segundos e confirma.
+    await fireEvent.press(screen.getByRole('button', { name: 'Descanso entre exercícios: 0:15' }));
+    await fireEvent.changeText(
+      screen.getByLabelText('Segundos de Descanso entre exercícios'),
+      '10',
+    );
     await fireEvent.press(
-      screen.getByRole('button', { name: 'Diminuir Descanso entre exercícios' }),
+      screen.getByRole('button', { name: 'Confirmar Descanso entre exercícios' }),
     );
     await fireEvent.press(screen.getByRole('button', { name: 'Criar e revisar' }));
     await waitFor(() => {

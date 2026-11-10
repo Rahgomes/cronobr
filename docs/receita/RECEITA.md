@@ -320,3 +320,10 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
 - **09/11 — Não sobrescrever os workers do E2E:** o `playwright.config.ts` usa 1 worker por causa
   dos testes de tempo real. Rodar com `--workers=2` derrubou 3 testes por tempo (restauração em
   61 s contra limite de 60 s, cronômetro atrasado); com o padrão, os mesmos passaram.
+- **09/11 — Campo editável dentro de um controle: ref só fora da renderização:** o rascunho
+  digitado precisa ser lido por um blur atrasado (ref), e o lint do React Compiler barra função
+  que mexe em ref passada por um auxiliar chamado na renderização. O campo virou componente
+  próprio (`NumberBox`) e a ref só é lida nos eventos.
+- **09/11 — Confirmar ao sair do campo com dois campos:** contar focos (`onFocus` soma, `onBlur`
+  subtrai) e confirmar só se, 150 ms depois do blur, nenhum dos dois tiver o foco. Passar de
+  minutos para segundos não confirma no meio.

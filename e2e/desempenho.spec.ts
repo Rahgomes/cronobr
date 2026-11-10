@@ -88,22 +88,25 @@ test('resposta dos controles do treino: cada toque responde em menos de 200 ms',
 test('precisão das trocas em tempo real: cada fase troca no tempo dela', async ({ page }) => {
   test.setTimeout(60_000);
   await page.goto('/intervalado');
-  // 5 s de exercício, 5 s de descanso, 2 rodadas, sem preparação: ajusta pelo − e +.
-  const set = async (label: string, target: string) => {
-    const value = page.getByLabel(`${label}: `, { exact: false });
-    for (let i = 0; i < 40 && (await value.textContent()) !== target; i += 1) {
-      const now = (await value.textContent()) ?? '';
-      const down = now.localeCompare(target, undefined, { numeric: true }) > 0;
-      await page
-        .getByRole('button', { name: `${down ? 'Diminuir' : 'Aumentar'} ${label}` })
-        .click();
+  // 5 s de exercício, 5 s de descanso, 2 rodadas, sem preparação: digitados à mão (D134).
+  const set = async (label: string, minutes: string | null, value: string) => {
+    await page.locator(`[role="button"][aria-label^="${label}: "]`).click();
+    if (minutes === null) {
+      await page.getByLabel(label, { exact: true }).fill(value);
+      await page.getByLabel(label, { exact: true }).press('Enter');
+      return;
     }
-    await expect(value).toHaveText(target);
+    await page.getByLabel(`Minutos de ${label}`).fill(minutes);
+    await page.getByLabel(`Minutos de ${label}`).press('Enter');
+    await page.getByLabel(`Segundos de ${label}`).fill(value);
+    await page.getByLabel(`Segundos de ${label}`).press('Enter');
   };
-  await set('Preparação', '0:00');
-  await set('Exercício', '0:05');
-  await set('Descanso', '0:05');
-  await set('Rodadas', '2');
+  await set('Preparação', '0', '0');
+  await set('Exercício', '0', '5');
+  await set('Descanso', '0', '5');
+  await set('Rodadas', null, '2');
+  await expect(page.getByRole('button', { name: 'Exercício: 0:05' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Rodadas: 2' })).toBeVisible();
   await page.getByRole('button', { name: /^Começar/ }).click();
   await page.getByRole('switch', { name: 'Travar a tela ao começar' }).click();
   // Marca a hora de cada troca do título da fase, de dentro da página.

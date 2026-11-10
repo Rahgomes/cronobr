@@ -25,13 +25,13 @@ describe('Temporizador', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Diminuir Minutos' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Aumentar Segundos' }));
     await fireEvent.changeText(screen.getByLabelText('Nome (opcional)'), 'Prancha');
-    await fireEvent.press(screen.getByRole('button', { name: 'Começar 4:05' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Começar 4:01' }));
     expect(router.push).toHaveBeenCalledWith({
       pathname: '/sessao',
-      params: { rapido: 't', s: '245', nome: 'Prancha' },
+      params: { rapido: 't', s: '241', nome: 'Prancha' },
     });
     await waitFor(async () => {
-      expect(await repos.prefs.get(TIMER_KEY)).toMatchObject({ seconds: 245, name: 'Prancha' });
+      expect(await repos.prefs.get(TIMER_KEY)).toMatchObject({ seconds: 241, name: 'Prancha' });
     });
   });
 
@@ -45,7 +45,10 @@ describe('Temporizador', () => {
       pathname: '/sessao',
       params: { rapido: 't', s: '5', denovo: '1' },
     });
-    await fireEvent.press(screen.getByRole('button', { name: 'Diminuir Segundos' }));
+    // Zero digitado à mão (D134) no lugar de cinco toques no −.
+    await fireEvent.press(screen.getByRole('button', { name: 'Segundos: 05' }));
+    await fireEvent.changeText(screen.getByLabelText('Segundos'), '0');
+    await fireEvent.press(screen.getByRole('button', { name: 'Confirmar Segundos' }));
     expect(screen.getByText(/pelo menos 1 s/)).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Diminuir Segundos' })).toBeDisabled();
   });

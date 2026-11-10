@@ -104,8 +104,7 @@ export function TimersScreen() {
             label={t.timers.seconds}
             value={form.seconds}
             min={0}
-            max={55}
-            step={5}
+            max={59}
             format={(s) => String(s).padStart(2, '0')}
             onChange={(seconds) => {
               setForm({ ...form, seconds });

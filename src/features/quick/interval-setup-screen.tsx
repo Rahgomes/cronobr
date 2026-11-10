@@ -19,25 +19,21 @@ import { parseInterval } from './parse';
 
 export const INTERVAL_KEY = 'rapido.intervalo';
 
-const seconds = (s: number) => clock(s * 1000);
-
 const FIELDS: {
   key: 'prepSeconds' | 'workSeconds' | 'restSeconds' | 'rounds';
   min: number;
   max: number;
-  step: number;
-  format: (v: number) => string;
+  kind: 'count' | 'duration';
 }[] = [
   {
     key: 'prepSeconds',
     min: 0,
     max: LIMITS.prepMaxSeconds,
-    step: 5,
-    format: seconds,
+    kind: 'duration',
   },
-  { key: 'workSeconds', min: 5, max: 60 * 60, step: 5, format: seconds },
-  { key: 'restSeconds', min: 0, max: 60 * 60, step: 5, format: seconds },
-  { key: 'rounds', min: 1, max: LIMITS.repeatMax, step: 1, format: String },
+  { key: 'workSeconds', min: 5, max: 60 * 60, kind: 'duration' },
+  { key: 'restSeconds', min: 0, max: 60 * 60, kind: 'duration' },
+  { key: 'rounds', min: 1, max: LIMITS.repeatMax, kind: 'count' },
 ];
 
 /** Intervalado: preparação, exercício, descanso e rodadas. Lembra a última configuração. */
@@ -72,8 +68,7 @@ export function IntervalSetupScreen() {
             value={config[f.key]}
             min={f.min}
             max={f.max}
-            step={f.step}
-            format={f.format}
+            kind={f.kind}
             onChange={(value) => {
               setConfig({ ...config, [f.key]: value });
             }}

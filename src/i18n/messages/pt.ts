@@ -218,6 +218,11 @@ export const pt = {
     brand: 'CronôBR',
     decrease: (label: string) => `Diminuir ${label}`,
     increase: (label: string) => `Aumentar ${label}`,
+    typeHint: 'Toque para digitar o valor',
+    minutesOf: (label: string) => `Minutos de ${label}`,
+    secondsOf: (label: string) => `Segundos de ${label}`,
+    confirm: (label: string) => `Confirmar ${label}`,
+    limit: (min: string, max: string) => `Use entre ${min} e ${max}. Ajustado para o limite.`,
   },
   common: {
     back: 'Voltar',

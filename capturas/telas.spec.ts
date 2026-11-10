@@ -190,3 +190,17 @@ test('estudo, tarefas e sequência do profissional (E07 D)', async ({ page }) =>
   await expect(page.getByRole('heading', { name: 'Editar rotina' })).toBeVisible();
   await shot(page, '29-sequencia-no-editor');
 });
+
+test('valores digitados à mão (D134)', async ({ page }) => {
+  await page.goto('/intervalado');
+  await expect(page.getByRole('heading', { name: 'Intervalado' })).toBeVisible();
+  await page.getByRole('button', { name: /^Exercício: / }).click();
+  await page.getByLabel('Segundos de Exercício').fill('45');
+  await shot(page, '30-valor-digitado');
+  await page.getByLabel('Segundos de Exercício').press('Enter');
+  await page.getByRole('button', { name: /^Rodadas: / }).click();
+  await page.getByLabel('Rodadas', { exact: true }).fill('500');
+  await page.getByRole('button', { name: 'Confirmar Rodadas' }).click();
+  await expect(page.getByText(/Ajustado para o limite/)).toBeVisible();
+  await shot(page, '31-valor-no-limite');
+});

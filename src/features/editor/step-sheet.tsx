@@ -1,6 +1,5 @@
 import { StyleSheet, View } from 'react-native';
 
-import { clock } from '@/domain/format';
 import { LIMITS } from '@/domain/limits';
 import { BPM_MAX, BPM_MIN, METRONOME_START } from '@/domain/metronome';
 import type { Step } from '@/domain/routine';
@@ -112,8 +111,7 @@ export function StepSheet({
           value={step.seconds ?? 30}
           min={5}
           max={LIMITS.stepMaxSeconds}
-          step={5}
-          format={(s) => clock(s * 1000)}
+          kind="duration"
           onChange={(seconds) => {
             actions.change({ seconds });
           }}

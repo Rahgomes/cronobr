@@ -215,6 +215,11 @@ export const es: Messages = {
     brand: 'CronôBR',
     decrease: (label) => `Disminuir ${label}`,
     increase: (label) => `Aumentar ${label}`,
+    typeHint: 'Toca para escribir el valor',
+    minutesOf: (label) => `Minutos de ${label}`,
+    secondsOf: (label) => `Segundos de ${label}`,
+    confirm: (label) => `Confirmar ${label}`,
+    limit: (min, max) => `Usa entre ${min} y ${max}. Ajustado al límite.`,
   },
   common: {
     back: 'Volver',

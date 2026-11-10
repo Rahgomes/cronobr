@@ -59,8 +59,7 @@ export function TimerSetupScreen() {
           label={t.quick.seconds}
           value={seconds}
           min={0}
-          max={55}
-          step={5}
+          max={59}
           format={(s) => String(s).padStart(2, '0')}
           onChange={(s) => {
             setTimer({ ...timer, seconds: minutes * 60 + s });

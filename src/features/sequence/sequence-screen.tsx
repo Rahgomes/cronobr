@@ -121,8 +121,7 @@ export function SequenceScreen({ now = Date.now }: { now?: () => number } = {}) 
           value={restBetween}
           min={0}
           max={REST_BETWEEN_MAX}
-          step={5}
-          format={(v) => clock(v * 1000)}
+          kind="duration"
           onChange={setRestBetween}
         />
       </Card>

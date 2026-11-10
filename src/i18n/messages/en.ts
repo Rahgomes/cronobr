@@ -214,6 +214,11 @@ export const en: Messages = {
     brand: 'CronôBR',
     decrease: (label) => `Decrease ${label}`,
     increase: (label) => `Increase ${label}`,
+    typeHint: 'Tap to type the value',
+    minutesOf: (label) => `${label} minutes`,
+    secondsOf: (label) => `${label} seconds`,
+    confirm: (label) => `Confirm ${label}`,
+    limit: (min, max) => `Use between ${min} and ${max}. Set to the limit.`,
   },
   common: {
     back: 'Back',

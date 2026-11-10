@@ -1,6 +1,5 @@
 import { StyleSheet, View } from 'react-native';
 
-import { clock } from '@/domain/format';
 import { LIMITS } from '@/domain/limits';
 import type { Block } from '@/domain/routine';
 import { useT } from '@/i18n/i18n-context';
@@ -66,8 +65,7 @@ export function BlockSheet({
           value={block.restAfterSeconds}
           min={0}
           max={LIMITS.blockRestMaxSeconds}
-          step={15}
-          format={(s) => clock(s * 1000)}
+          kind="duration"
           onChange={(restAfterSeconds) => {
             actions.change({ restAfterSeconds });
           }}

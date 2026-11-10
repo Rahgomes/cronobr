@@ -157,3 +157,28 @@ Junta-se aos roteiros da E03, E07 e lote B na rodada do APK.
 | D131 | **Consentimento só quando a primeira tela com anúncio aparece**, não ao abrir o app | Um treino retomado abre direto na sessão; pedir consentimento ao ligar cobriria o cronômetro. A Início fica montada embaixo do treino, então o pedido de novo ao voltar para o app só vale com ela à vista |
 | D132 | **Sem pedido de rastreamento (ATT) no iPhone** | Um diálogo a menos, nenhum identificador entre apps. Banner sem rastreamento rende menos, mas o app não depende disso. Pode mudar no lançamento se a conta mostrar diferença grande |
 | D133 | **Falha some em silêncio e tenta de novo no foco ou ao voltar para o app** | Anúncio indisponível não é problema da pessoa: nem aviso, nem botão. Tentar de novo só nesses momentos evita pedir anúncio em laço sem rede |
+
+## Ajuste pedido no meio da E08 · Valores digitados à mão
+
+Pedido do Ramon depois do lote C: o + e o − andavam de 5 em 5 segundos (15 em 15 no descanso entre
+blocos e no desaquecimento), e não havia como escrever o valor. Vale para todas as telas com o
+controle (`ui/stepper.tsx`): intervalado, temporizador, temporizadores, editor (preparação,
+etapa, repetições, cadência, rodadas, descanso entre blocos, desaquecimento), sequência do
+profissional e metrônomo.
+
+| O quê | Como ficou |
+| --- | --- |
+| Passo do + e do − | 1 segundo em todo campo de tempo; segundos dos temporizadores vão até 59 (antes 55). Cadência no editor segue de 5 em 5 BPM e o atraso do fone no passo dele: o número digitado cobre o ajuste fino |
+| Tocar no número | Abre ali mesmo, sem janela do sistema (D08 segue valendo): tempo em dois campos, minutos e segundos; contagem em um campo. Teclado numérico, o valor atual já selecionado |
+| Confirmar | Botão de confirmar, "ok" do teclado nos segundos, ou tocar fora. "ok" nos minutos passa para os segundos. Segundos acima de 59 somam (0 e 90 vira 1:30) |
+| Limite | O que passar do mínimo ou do máximo é ajustado e explicado embaixo ("Use entre 1 e 99. Ajustado para o limite.") |
+| Leitor de tela | O número virou botão "Exercício: 0:30", com a dica "Toque para digitar o valor"; os campos se chamam "Minutos de Exercício" e "Segundos de Exercício" |
+
+Prova: `domain/number-input.test.ts` (leitura e limite, 100%), `ui/stepper.test.tsx` (passo,
+edição, limite, confirmar pelo teclado e saindo do campo), testes das telas de temporizador e
+sequência digitando, `e2e/rapido.spec.ts` (digitação no Chromium com axe no modo de edição).
+Capturas 30 e 31.
+
+| # | Decisão | Por quê |
+| --- | --- | --- |
+| D134 | **Passo de 1 s e número digitável** em todo valor com + e − | Passo de 5 s não chega em 0:42; para ir de 0:20 a 3:00, digitar é mais rápido que qualquer passo. Com o número editável, o passo pequeno não obriga a tocar 160 vezes. Edição no próprio lugar, sem seletor nativo, mantém o D08 |
