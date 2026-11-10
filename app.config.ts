@@ -87,6 +87,16 @@ const config: ExpoConfig = {
         androidPermissions: [],
       },
     ],
+    // Anúncio (E08 C): IDs de app de exemplo do Google, só para teste (D125). Medição do SDK
+    // espera o consentimento; sem pedido de rastreamento no iPhone (D132).
+    [
+      'react-native-google-mobile-ads',
+      {
+        androidAppId: 'ca-app-pub-3940256099942544~3347511713',
+        iosAppId: 'ca-app-pub-3940256099942544~1458002511',
+        delayAppMeasurementInit: true,
+      },
+    ],
     [
       'expo-notifications',
       {

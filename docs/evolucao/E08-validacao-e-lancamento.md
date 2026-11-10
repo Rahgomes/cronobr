@@ -8,7 +8,7 @@ APK único).
 | --- | --- | --- |
 | A | Qualidade e fluxos críticos: mapa de cada exigência do PRD para o teste que a prova; lacunas cobertas (primeira abertura sem rede, permissão recusada, texto ampliado, arquivo vindo de outro sistema); fixtures de versões anteriores conferidas | Feito |
 | B | Performance: o que dá para medir sem aparelho (abertura do pacote web, resposta dos controles, precisão das transições, biblioteca e histórico volumosos) com limite em teste; roteiro de medição no aparelho (abertura, memória e bateria em sessão longa) | Feito |
-| C | Monetização: banner discreto só com IDs de teste, longe dos controles de treino, sem intersticial; uso normal sem anúncio (falha, offline, sem preenchimento); consentimento e declarações pela documentação oficial atual | A fazer |
+| C | Monetização: banner discreto só com IDs de teste, longe dos controles de treino, sem intersticial; uso normal sem anúncio (falha, offline, sem preenchimento); consentimento e declarações pela documentação oficial atual | Feito |
 | D | Lojas: textos nas 4 línguas (título candidato, descrição curta e completa) dentro dos limites atuais de cada loja; lista de capturas; privacidade igual ao comportamento real; instruções de backup e importação; nada de "funciona ilimitado em segundo plano" | A fazer |
 | E | Relatório final: matriz Android/iOS de cada requisito (aprovado, reprovado, não testado), evidências, defeitos que impedem lançamento, limitações, o que depende de aparelho ou conta, próximos passos | A fazer |
 
@@ -99,3 +99,61 @@ Junta-se aos roteiros da E03 e da E07 na rodada do APK. Anotar aparelho, sistema
 | --- | --- | --- |
 | D128 | **Listas de rotinas mostram 20 e um "Mostrar mais 50 (faltam N)"**, na Início e na modalidade | A medição achou a Início desenhando as 1.000 rotinas de uma vez, cada uma calculando a duração: 4,4 s e 34 MB. Lista virtual mudaria o desenho da Início inteira; mostrar em partes resolve com uma mudança pequena e o leitor de tela sabe quantas faltam |
 | D129 | **Desempenho vira teste com limite**, num tema só, com os números anexados ao relatório do Playwright | Mesmo motivo do D121: medir uma vez não pega regressão. O limite tem folga para o CI, mais lento que a máquina local |
+
+## Lote C · Monetização
+
+Base: documentação atual do `react-native-google-mobile-ads` 17.4 (exige RN 0.86 com a nova
+arquitetura; o app está no 0.88) e da plataforma de consentimento do Google (UMP). Nenhuma conta
+criada (D125): o app usa os IDs de exemplo do Google, que só servem anúncio de teste.
+
+| O quê | Como ficou |
+| --- | --- |
+| Onde aparece | No fim da Início e no fim do Histórico, depois da última ação da tela. Nunca na sessão, no editor, na prévia do treino, em folha ou diálogo (D124) |
+| Formato | Banner adaptativo em linha, até 100 de altura, com "Publicidade" em cima. Sem intersticial, sem vídeo, sem anúncio de abertura |
+| IDs | App: `ca-app-pub-3940256099942544~3347511713` (Android) e `~1458002511` (iPhone). Bloco: `TestIds.ADAPTIVE_BANNER`. Trocar pelos reais é passo de lançamento |
+| Consentimento | UMP a cada abertura, como a documentação pede, mas só quando a primeira tela com anúncio fica à vista (D131). Sem consentimento, sem anúncio. Medição do SDK espera o consentimento (`delayAppMeasurementInit`) |
+| Rever a escolha | Ajustes mostra "Privacidade dos anúncios" quando o UMP diz que o mercado exige (Europa, Reino Unido) e reabre o formulário do Google |
+| Classificação | Livre (PG): app de treino para qualquer idade |
+| Web | Sem SDK: o arquivo `expo-ads.tsx` não carrega nada, e o pacote web continua sem nenhuma referência ao SDK (conferido no `dist`) |
+
+### Carregamento, falha, offline, sem preenchimento
+
+| Situação | O que acontece | Prova |
+| --- | --- | --- |
+| Carregou | Banner e o rótulo "Publicidade" no fim da tela; a tela segue igual em cima | `ad-slot.test.tsx` |
+| Sem preenchimento (`no-fill`) | O espaço some sem aviso; nada reservado | idem |
+| Offline (`network-error`, `timeout`) | Some; tenta de novo quando a tela volta a ficar à vista ou o app volta para a frente | idem ("offline e depois com rede") |
+| Erro qualquer | Some | idem |
+| Sem consentimento | Nenhum pedido de anúncio; tenta de novo na próxima vez que a tela aparecer | `ad-slot.test.tsx`, `expo-ads.native.test.tsx` |
+| SDK falhou ao começar | Nenhum banner, nenhum erro para a pessoa | idem |
+| Formulário de consentimento sem rede | Vale o consentimento da vez anterior | `expo-ads.native.test.tsx` |
+| Treino e editor | Nenhum banner, e o consentimento nem é pedido | `session-screen.test.tsx`, `editor-screen.test.tsx` |
+
+### Roteiro no aparelho
+
+Junta-se aos roteiros da E03, E07 e lote B na rodada do APK.
+
+| # | Passo | Aprovado se |
+| --- | --- | --- |
+| A1 | Abrir a Início com rede | Banner com a marca "Test Ad" do Google e "Publicidade" em cima, longe de qualquer botão |
+| A2 | Começar um treino, abrir o editor, abrir uma folha | Nenhum anúncio em nenhum deles |
+| A3 | Modo avião e abrir o app | Início sem banner e sem espaço vazio; tudo funciona |
+| A4 | Tirar o modo avião e voltar ao app | Banner volta |
+| A5 | Aparelho com a região da Europa (geografia de teste do UMP, exige registrar o aparelho de teste) | Formulário de consentimento aparece só ao chegar na Início, nunca por cima de treino retomado; Ajustes mostra "Privacidade dos anúncios" |
+| A6 | iPhone | Nenhum pedido de rastreamento (D132) |
+
+### Pendências de lançamento (dependem de conta)
+
+- Conta AdMob, IDs reais do app e do bloco, `app-ads.txt` no site.
+- Mensagem de consentimento configurada no console (sem ela, o UMP não mostra formulário).
+- Identificadores SKAdNetwork no iPhone (`skAdNetworkItems`), recomendados para anúncio sem rastreamento.
+- Declarações das lojas (lote D): o SDK coleta identificador de publicidade no Android e dados de uso para anúncio; a Play pede a permissão `AD_ID` declarada, que vem do próprio SDK.
+
+### Decisões do lote C
+
+| # | Decisão | Por quê |
+| --- | --- | --- |
+| D130 | **Banner só no fim da Início e do Histórico**, em linha e baixo, nada reservado enquanto carrega | "Espaço suficiente dos controles de treino": as duas telas são de consulta, e o fim da rolagem fica longe de qualquer controle. Sem espaço reservado, falha não deixa buraco |
+| D131 | **Consentimento só quando a primeira tela com anúncio aparece**, não ao abrir o app | Um treino retomado abre direto na sessão; pedir consentimento ao ligar cobriria o cronômetro. A Início fica montada embaixo do treino, então o pedido de novo ao voltar para o app só vale com ela à vista |
+| D132 | **Sem pedido de rastreamento (ATT) no iPhone** | Um diálogo a menos, nenhum identificador entre apps. Banner sem rastreamento rende menos, mas o app não depende disso. Pode mudar no lançamento se a conta mostrar diferença grande |
+| D133 | **Falha some em silêncio e tenta de novo no foco ou ao voltar para o app** | Anúncio indisponível não é problema da pessoa: nem aviso, nem botão. Tentar de novo só nesses momentos evita pedir anúncio em laço sem rede |

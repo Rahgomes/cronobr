@@ -674,4 +674,9 @@ export const fr: Messages = {
     backupHint: 'Tout enregistrer dans un fichier, passer à un autre appareil ou restaurer.',
     saveFailed: "Impossible d'enregistrer votre choix. Réessayez.",
   },
+  ads: {
+    label: 'Publicité',
+    privacy: 'Confidentialité des annonces',
+    privacyHint: 'Revoir ce que vous avez autorisé pour les annonces.',
+  },
 };

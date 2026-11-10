@@ -32,3 +32,9 @@ jest.mock('@/i18n/device', () => ({ deviceLanguageTags: () => ['pt-BR'] }));
 jest.mock('react-native-audio-api', () =>
   jest.requireActual<object>('react-native-audio-api/mock'),
 );
+
+// Anúncio: o SDK nativo não existe no Jest. As telas usam a porta falsa (src/test/app.tsx); este
+// mock só serve ao teste da porta nativa (expo-ads.native.test.tsx), que troca cada função.
+jest.mock('react-native-google-mobile-ads', () =>
+  jest.requireActual<object>('@/test/ads-sdk-mock'),
+);

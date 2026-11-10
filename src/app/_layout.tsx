@@ -7,6 +7,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { DataProvider } from '@/data/data-context';
 import { resolveLanguage } from '@/domain/appearance';
+import { AdsProvider } from '@/features/ads/ads-context';
+import { createAdsPort } from '@/features/ads/expo-ads';
 import { CueProvider } from '@/features/cues/cue-context';
 import { createExpoPort } from '@/features/cues/expo-port';
 import { AppearanceProvider } from '@/features/settings/appearance-context';
@@ -79,6 +81,7 @@ function AppStack() {
 export default function RootLayout() {
   const [port] = useState(createExpoPort);
   const [files] = useState(createFilePort);
+  const [ads] = useState(createAdsPort);
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
@@ -89,7 +92,9 @@ export default function RootLayout() {
                 <CueProvider port={port}>
                   <TimersProvider>
                     <FilePortProvider port={files}>
-                      <AppStack />
+                      <AdsProvider port={ads}>
+                        <AppStack />
+                      </AdsProvider>
                     </FilePortProvider>
                   </TimersProvider>
                 </CueProvider>

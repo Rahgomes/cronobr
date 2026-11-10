@@ -665,6 +665,11 @@ export const pt = {
     backupHint: 'Guardar tudo num arquivo, levar para outro aparelho ou restaurar.',
     saveFailed: 'Não deu para guardar a escolha. Tente de novo.',
   },
+  ads: {
+    label: 'Publicidade',
+    privacy: 'Privacidade dos anúncios',
+    privacyHint: 'Rever o que você autorizou para os anúncios.',
+  },
 } satisfies Record<string, unknown> & { words: Words };
 
 type Widen<T> = T extends string

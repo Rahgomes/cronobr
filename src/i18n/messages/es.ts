@@ -664,4 +664,9 @@ export const es: Messages = {
     backupHint: 'Guardar todo en un archivo, pasarlo a otro dispositivo o restaurar.',
     saveFailed: 'No se pudo guardar la elección. Inténtalo de nuevo.',
   },
+  ads: {
+    label: 'Publicidad',
+    privacy: 'Privacidad de los anuncios',
+    privacyHint: 'Revisar lo que autorizaste para los anuncios.',
+  },
 };

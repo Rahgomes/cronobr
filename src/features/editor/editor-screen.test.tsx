@@ -1,7 +1,7 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { presetById } from '@/domain/presets';
-import { appRepos, renderApp } from '@/test/app';
+import { appRepos, fakeAds, renderApp } from '@/test/app';
 import { block, must, routine, step } from '@/test/domain';
 import { router, usePreventRemove } from '@/test/expo-router-mock';
 
@@ -23,13 +23,23 @@ function pressSystemBack() {
 describe('editor de rotinas', () => {
   it('sequência completa fica um toque adiante (avançado aos poucos)', async () => {
     const { repos } = await appRepos();
-    await renderApp(<EditorScreen id="nova" from="tabata-classic" />, repos);
+    const ads = fakeAds();
+    await renderApp(
+      <EditorScreen id="nova" from="tabata-classic" />,
+      repos,
+      undefined,
+      undefined,
+      ads,
+    );
     const show = await screen.findByRole('button', { name: 'Ver a sequência (16 etapas)' });
     expect(screen.queryByText('e mais 4 etapas')).toBeNull();
     await fireEvent.press(show);
     expect(screen.getByText('e mais 4 etapas')).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('button', { name: 'Esconder a sequência' }));
     expect(screen.queryByText('e mais 4 etapas')).toBeNull();
+    // Editor sem anúncio (D124), nem o consentimento abre aqui.
+    expect(screen.queryByText('Banner de teste')).toBeNull();
+    expect(ads.start).not.toHaveBeenCalled();
   });
 
   it('nova: sem nome não salva e diz por quê; com nome grava e volta', async () => {

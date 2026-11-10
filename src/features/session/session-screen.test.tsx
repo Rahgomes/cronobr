@@ -5,7 +5,7 @@ import { createSession, start } from '@/domain/engine';
 import { presetById } from '@/domain/presets';
 import { buildTimeline } from '@/domain/timeline';
 import * as away from '@/features/cues/away';
-import { appRepos, fakeClock, fakePort, renderApp } from '@/test/app';
+import { appRepos, fakeAds, fakeClock, fakePort, renderApp } from '@/test/app';
 import { must } from '@/test/domain';
 import { router, usePreventRemove } from '@/test/expo-router-mock';
 
@@ -54,10 +54,20 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-async function open(routineId: string | undefined = 'tabata-classic', port = fakePort()) {
+async function open(
+  routineId: string | undefined = 'tabata-classic',
+  port = fakePort(),
+  ads = fakeAds(),
+) {
   const env = await unlockedRepos();
   const clock = fakeClock();
-  await renderApp(<SessionScreen routineId={routineId} clockSource={clock} />, env.repos, port);
+  await renderApp(
+    <SessionScreen routineId={routineId} clockSource={clock} />,
+    env.repos,
+    port,
+    undefined,
+    ads,
+  );
   /** O relógio anda e o intervalo da tela dispara uma vez (ou várias, se `ticks`). */
   const advance = async (ms: number, ticks = 1) => {
     clock.advance(ms);
@@ -65,7 +75,7 @@ async function open(routineId: string | undefined = 'tabata-classic', port = fak
       jest.advanceTimersByTime(TICK_MS * ticks);
     });
   };
-  return { ...env, clock, port, advance };
+  return { ...env, clock, port, ads, advance };
 }
 
 async function startTabata() {
@@ -75,6 +85,14 @@ async function startTabata() {
 }
 
 describe('sessão', () => {
+  it('nenhum anúncio na prévia nem no treino, e o consentimento não abre aqui (D124)', async () => {
+    const { ads, advance } = await startTabata();
+    await advance(15_000);
+    expect(screen.queryByText('Publicidade')).toBeNull();
+    expect(screen.queryByText('Banner de teste')).toBeNull();
+    expect(ads.start).not.toHaveBeenCalled();
+  });
+
   it('pronto mostra a prévia com a mesma duração da execução [PRD 7]', async () => {
     await open();
     expect(await screen.findByRole('header', { name: 'Tabata clássico' })).toBeOnTheScreen();

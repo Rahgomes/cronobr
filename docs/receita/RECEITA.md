@@ -304,3 +304,19 @@ Depois de implementar, a captura da tela **real** substitui a imagem-conceito na
   `performance.now()` quando o título da fase muda; sem `page.clock`, porque é o relógio de verdade
   que se quer medir.
 
+- **09/11 — E08 C, anúncio como porta injetável:** o SDK fica atrás de uma porta (`AdsPort`) igual
+  à de avisos e à de arquivos; `expo-ads.native.tsx` no aparelho, `expo-ads.tsx` vazio na web. As
+  telas são testadas com uma porta falsa que carrega ou falha com o motivo que o teste escolher
+  (`no-fill`, `network-error`), e a porta nativa com o SDK simulado. Conferir no `dist` que o SDK
+  não entrou no pacote web.
+- **09/11 — Callback no deps reabre o pedido:** o `request` do provedor dependia de `ready`; quando
+  o SDK ficava pronto, a função mudava, o efeito de foco rodava de novo e o banner que tinha
+  falhado voltava. Estado do pedido num `useRef`, função estável.
+- **09/11 — Consentimento não abre ao ligar o app:** treino retomado abre direto na sessão. Pedir
+  quando a primeira tela com anúncio aparece, e só com ela em foco (a Início fica montada embaixo).
+- **09/11 — Conferir o plugin nativo sem compilar:** `npx expo config --type introspect --json`
+  mostra o manifesto e o Info.plist como ficariam; deu para ver os IDs de teste e a medição
+  atrasada sem gerar APK.
+- **09/11 — Não sobrescrever os workers do E2E:** o `playwright.config.ts` usa 1 worker por causa
+  dos testes de tempo real. Rodar com `--workers=2` derrubou 3 testes por tempo (restauração em
+  61 s contra limite de 60 s, cronômetro atrasado); com o padrão, os mesmos passaram.

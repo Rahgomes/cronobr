@@ -1,6 +1,9 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["src/app/**/*.tsx", "e2e/**/*.ts"],
+  "entry": ["src/app/**/*.tsx", "e2e/**/*.ts", "src/test/ads-sdk-mock.ts"],
   "project": ["src/**/*.{ts,tsx}", "e2e/**/*.ts"],
-  "ignoreExportsUsedInFile": { "type": true, "interface": true }
+  "ignoreExportsUsedInFile": {
+    "type": true,
+    "interface": true
+  }
 }

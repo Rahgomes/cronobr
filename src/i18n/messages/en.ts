@@ -655,4 +655,9 @@ export const en: Messages = {
     backupHint: 'Save everything to a file, move to another device or restore.',
     saveFailed: "Couldn't save your choice. Try again.",
   },
+  ads: {
+    label: 'Advertisement',
+    privacy: 'Ad privacy',
+    privacyHint: 'Review what you allowed for ads.',
+  },
 };

@@ -1,12 +1,15 @@
 // Monta uma tela como no app: área segura, tema, banco de verdade (node:sqlite) e DialogHost.
 import { render, screen } from '@testing-library/react-native';
-import type { ReactElement } from 'react';
+import { useEffect, type ReactElement } from 'react';
+import { Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { DataProvider } from '@/data/data-context';
 import type { Repos } from '@/data/repos';
 import { sqliteRepos } from '@/data/sqlite-repos';
 import type { Instant } from '@/domain/engine';
+import { AdsProvider } from '@/features/ads/ads-context';
+import type { AdsPort, BannerProps } from '@/features/ads/port';
 import { CueProvider } from '@/features/cues/cue-context';
 import type { CuePort, NotifyState } from '@/features/cues/port';
 import { FilePortProvider, type FilePort } from '@/features/transfer/file-port';
@@ -25,13 +28,20 @@ export async function appRepos() {
   return { db, raw, repos: sqliteRepos(db) };
 }
 
-export async function renderApp(ui: ReactElement, repos: Repos, port?: CuePort, files?: FilePort) {
-  const inner = (
+export async function renderApp(
+  ui: ReactElement,
+  repos: Repos,
+  port?: CuePort,
+  files?: FilePort,
+  ads?: AdsPort,
+) {
+  const screenAndDialogs = (
     <>
       {ui}
       <DialogHost />
     </>
   );
+  const inner = ads ? <AdsProvider port={ads}>{screenAndDialogs}</AdsProvider> : screenAndDialogs;
   const content = files ? <FilePortProvider port={files}>{inner}</FilePortProvider> : inner;
   await render(
     <SafeAreaProvider initialMetrics={METRICS}>
@@ -100,4 +110,34 @@ export function fakeFiles(files: Record<string, string> = {}) {
     }),
   } satisfies FilePort & Record<string, unknown>;
   return port;
+}
+
+/**
+ * Porta de anúncio falsa. `start`: o que o consentimento e o SDK respondem. `banner`: 'loaded'
+ * ou o motivo da falha que o banner devolve (no-fill, network-error...). O banner aparece como o
+ * texto "Banner de teste" enquanto está montado.
+ */
+export function fakeAds({
+  start = true,
+  banner = 'loaded',
+  privacy = false,
+}: { start?: boolean | 'reject'; banner?: string; privacy?: boolean } = {}) {
+  const outcome = { banner };
+  function Banner({ onLoaded, onFailed }: BannerProps) {
+    useEffect(() => {
+      if (outcome.banner === 'loaded') onLoaded();
+      else onFailed(outcome.banner);
+    }, [onLoaded, onFailed]);
+    return <Text>Banner de teste</Text>;
+  }
+  const port = {
+    outcome,
+    start: jest.fn(() =>
+      start === 'reject' ? Promise.reject(new Error('sdk')) : Promise.resolve(start),
+    ),
+    privacyRequired: jest.fn(() => Promise.resolve(privacy)),
+    showPrivacy: jest.fn(() => Promise.resolve()),
+    Banner,
+  };
+  return port satisfies AdsPort;
 }

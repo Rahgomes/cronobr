@@ -17,6 +17,7 @@ import {
 } from '@/domain/calendar';
 import { duration } from '@/domain/format';
 import type { HistoryEntry } from '@/domain/history';
+import { AdSlot } from '@/features/ads/ad-slot';
 import { useLanguage, useT } from '@/i18n/i18n-context';
 import type { Messages } from '@/i18n/messages/pt';
 import { Button } from '@/ui/button';
@@ -185,15 +186,18 @@ export function HistoryScreen() {
       keyExtractor={(entry) => entry.id}
       renderItem={({ item }) => <HistoryRow entry={item} />}
       after={
-        next && !filter ? (
-          <Button
-            label={t.history.loadMore}
-            kind="secondary"
-            onPress={() => {
-              void loadMore(next);
-            }}
-          />
-        ) : null
+        <>
+          {next && !filter ? (
+            <Button
+              label={t.history.loadMore}
+              kind="secondary"
+              onPress={() => {
+                void loadMore(next);
+              }}
+            />
+          ) : null}
+          <AdSlot />
+        </>
       }
     />
   );

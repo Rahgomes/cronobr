@@ -2,10 +2,11 @@
 // progressiva).
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { LANGUAGES, type Appearance, type LanguagePref, type ThemePref } from '@/domain/appearance';
+import { useAds } from '@/features/ads/ads-context';
 import { LANGUAGE_NAME, useT } from '@/i18n/i18n-context';
 import { Card } from '@/ui/card';
 import { Chip } from '@/ui/chip';
@@ -23,6 +24,18 @@ export function SettingsScreen() {
   const t = useT();
   const { appearance, deviceLanguage, setAppearance } = useAppearance();
   const [failed, setFailed] = useState(false);
+  const ads = useAds();
+  // Só onde a lei pede (Europa, Reino Unido) e só no aparelho: rever o consentimento dos anúncios.
+  const [privacy, setPrivacy] = useState(false);
+  useEffect(() => {
+    let active = true;
+    void ads.port.privacyRequired().then((required) => {
+      if (active) setPrivacy(required);
+    });
+    return () => {
+      active = false;
+    };
+  }, [ads.port]);
 
   const update = (patch: Partial<Appearance>) => {
     setFailed(false);
@@ -98,6 +111,16 @@ export function SettingsScreen() {
             router.push('/backup');
           }}
         />
+        {privacy ? (
+          <SettingsLink
+            icon="shield-account"
+            label={t.ads.privacy}
+            hint={t.ads.privacyHint}
+            onPress={() => {
+              void ads.port.showPrivacy();
+            }}
+          />
+        ) : null}
       </Card>
     </Screen>
   );
@@ -110,7 +133,7 @@ function SettingsLink({
   hint,
   onPress,
 }: {
-  icon: 'volume-high' | 'backup-restore';
+  icon: 'volume-high' | 'backup-restore' | 'shield-account';
   label: string;
   hint: string;
   onPress: () => void;

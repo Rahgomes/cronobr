@@ -9,6 +9,7 @@ import { clock, relativeDay } from '@/domain/format';
 import { recentRoutines, type RecentRoutine } from '@/domain/history';
 import type { Routine } from '@/domain/routine';
 import { buildTimeline, summarize } from '@/domain/timeline';
+import { AdSlot } from '@/features/ads/ad-slot';
 import { idGenerator } from '@/features/editor/ids';
 import { MODALITY } from '@/features/modality/catalog';
 import { useFavorites } from '@/features/routines/favorites';
@@ -258,6 +259,8 @@ export function HomeScreen() {
           }}
         />
       </View>
+
+      <AdSlot />
 
       <RoutineOptions
         routine={options}
